@@ -1,0 +1,171 @@
+.CylindricalPlotBox {
+    height: 356px;
+    width: 100%;
+    max-width: 550px;
+    position: relative;
+}
+
+.box-line {
+    height: 92px;
+    border-top: 1px #d6d6d6 dashed;
+    border-bottom: 1px #d6d6d6 solid;
+    position: absolute;
+    width: 100%;
+    bottom: 0px;
+}
+
+.bottomDate {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: #838383;
+}
+
+.left-items,
+.right-items {
+    position: absolute;
+    width: 34%;
+    max-width: 180px;
+    height: 100%;
+    bottom: 0;
+}
+
+.m-items {
+    width: 100%;
+    height: 200px;
+    position: absolute;
+    bottom: 32px;
+}
+
+.newSum_box {
+    position: absolute;
+    bottom: 0px;
+    width: 38%;
+    max-width: 46px;
+    height: 100%;
+    z-index: 9;
+}
+
+.m-items .m-items-box {
+    margin: 0 auto;
+    width: 30%;
+    max-width: 125px;
+    height: 100%;
+}
+
+
+.m-items .newSum_box .data-position {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 97%;
+}
+
+.m-items .newSum_box .position-box {
+    width: 100%;
+    height: 100%;
+    background: #D3F2F2;
+}
+
+.m-items .def-quota {
+    position: relative;
+    bottom: 0px;
+    width: 38%;
+    max-width: 46px;
+    height: 100%;
+    z-index: 10;
+}
+
+.m-items .def-quota .data-position {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60%;
+}
+
+.m-items .def-quota .position-box {
+    width: 100%;
+    height: 100%;
+    background: -webkit-linear-gradient(#44d1eb,
+        #22a1c9);
+    /* Safari 5.1 - 6.0 */
+    background: -o-linear-gradient(#44d1eb, #22a1c9);
+    /* Opera 11.1 - 12.0 */
+    background: -moz-linear-gradient(#44d1eb, #22a1c9);
+    /* Firefox 3.6 - 15 */
+    background: linear-gradient(#44d1eb, #22a1c9);
+    /* 标准的语法 */
+}
+
+.left-items p,
+.right-items p {
+    margin: 0;
+    padding: 0;
+    color: #3a3a3a;
+}
+
+// .m-items .outQuota .oval-top {
+//     background: #e16264;
+// }
+
+// .m-items .outQuota .position-box {
+//     width: 100%;
+//     height: 100%;
+//     background: -webkit-linear-gradient(#d74242,
+//         #44d1eb,
+//         #22a1c9);
+//     /* Safari 5.1 - 6.0 */
+//     background: -o-linear-gradient(#d74242,
+//         #44d1eb,
+//         #22a1c9);
+//     /* Opera 11.1 - 12.0 */
+//     background: -moz-linear-gradient(#d74242,
+//         #44d1eb,
+//         #22a1c9);
+//     /* Firefox 3.6 - 15 */
+//     background: linear-gradient(#d74242, #44d1eb 0%, #22a1c9);
+//     /* 标准的语法 */
+// }
+
+.left-items .top-text,
+.right-items .top-text {
+    position: absolute;
+    width: 100%;
+    text-align: right;
+    font-weight: bold;
+    top: -32px;
+    font-size: 14px;
+}
+
+.left-items .m-text,
+.right-items .m-text {
+    font-size: 22px;
+    height: 60px;
+    text-align: right;
+    line-height: 60px;
+    // position: absolute;
+    // bottom: -10px;
+    // right: 10px;
+}
+
+// .right-items .m-text {
+//     left: 10px;
+// }
+
+.left-items .m-text span,
+.right-items .m-text span {
+    font-size: 30px;
+}
+
+.left-items .bottom-text,
+.right-items .bottom-text {
+    font-size: 14px;
+    position: absolute;
+    width: 100%;
+    text-align: right;
+    font-weight: bold;
+    bottom: 0px;
+    line-height: 20px;
+}

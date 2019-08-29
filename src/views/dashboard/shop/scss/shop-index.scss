@@ -1,0 +1,41 @@
+$borderColor: #3c5c75;
+$bcColor:#182037;
+
+.border {
+    position: absolute;
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+.left-top {
+    top: 0;
+    left: 0;
+    border-left: 2px solid $borderColor;
+    border-top: 2px solid $borderColor;
+    z-index: 2;
+}
+
+.right-top {
+    top: 0;
+    right: -2px;
+    border-right: 2px solid $borderColor;
+    border-top: 2px solid $borderColor;
+    z-index: 2;
+}
+
+.left-bottom {
+    bottom: 0;
+    left: 0;
+    border-bottom: 2px solid $borderColor;
+    border-left: 2px solid $borderColor;
+    z-index: 2;
+}
+
+.right-bottom {
+    bottom: 0;
+    right: -2px;
+    border-right: 2px solid $borderColor;
+    border-bottom: 2px solid $borderColor;
+    z-index: 2;
+}

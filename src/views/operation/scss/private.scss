@@ -1,0 +1,28 @@
+.row-head {
+    height: 40px;
+    line-height: 40px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.TreeSelect {
+    width: 520px;
+}
+
+/deep/ .el-rate {
+    height: 40px;
+    line-height: 40px;
+}
+
+/deep/ .el-rate__item {
+    line-height: 40px;
+}
+
+/deep/ .el-rate__icon {
+    font-size: 24px;
+    margin-top: 6px;
+}
+
+/deep/ .el-rate__text {
+    vertical-align: top;
+}
