@@ -4,29 +4,31 @@
       <div class="table-content" v-show="basicShow">
         <p class="header">
           <span>报警次数</span>
-          <router-link tag="a" to="/safety/alarm/view">查看详情</router-link>
+          <router-link tag="a" to="/safety/alarm/view?type=2">查看详情</router-link>
           <i class="iconfont icon-fanhui"></i>
         </p>
         <table border="0" cellspacing="0">
-          <tr class="thead">
-            <td width="150">设备名称</td>
-            <td>本月报警次数</td>
-            <td>安全运行时长</td>
-          </tr>
-          <tr>
-            <td>
-              <router-link tag="a" to="/safety/alarm/view">{{basicData.name}}</router-link>
-            </td>
-            <td>{{basicData.alarmCount}}</td>
-            <td>{{basicData.safePeriod}}</td>
-          </tr>
-          <tr v-for="(item, index) in basicData.pumps" :key="index">
-            <td>
-              <router-link tag="a" to="/safety/alarm/view">{{item.name}}</router-link>
-            </td>
-            <td>{{item.alarmCount}}</td>
-            <td>{{item.safePeriod}}</td>
-          </tr>
+          <div v-for="(dataItem, i) in basicData" :key="i">
+            <tr class="thead">
+              <td width="150">设备名称</td>
+              <td>本月报警次数</td>
+              <td>安全运行时长</td>
+            </tr>
+            <tr>
+              <td>
+                <router-link tag="a" to="/safety/alarm/view?type=2">{{dataItem.name}}</router-link>
+              </td>
+              <td>{{dataItem.alarmCount}}</td>
+              <td>{{dataItem.safePeriod}}</td>
+            </tr>
+            <tr v-for="(item, index) in dataItem.pumps" :key="index">
+              <td>
+                <router-link tag="a" to="/safety/alarm/view?type=2">{{item.name}}</router-link>
+              </td>
+              <td>{{item.alarmCount}}</td>
+              <td>{{item.safePeriod}}</td>
+            </tr>
+          </div>
         </table>
       </div>
       <i
@@ -38,17 +40,20 @@
     <i
       v-if="videoMonitorList.length"
       @click="videoModelVisible = true"
-      class="iconfont icon-xiayiji video-btn"
+      class="iconfont icon-shipin video-btn"
     ></i>
     <empty-data v-if="!dataList.length && !$store.getters.getLoading" msg="暂无给水系统数据" />
     <div class="water-container">
-      <el-radio-group v-model="tabPosition" class="tab-groups">
-        <el-radio-button
-          v-for="(item,index) in dataList"
-          :key="index"
-          :label="item.number"
-        >{{item.name}}</el-radio-button>
-      </el-radio-group>
+      <div class="tab-content">
+        <el-radio-group v-model="tabPosition" class="tab-groups">
+          <el-radio-button
+            v-for="(item,index) in dataList"
+            :key="index"
+            :label="item.number"
+          >{{item.name}}</el-radio-button>
+        </el-radio-group>
+      </div>
+
       <empty-data
         v-if="dataList.length && !activatedDevice && !$store.getters.getLoading"
         msg="暂无对应给水系统数据"
@@ -87,21 +92,38 @@
                   class="picture"
                   :src="item.status === '0'? pumpRunningPng : item.status === '2' ? pumpStopPng : pumpTroublePng"
                 />
-                <img v-else class="picture" style="opacity:0.5" :src="pumpStopPng" />
+                <img v-else class="picture" :src="pumpTroublePng" />
                 <span class="line1 right">
                   <span class="x-line" :class="{'running': item.status === '0'}"></span>
                 </span>
               </div>
-              <p class="name">
-                {{item.name}}:
-                <span
-                  :class="{'running': item.status === '0', 'trouble': item.status === '1'||!item.status}"
-                >{{item.status==='0'?'正常':item.status==='1'?'故障':item.status==='2'?'停止':'请配置参数'}}</span>
-                &nbsp;&nbsp;
-                <span
-                  :class="{'trouble':!item.control}"
-                >{{item.control?item.control:'请配置参数'}}</span>
-              </p>
+              <!-- 文字提示 -->
+              <el-popover trigger="hover" placement="top">
+                <p class="msgTip name">
+                  <span class>{{item.name}}：</span>
+                  <span
+                    v-if="item.status"
+                    :class="{'running': item.status === '0', 'trouble': item.status !== '0'&&item.status !== '2'}"
+                  >{{item.status==='0'?'正常':item.status==='1'?'故障':item.status==='2'?'停止':item.status}}</span>
+                  <span class="trouble" v-else>请配置参数</span>
+                  &nbsp;&nbsp;
+                  <span
+                    :class="{'trouble':!item.control}"
+                  >{{item.control?item.control:'请配置参数'}}</span>
+                </p>
+                <p class="name" slot="reference">
+                  <span class>{{item.name}}：</span>
+                  <span
+                    v-if="item.status"
+                    :class="{'running': item.status === '0', 'trouble': item.status !== '0'&&item.status !== '2'}"
+                  >{{item.status==='0'?'正常':item.status==='1'?'故障':item.status==='2'?'停止':item.status}}</span>
+                  <span class="trouble" v-else>请配置参数</span>
+                  &nbsp;&nbsp;
+                  <span
+                    :class="{'trouble':!item.control}"
+                  >{{item.control?item.control:'请配置参数'}}</span>
+                </p>
+              </el-popover>
             </div>
           </div>
           <!-- 泵右边边Y轴 -->
@@ -124,7 +146,7 @@
           <span class="line1">
             <span class="x-line" :class="{'running': lineStatusList.bus}"></span>
           </span>
-          <span class="label-span">高位生活水箱</span>
+          <!-- <span class="label-span">高位生活水箱</span> -->
           <span class="line1 line2">
             <span class="x-line" :class="{'running': lineStatusList.bus}"></span>
           </span>
@@ -189,6 +211,7 @@
                 >-->
                 <span
                   class="level-line current-line"
+                  :class="liquidLevel.currentFluid > liquidLevel.lowerLimit && liquidLevel.currentFluid < liquidLevel.upperLimit ? 'normal' : 'alarm' "
                   :style="{top: (liquidLevel.currentFluid > liquidLevel.height ? 0 :1 - liquidLevel.currentFluid / liquidLevel.height) * 100 + '%'}"
                   :title="liquidLevel.currentFluid"
                 >
@@ -244,15 +267,13 @@ export default {
     ...mapGetters('drainage', ['getWebsocket', 'getSupplySystem']),
     activatedDevice () { // 当前供水设备组
       let dataList = JSON.parse(JSON.stringify(this.dataList))
-      console.log("dataList=", dataList)
-      console.log("this.tabPosition=", this.tabPosition)
       let activatedDevice = dataList[0]
       for (let index = 0, len = dataList.length; index < len; index++) {
         const item = dataList[index];
+        // 报警次数显示
         if (item.number === this.tabPosition) {
           activatedDevice = item
-          this.basicData = this.dataList.find(item => item.number === this.tabPosition)
-          console.log("activatedDevice=", activatedDevice)
+          this.basicData = this.dataList.filter(item => item.number === this.tabPosition)
           break;
         }
       }
@@ -320,7 +341,7 @@ export default {
     lineStatusList () {
       if (!this.activatedDevice.pumps.length) {
         return {
-          bus: true
+          bus: false
         }
       }
       let stateList = this.activatedDevice.pumps.map(item => item.status)
@@ -356,7 +377,9 @@ export default {
       if (!val) return
       val = JSON.parse(JSON.stringify(val))
       this.dataList = val.detail || []
-      this.basicData = val.basic || []
+
+      this.basicData = val.basic || [];
+      const { alarm } = this.$route.query;
       if (!this.tabPosition) this.tabPosition = (this.dataList[0] || {}).number || ''
     }
 
@@ -386,21 +409,22 @@ export default {
 </script>
 <style lang="scss" scoped>
 .supply-water {
-  height: 100%;
   overflow: auto;
   position: relative;
   text-align: center;
   min-height: 200px;
   color: #333333;
   margin-bottom: 20px;
+  /deep/ .el-dialog__header {
+    font-size: 14px;
+    text-align: left;
+  }
   .video-btn {
+    font-size: 40px;
     position: absolute;
-    width: 30px;
-    right: 20px;
-    top: 0;
-    line-height: 40px;
-    font-size: 20px;
-    background-color: #dcdfe6;
+    right: 30px;
+    top: 10px;
+    z-index: 999;
     cursor: pointer;
   }
   .basic-table {
@@ -462,8 +486,14 @@ export default {
   }
   .water-container {
     font-size: 18px;
+    .tab-content {
+      max-width: 1230px;
+      overflow-x: auto;
+      margin-left: 465px;
+    }
     .tab-groups {
       margin: 30px 0;
+      white-space: nowrap;
       position: relative;
       z-index: 2;
     }
@@ -503,6 +533,9 @@ export default {
           .name {
             max-width: 212px;
             margin-left: -20px;
+            height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
           }
         }
@@ -623,6 +656,21 @@ export default {
                 border-top: 3px solid #f0213e;
                 background: rgba(240, 33, 62, 0.2);
                 color: #f0213e;
+                &.normal {
+                  border-color: #2eb34a;
+                  background: rgba(46, 179, 74, 0.3);
+                  .cur-mark {
+                    border-color: #2eb34a;
+                    border-top-color: transparent;
+                    border-left-color: transparent;
+                  }
+                  .cur-value {
+                    color: #2eb34a;
+                  }
+                }
+                &.alarm {
+                  border-color: #f0213e;
+                }
                 .cur-mark {
                   left: 0;
                   top: -15px;
@@ -683,6 +731,19 @@ export default {
 }
 </style>
 <style lang="scss" scoped>
+.msgTip {
+  .running {
+    color: #2eb34a;
+  }
+  .trouble {
+    color: #f0213e;
+  }
+  // .name {
+  //   max-width: 212px;
+  //   margin-left: -20px;
+  //   white-space: nowrap;
+  // }
+}
 .supply-water {
   .line1 {
     display: inline-block;

@@ -22,7 +22,11 @@
         </el-col>
       </el-row>
       <el-form-item label="巡检周期" prop="cycleTimeLength">
-        <el-input v-model="ruleForm.cycleTimeLength" style="width:123px;"></el-input>
+        <el-input
+          v-model="ruleForm.cycleTimeLength"
+          style="width:123px;"
+          :disabled="cycleTimeDisabled"
+        ></el-input>
         <el-select v-model="ruleForm.cycleTime" style="width:88px">
           <el-option
             v-for="(item,index) in CheckCycleOptions"
@@ -123,6 +127,7 @@ export default {
       multipleSelection: [],
       tableData: [],
       curId: '',//当前选中ID
+      cycleTimeDisabled: false,//巡检周期禁用
     }
   },
   computed: {
@@ -133,6 +138,17 @@ export default {
   },
   created () {
     this.initData();
+  },
+  watch: {
+    'ruleForm.cycleTime' (val, oldVal) {
+      this.cycleTimeDisabled = val == 'D' || val == 'F';//周、季
+      //半月或者半年则禁用
+      if (this.cycleTimeDisabled) {
+        this.ruleForm.cycleTimeLength = 1;
+      } else {
+        this.ruleForm.cycleTimeLength = (oldVal == 'D' || oldVal == 'F') ? '' : this.ruleForm.cycleTimeLength;//如果之前的值是周、季，清空值
+      }
+    }
   },
   methods: {
     //初始化界面数据

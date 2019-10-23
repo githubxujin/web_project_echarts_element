@@ -52,7 +52,11 @@ export function validateRealName(rule, value, callback) {
     if (!Utils.notEmpty(value)) return callback();
 
     if (!Regexps.realName.test(value)) {
-        return callback(new Error('长度16位以内(可包含中英文和·)'));
+        return callback(new Error('长度10位以内(可包含中英文和·)'));
+    }
+    const len = (value || '').length;
+    if (len > 10 || len < 2) {
+        return callback(new Error('长度2到10位'));
     }
     return callback();
 }
@@ -99,6 +103,51 @@ export function validatePositiveNumber(rule, value, callback) {
         callback(new Error('请输入正整数'));
     }
 }
+//正整数-且小于某个值
+export function validateNumberLess(rule, value, callback, otherVal) {
+    if (!Utils.notEmpty(value)) {
+        return callback();
+    }
+    var rex = Regexps.number; //数字
+    let result = rex.test(value);
+    if (result) {
+        if (!Utils.notEmpty(otherVal)) {
+            callback();
+        }
+        if (Math.abs(value) > 100000000) {
+            return callback(new Error('范围不能超过1亿'));
+        } else if (Number(value) > Number(otherVal)) {
+            callback(new Error('最小值不能大于最大值'));
+        } else {
+            return callback();
+        }
+    } else {
+        callback(new Error('请输入数字'));
+    }
+}
+//正整数-且大于某个值
+export function validateNumberGreater(rule, value, callback, otherVal) {
+    if (!Utils.notEmpty(value)) {
+        return callback();
+    }
+    var rex = Regexps.number; //数字
+    let result = rex.test(value);
+    if (result) {
+        if (!Utils.notEmpty(otherVal)) {
+            // callback(new Error('请输入最小值'));
+            callback();
+        }
+        if (Math.abs(value) > 100000000) {
+            return callback(new Error('范围不能超过1亿'));
+        } else if (Number(value) < Number(otherVal)) {
+            callback(new Error('最大值不能小于最小值'));
+        } else {
+            return callback();
+        }
+    } else {
+        callback(new Error('请输入数字'));
+    }
+}
 //整数、小数-小于1个亿
 export function validateIntOrNumber(rule, value, callback) {
     if (!Utils.notEmpty(value)) {
@@ -113,7 +162,7 @@ export function validateIntOrNumber(rule, value, callback) {
         }
         return callback();
     } else {
-        return callback(new Error('请输入正确的格式'));
+        return callback(new Error('请输入正确的数字'));
     }
 }
 //验证码
@@ -144,4 +193,41 @@ export function validateMaxInt(rule, value, callback, maxVal) {
     } else {
         return callback(new Error('请输入正整数'));
     }
+}
+export function validateCompare(rule, value, callback, otherVal) {
+    if (!Utils.notEmpty(value)) {
+        return callback(new Error('请输入非正常文本'));
+    } else if (value.indexOf(' ') > -1) {
+        return callback(new Error('非正常不能存在空格'));
+    } else if (value == otherVal) {
+        return callback(new Error('正常文本和非正常文本不能相同!'));
+    } else {
+        return checkChartLength(rule, value, callback, 8, '非正常文本');
+    }
+}
+export function checkChartLength(rule, value, callback, length, name) {
+    let len = GetLength(value);
+    if (len > length) {
+        //重点重点，下面就是填写提示的文字
+        callback(
+            new Error(
+                name + '长度为' + length + '个字符，一个中文字等于2个字符。'
+            )
+        );
+    } else {
+        callback();
+    }
+}
+//获取字符长度，一个中文字等于2个字符
+function GetLength(str) {
+    console.log('str :', str);
+    var l = str.length;
+    var blen = 0;
+    for (let i = 0; i < l; i++) {
+        if ((str.charCodeAt(i) & 0xff00) != 0) {
+            blen++;
+        }
+        blen++;
+    }
+    return blen;
 }

@@ -18,7 +18,7 @@
                        width="80"
                        :index="numerical" />
 
-      <!--thead-->
+      <!--thead-->   <!--show-overflow-tooltip-->
       <el-table-column v-for="(item, index) of vTableData.tHead"
                        :key="index"
                        :formatter="formatter"
@@ -26,9 +26,9 @@
                        :prop="item.prop"
                        :label="item.text"
                        max-width="150"
-                       show-overflow-tooltip />
+                     />
 
-      <el-table-column v-if="vTableData.operateBtn && vTableData.operateBtn.length"
+        <el-table-column v-if="vTableData.operateBtn && vTableData.operateBtn.length"
                        label="操作"
                        fixed="right"
                        min-width="150">

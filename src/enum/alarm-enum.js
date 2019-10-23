@@ -7,22 +7,22 @@ export const alarmLevel = {
     5: '五级'
 };
 
-//报警'状态，0：未确认，1：已确认，2：处理中，3：已解决',
+//报警'状态，0：待确认，3：已恢复，2：处理中，1：已忽略',
 export const alarmStatus = {
-    0: '未确认',
-    1: '已恢复',
+    0: '待确认',
     2: '处理中',
-    3: '已解决'
+    3: '已恢复',
+    1: '已忽略'
 };
 //报警状态枚举
 export const alarmStatusEnum = {
-    //未确认
+    //待确认
     noSure: 0,
-    //已恢复
+    //已忽略
     recovered: 1,
     //处理中
     processing: 2,
-    //已解决
+    //已恢复
     resolved: 3
 };
 //报警类别
@@ -45,17 +45,22 @@ export const alarmSystemIcon = {
 export const alarmStatusOptions = function() {
     let res = [];
     res.push({
-        label: '全部',
-        value: -1
+        value: -1,
+        label: '全部'
     });
-    for (var x in alarmStatus) {
-        res.push({ value: x, label: alarmStatus[x] });
-    }
+    res.push({ value: 0, label: alarmStatus[0] });
+    res.push({ value: 2, label: alarmStatus[2] });
+    res.push({ value: 1, label: alarmStatus[1] });
+    res.push({ value: 3, label: alarmStatus[3] });
     return res;
 };
 //报警级别配置项
 export const alarmLevelOptions = function() {
     let res = [];
+    res.push({
+        value: -1,
+        label: '全部'
+    });
     for (var x in alarmLevel) {
         res.push({ value: parseInt(x), label: alarmLevel[x] });
     }

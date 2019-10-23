@@ -114,6 +114,15 @@ export default {
       console.log('nodeClick', args);
       let curNode = args[1];
       if (curNode) {
+        let curData = args[0];
+        if (curData.depth && curData.depth < 3) {
+          this.$message({
+            message: '只有门店名称可点击进入门店首页',
+            type: 'error',
+            duration: this.$baseConfig.messageDuration
+          });
+          return;
+        }
         this.$store.commit('base/updateCurShop', { shopId: curNode.id, shopNumber: curNode.key, shopName: curNode.label });
         //跳转到门店首页
         // this.$router.push({ path: '/shop-index' });
@@ -130,7 +139,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../index.scss';
+@import "../index.scss";
 $borderColor: #3c5c75;
 .platform {
   background-color: #182237;

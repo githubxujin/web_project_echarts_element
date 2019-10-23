@@ -26,7 +26,12 @@
             </div>
             <div class="title-input-group u-title-input-group">
               <p class="text">报警级别：</p>
-              <div class="input-container multiple" :style="{width:getAlarmLevelWidth()}">
+              <div class="input-container" style="width:170px;">
+                <div style="border-radius: 2px;" class="item select-input">
+                  <mult-select v-model="level" :options="levelOptions"></mult-select>
+                </div>
+              </div>
+              <!-- <div class="input-container multiple" :style="{width:getAlarmLevelWidth()}">
                 <div style="border-radius: 2px;" class="item select-input">
                   <el-select v-model="level" multiple placeholder="请选择" clearable>
                     <el-option
@@ -37,10 +42,10 @@
                     ></el-option>
                   </el-select>
                 </div>
-              </div>
+              </div>-->
             </div>
             <div class="title-input-group u-title-input-group">
-              <p class="text">工单状态：</p>
+              <p class="text">报警状态：</p>
               <div class="input-container" style="width:170px;">
                 <div style="border-radius: 2px;" class="item select-input">
                   <mult-select v-model="status" :options="statusOptions"></mult-select>
@@ -56,7 +61,7 @@
                 icon="el-icon-search"
                 round
                 :loading="btnLoading"
-                @click="getItemList"
+                @click="refreshPage"
               >查询</el-button>
             </div>
           </div>
@@ -85,7 +90,11 @@
           @sort-change="sortChange"
         >
           <el-table-column type="selection" width="55" prop="id"></el-table-column>
-          <el-table-column prop="alarmName" label="报警名称"></el-table-column>
+          <el-table-column prop="alarmName" label="报警名称">
+            <template slot-scope="scope">
+              <span class="two-text-ellipse" :title="scope.row.alarmName">{{scope.row.alarmName}}</span>
+            </template>
+          </el-table-column>
           <el-table-column
             label="报警级别"
             align="center"
@@ -98,7 +107,14 @@
             </template>
           </el-table-column>
           <el-table-column prop="deviceName" label="报警设备"></el-table-column>
-          <el-table-column prop="alarmLocation" label="报警位置"></el-table-column>
+          <el-table-column prop="alarmLocation" label="报警位置">
+            <template slot-scope="scope">
+              <span
+                class="two-text-ellipse"
+                :title="scope.row.alarmLocation"
+              >{{scope.row.alarmLocation}}</span>
+            </template>
+          </el-table-column>
           <el-table-column
             prop="alarmTime"
             align="center"
@@ -115,7 +131,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" align="center" label="操作" width="200">
+          <el-table-column align="center" label="操作" width="200">
             <template slot-scope="scope">
               <div class="opration-btn">
                 <el-button
@@ -191,7 +207,11 @@
       :visible.sync="showDetailWin"
       width="900px"
     >
-      <alarm-detail @onHide="showDetailWin=false" :deviceId="curItem.deviceId"></alarm-detail>
+      <alarm-detail
+        @onHide="showDetailWin=false"
+        :deviceId="curItem.deviceId"
+        :alarmType="curItem.alarmType"
+      ></alarm-detail>
     </el-dialog>
   </div>
 </template>
@@ -208,6 +228,7 @@ import AlarmEditor from '../../../views/system-settings/basics/custom-alarm-mana
 import baseOptions from '@/utils/baseOptions';
 import MultSelect from '@/components/form/MultSelect.vue';
 import AlarmDetail from './AlarmDetail';
+import forbidBack from '@/utils/mixins/forbidBack.js';
 export default {
   extends: baseOptions,
   components: {
@@ -219,6 +240,7 @@ export default {
     MultSelect,
     AlarmDetail
   },
+  mixins: [forbidBack],
   data () {
     let _startTime = datetimeUtils.getPreDate(67);
     return {
@@ -268,7 +290,7 @@ export default {
       detailTitle: '',//报警详情标题文字
     }
   },
-  created: function () {
+  created: async function () {
     //接收页面参数：checkKeys
     console.log('this.$route.params', this.$route.params);
 
@@ -281,7 +303,7 @@ export default {
     if (status) {
       this.status = status;
     }
-    this.initLeftTree();
+    await this.initData();
   },
   mounted: function () {
     this.$common.initTableHeight(this);
@@ -313,15 +335,25 @@ export default {
     },
     //--------------------------控制按钮显示权限 end-------------------------------
     //初始化左侧树-并查询数据
-    initLeftTree () {
+    async initLeftTree (flag) {
       // debugger
-      getAlarmConditionTree(this.shopNumber).then(res => {
+      await getAlarmConditionTree(this.shopNumber).then(res => {
         // console.log('res', res)
         this.treeData = res.data;
-        this.getCheckKeys(res.data, this.checkKeys);
+        if (flag) {
+          console.log('初始化 :', this.checkKeys);
+          this.getCheckKeys(res.data, this.checkKeys);
+        }
         // console.log('this.checkKeys', this.checkKeys)
-        this.getItemList();
       })
+    },
+    async initData () {
+      await this.initLeftTree(true);
+      await this.getItemList();
+    },
+    async refreshPage () {
+      await this.initLeftTree(false);
+      await this.getItemList();
     },
     //获取所有选中项Key
     getCheckKeys (data, checkKeys) {
@@ -329,17 +361,29 @@ export default {
         return;
       }
       var that = this;
+      const { type } = this.$route.query
+      console.log(this.$route.query)
       data.forEach(item => {
-        if (item.id && Object.prototype.toString.call(item.id).indexOf('String') != -1) { //字符串类型
-          checkKeys.push(item.id);
+
+        if (type) {
+          if (String(item.id) === type) {
+            checkKeys.push(type)
+            item.childList && item.childList.map(o => { checkKeys.push(o.id) })
+          }
+        } else {
+          console.log('type', type)
+          if (item.id && Object.prototype.toString.call(item.id).indexOf('String') != -1) { //字符串类型
+            checkKeys.push(item.id);
+          }
+          if (item.childList) {
+            that.getCheckKeys(item.childList, checkKeys);
+          }
         }
-        if (item.childList) {
-          that.getCheckKeys(item.childList, checkKeys);
-        }
+
       });
     },
     // 查询请求
-    getItemList () {
+    async getItemList () {
       // console.log('查询')
       this.$common.updateLoadingStatus(true);
       this.btnLoading = true;
@@ -353,7 +397,7 @@ export default {
       this.searchOptions.alarmLevel = this.level.join(',');
       this.searchOptions.status = this.status.join(',');
 
-      getAlarmList(this.searchOptions, this.alarmId).then((res) => {
+      await getAlarmList(this.searchOptions, this.alarmId).then((res) => {
         if (res.data) {
           this.pager.total = res.data.total;
           this.tableData = res.data.list ? res.data.list : [res.data];
@@ -402,6 +446,22 @@ export default {
         });
         return;
       }
+      item = this.multipleSelection.find((n) => (n.status == this.alarmStatusEnum.recovered))
+      if (item) {
+        this.$message({
+          message: '[' + item.alarmName + ']是已忽略的报警,不能转工单！',
+          type: 'error'
+        });
+        return;
+      }
+      item = this.multipleSelection.find((n) => (n.status == this.alarmStatusEnum.resolved))
+      if (item) {
+        this.$message({
+          message: '[' + item.alarmName + ']是已恢复的报警,不能转工单！',
+          type: 'error'
+        });
+        return;
+      }
       this.showTransferBill = true;
       this.transferBillTitle = '报警批量转工单';
       this.trassferBillData = this.multipleSelection;
@@ -420,7 +480,7 @@ export default {
             type: 'success'
           });
           this.showTransferBill = false;
-          this.getItemList(); //刷新界面
+          this.refreshPage();
         }
       })
     },
@@ -444,14 +504,24 @@ export default {
         confirmButtonText: '确 定',
         type: 'warning'
       }).then(() => {
-        editAlarm({ id: row.id, status: this.alarmStatusEnum.recovered }).then((res) => {
-          console.log('忽略：', res);
+        // editAlarm({ id: row.id, status: this.alarmStatusEnum.recovered }).then((res) => {
+        //   console.log('忽略：', res);
+        //   if (res.code === 200) {
+        //     this.$message({
+        //       message: '忽略成功！',
+        //       type: 'success'
+        //     });
+        //     this.refreshPage();
+        //   }
+        // })
+        ignoreAlarm({ alarmIds: row.id }).then(res => {
+          //操作成功-提示
           if (res.code === 200) {
             this.$message({
               message: '忽略成功！',
               type: 'success'
             });
-            this.getItemList();
+            this.refreshPage(); //刷新界面
           }
         })
       });
@@ -471,6 +541,14 @@ export default {
         cancelButtonText: '取 消',
         type: 'warning'
       }).then(() => {
+        let item = this.multipleSelection.find((n) => (n.status != this.alarmStatusEnum.noSure))
+        if (item) {
+          this.$message({
+            message: '只有待确认状态下的记录能够忽略！',
+            type: 'error'
+          });
+          return;
+        }
         // console.log('multipleSelection', this.multipleSelection)
         ignoreAlarm({ alarmIds: this.getCheckedAlarmIds().join(',') }).then(res => {
           // console.log('res', res)
@@ -480,7 +558,7 @@ export default {
               message: '忽略成功！',
               type: 'success'
             });
-            this.getItemList(); //刷新界面
+            this.refreshPage(); //刷新界面
           }
         })
       })
@@ -499,7 +577,7 @@ export default {
     //报警设置回调
     alarmSetCallBack () {
       this.editDialogVisible = false;
-      this.getItemList(); //刷新界面
+      this.initLeftTree(false); //刷新界面
     },
     resetDialogForm () { // 重置弹窗表格内容
       this.$refs.pointTableEditor && this.$refs.pointTableEditor.cancle();

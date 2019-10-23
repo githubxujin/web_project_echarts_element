@@ -1,69 +1,56 @@
 <template>
   <div class="user-editor">
-    <el-form v-loading="dialogLoading"
-             ref="form"
-             :model="form"
-             :rules="formRules"
-             label-width="90px"
-             size="mini"
-             inline
-           >
+    <el-form
+      v-loading="dialogLoading"
+      ref="form"
+      :model="form"
+      :rules="formRules"
+      label-width="90px"
+      size="mini"
+      inline
+    >
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="templateId"
-                        label="模版ID">
-            <el-input v-model="form.templateId"
-                      placeholder="请输入"
-                      clearable
-                      :maxlength="16"></el-input>
+          <el-form-item prop="templateId" label="模版ID">
+            <el-input v-model.trim="form.templateId" placeholder="请输入" clearable :maxlength="16"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item prop="title"
-                        label="短信标题">
-            <el-input v-model="form.title"
-                      placeholder="请输入"
-                      clearable
-                      :maxlength="16"></el-input>
+          <el-form-item prop="title" label="短信标题">
+            <el-input v-model.trim="form.title" placeholder="请输入" clearable :maxlength="16"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
-
-        <el-form-item prop="content"
-                      label="短信内容">
-          <el-input type="textarea"
-                    v-model="form.content"
-                    placeholder="请输入"
-                    :maxlength="70"
-                    :rows="5"
-                    clearable></el-input>
+        <el-form-item prop="content" label="短信内容">
+          <el-input
+            type="textarea"
+            v-model.trim="form.content"
+            placeholder="请输入"
+            :maxlength="70"
+            :rows="5"
+            clearable
+          ></el-input>
         </el-form-item>
-
       </el-row>
 
       <el-row>
-
         <el-form-item label="状态">
-          <el-radio v-model="form.status"
-                    label="0">启用</el-radio>
-          <el-radio v-model="form.status"
-                    label="1">禁用</el-radio>
+          <el-radio v-model="form.status" label="0">启用</el-radio>
+          <el-radio v-model="form.status" label="1">禁用</el-radio>
         </el-form-item>
-
       </el-row>
 
       <el-row class="text-center">
-        <el-button type="primary"
-                   round
-                   size="mini"
-                   @click="submit"
-                   :loading="submitLoading">{{isEdit ? '确 定' : '新 增'}}
-        </el-button>
+        <el-button
+          type="primary"
+          round
+          size="mini"
+          @click="submit"
+          :loading="submitLoading"
+        >{{isEdit ? '确 定' : '新 增'}}</el-button>
 
-          <el-button round
-                     size="mini"
-                     @click="close">取 消</el-button>
+        <el-button round size="mini" @click="close">取 消</el-button>
       </el-row>
     </el-form>
   </div>
@@ -92,12 +79,12 @@ export default {
       formRules: { // 表单规则
         templateId: [
           { required: true, message: '请输入模版ID', trigger: 'blur' },
-          { pattern: Regexps.positiveInteger, message: '模版ID必须为正整数', trigger: 'blur' }
+          { validator: this.templateIdPattern, message: '模版ID不能包含文字或空格', trigger: 'blur' }
         ],
         title: [
           { required: true, message: '请输入标题', trigger: 'blur' }
         ],
-        content: [{ required: true, message: '请输入模版内容', trigger: 'blur' }]
+        content: [{ required: true, message: '请输入短信内容', trigger: 'blur' }]
       }
     }
   },
@@ -114,6 +101,13 @@ export default {
 
   }
   , methods: {
+    templateIdPattern (rule, value, callback) {
+      if (!rule) return callback()
+      if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+        return callback(new Error('请输入正确模板ID)'))
+      }
+      return callback()
+    },
     submit () {
       let result = false
       this.$refs.form.validate(res => {

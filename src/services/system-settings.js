@@ -419,6 +419,10 @@ export function meterGetArray(params) {
         url.systemSettings.meterGetArray.replace('$', params.shopNumber)
     )
 }
+
+export function meterGetArrayByType(params) {
+    return request.post(url.systemSettings.meterGetArrayByType, params)
+}
 /**
  * 根据设备类型获取支路列表
  * @return {
@@ -441,7 +445,16 @@ export function subentryQuery(params) {
 }
 
 /**
- * 新增分项
+ * 编辑分项信息
+ * @return {
+ *    code 200
+ * }
+ */
+export function subentryEdit(params) {
+    return request.post(url.systemSettings.subentryEdit, params)
+}
+/**
+ * 增加分项信息
  * @return {
  *    code 200
  * }
@@ -450,13 +463,13 @@ export function subentryAdd(params) {
     return request.post(url.systemSettings.subentryAdd, params)
 }
 /**
- * 编辑分项信息
+ * 新增分项信息
  * @return {
  *    code 200
  * }
  */
-export function subentryEdit(params) {
-    return request.post(url.systemSettings.subentryEdit, params)
+export function subentryAddOne(params) {
+    return request.post(url.systemSettings.subentryAddOne, params)
 }
 /**
  * 获取分项列表
@@ -474,7 +487,9 @@ export function subentryGetArray(params) {
  * }
  */
 export function subentryGetTreeArray(params) {
-    return request.post(url.systemSettings.subentryGetTreeArray, params)
+    return request.get(
+        url.systemSettings.subentryGetTreeArray.replace('$', params.shopNumber)
+    )
 }
 
 /**

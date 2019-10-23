@@ -23,7 +23,7 @@
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item label="工单状态">{{userInfo.status}}</el-form-item>
+          <el-form-item label="工作状态">{{userInfo.status}}</el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="当前工单数">{{userInfo.billCount}}</el-form-item>
@@ -67,8 +67,8 @@ export default {
       default: false
     },
     id: {
-      type: Number,
-      default: 0
+      type: String,
+      default: ''
     }
   },
   data () {
@@ -98,13 +98,6 @@ export default {
       fcEvents: demoEvents
     }
   },
-  watch: {
-    id (val) {
-      if (val > 0) {
-        this.initData();
-      }
-    }
-  },
   created () {
     this.initData();
   },
@@ -117,7 +110,7 @@ export default {
           this.userInfo = res.data.info;
         }
       });
-      this.getClassInfo();
+      // this.getClassInfo();
     },
     //获取人员排班信息
     getClassInfo () {

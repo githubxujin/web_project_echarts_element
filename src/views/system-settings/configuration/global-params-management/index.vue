@@ -60,7 +60,13 @@
                 :index="indexMethod"
                 label="序号"
               ></el-table-column>
-              <el-table-column header-align="center" align="center" prop="configName" label="类别名称">
+              <el-table-column
+                :show-overflow-tooltip="true"
+                header-align="center"
+                align="center"
+                prop="configName"
+                label="类别名称"
+              >
                 <template slot-scope="scope">
                   <el-input
                     v-show="dictItem.property === 'configName' && dictItem.id === scope.row.id"
@@ -82,7 +88,13 @@
                   <!-- </el-tooltip> -->
                 </template>
               </el-table-column>
-              <el-table-column header-align="center" align="center" prop="rank" label="排序">
+              <el-table-column
+                :show-overflow-tooltip="true"
+                header-align="center"
+                align="center"
+                prop="rank"
+                label="排序"
+              >
                 <template slot-scope="scope">
                   <el-input
                     v-show="dictItem.property === 'rank' && dictItem.id === scope.row.id"
@@ -97,7 +109,13 @@
                   >{{scope.row.rank}}</span>
                 </template>
               </el-table-column>
-              <el-table-column header-align="center" align="center" prop="pid" label="父类">
+              <el-table-column
+                :show-overflow-tooltip="true"
+                header-align="center"
+                align="center"
+                prop="pid"
+                label="父类"
+              >
                 <template slot-scope="scope">
                   <el-select
                     v-if="dictItem.property === 'pid' && dictItem.id === scope.row.id"
@@ -127,7 +145,13 @@
                   <!-- </el-tooltip> -->
                 </template>
               </el-table-column>
-              <el-table-column header-align="center" align="center" prop="content" label="备注">
+              <el-table-column
+                :show-overflow-tooltip="true"
+                header-align="center"
+                align="center"
+                prop="content"
+                label="备注"
+              >
                 <template slot-scope="scope">
                   <el-input
                     v-show="dictItem.property === 'content' && dictItem.id === scope.row.id"

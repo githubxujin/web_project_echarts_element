@@ -62,6 +62,15 @@
               @change="branchChange"
               :anotherStyle="false"
             ></ProjectTree>
+            <!-- <TreeSelect
+              v-model="form.meterIdList"
+              placeholder="请选择"
+              :clearable="true"
+              @change="branchChange"
+              :data="branchDataArray"
+              :defaultProps="defaultProps"
+              :isOnlyLeafSelect="true"
+            ></TreeSelect>-->
           </el-form-item>
         </el-col>
       </el-row>
@@ -147,6 +156,12 @@ export default {
         label: 'name',
         key: 'id'
       },
+      defaultProps: {
+        children: 'childList',
+        label: 'configName',
+        key: 'id',
+        disabled: 'disabled'
+      },
       branchCheckedLabel: '请选择支路', //project-tree展示的内容
     }
   },
@@ -230,11 +245,16 @@ export default {
       this.$emit('update:editDialogVisible', false)
     },
     branchChange () { // 支路change事件
-      let checkedNodeList = arguments[1].filter(item => !item.children)
-      let labelList = checkedNodeList.map(item => {
-        return `[${item.number}]${item.name}`
+      // let checkedNodeList = arguments[1].filter(item => !item.children)
+      let value = [];
+      let labelList = arguments[1].map(item => {
+        value.push(item.id);
+        return `[${item.electricAddr}]${item.name}`
       })
       this.form.meterNameList = labelList.join(',') || '请选择支路'
+      setTimeout(_ => { // 多选支路id问题
+        this.form.meterIdList = value || [];
+      }, 200)
     }
   },
   watch: {

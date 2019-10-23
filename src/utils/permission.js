@@ -53,7 +53,9 @@ export function getShopOneLevelByIndex(index) {
  * @param {*} id
  */
 export function getSubMenuById(menus, id) {
-    var subMenus = { subs: [] };
+    var subMenus = {
+        subs: []
+    };
     if (menus && menus.length > 0) {
         subMenus = menus.find((item, index, array) => {
             // eslint-disable-next-line eqeqeq
@@ -76,7 +78,7 @@ function getAllChildNodes(menus, index, allCN) {
         if (child.index == index) {
             if (child.subs && child.subs.length > 0) {
                 // allCN.push(child.subs[0]);
-                child.subs.forEach(function(n) {
+                child.subs.forEach(function (n) {
                     allCN.push(n);
                 });
             }
@@ -94,9 +96,9 @@ function getAllChildNodes(menus, index, allCN) {
  */
 export function getSubmMenusByPreIndex(index, category = 'shop') {
     var allMenus =
-        category == 'shop'
-            ? Storages.getLocalStorage('$shopAuthoritiesArr') || []
-            : Storages.getLocalStorage('$platMenus') || [];
+        category == 'shop' ?
+        Storages.getLocalStorage('$shopAuthoritiesArr') || [] :
+        Storages.getLocalStorage('$platMenus') || [];
     // 1.创建全部节点的数组
     var allCN = [];
     // console.log('allMenus', allMenus);
@@ -118,6 +120,7 @@ export function getBtnsByIndex(index) {
     let allMenus = shopMenus.concat(platMenus);
 
     var btns = [];
+
     function getPageBtns(menus, index) {
         for (var i = 0; i < menus.length; i++) {
             let child = menus[i];
@@ -148,6 +151,7 @@ export function VerifyPermissions(index) {
 
     if (allMenus && allMenus.length > 0) {
         var result = false;
+
         function getMenuByIndex(menus, index) {
             for (var i = 0; i < menus.length; i++) {
                 let child = menus[i];

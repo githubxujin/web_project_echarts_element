@@ -3,7 +3,7 @@
     <header class="header">
       <span class="line left" />
       <span class="line right" />
-      <div class="title">红星美凯龙-{{ ($store.getters.getUserInfo || {}).shopName }}</div>
+      <div class="title">{{ ($store.getters.getUserInfo || {}).shopName }}</div>
     </header>
     <div class="section">
       <section>
@@ -38,16 +38,31 @@
                 wrap-class="select-dropdown__wrap"
                 view-class="el-select-dropdown__list"
               >
-                <table>
+                <table ref="table">
                   <tbody>
                     <tr
                       v-for="(item, index) in tableDataList"
                       :key="index"
                       :class="{'warning': [1,2].includes(item.status)}"
                     >
-                      <td>{{item.deviceName}}</td>
-                      <td>{{item.alarmName}}</td>
-                      <td>{{item.alarmLocation}}</td>
+                      <td>
+                        <div
+                          :style="scrollStyle(item.deviceName,[1,2].includes(item.status))"
+                          class="scorll_auto"
+                        >{{item.deviceName}}</div>
+                      </td>
+                      <td>
+                        <div
+                          :style="scrollStyle(item.alarmName,[1,2].includes(item.status))"
+                          class="scorll_auto"
+                        >{{item.alarmName}}</div>
+                      </td>
+                      <td>
+                        <div
+                          :style="scrollStyle(item.alarmLocation,[1,2].includes(item.status))"
+                          class="scorll_auto"
+                        >{{item.alarmLocation}}</div>
+                      </td>
                       <td>{{item.handler || '--'}}</td>
                       <td>{{item.status | translate(statusList)}}</td>
                       <td>{{item | translateTime}}</td>
@@ -69,6 +84,7 @@ export default {
   mixins: [WebsocketMixin],
   data () {
     return {
+      tableDataList: [],
       statusList: [ // 事件状态字典
         {
           label: '未确认',
@@ -91,10 +107,6 @@ export default {
     }
   },
   computed: {
-    tableDataList () {
-      if (!this.webSocketData || !this.webSocketData.info) return []
-      return this.webSocketData.info
-    },
     problemList () {
       let problemList = [
         {
@@ -130,10 +142,29 @@ export default {
     }
   },
   created () {
-    this.websocketParams = this.$store.getters.shopNumber
+    this.websocketParams = { shopNumber: this.$store.getters.shopNumber, heartBeat: 'ping' }
     this.initWebSocket()
   },
   watch: {},
+  methods: {
+    refresh (data) {
+      this.webSocketData = data;
+      if (!data || !data.info) return
+      if (data && data.heartBeat === 'pong') return
+      this.tableDataList = data.info || []
+
+    },
+    scrollStyle (text, type) {
+      if (!!text) {
+        let leftWidth = this.$refs.table.offsetWidth / 6;
+        let model = { animationDelay: '0s', animationDuration: '0s', left: leftWidth + 'px', paddingRight: '0' };
+        if (type && text.length > 8 || !type && text.length > 10) {
+          model = { ...model, ...{ animationDelay: '0s', animationDuration: '5s', paddingRight: '80px', width: 'auto' } }
+        }
+        return model
+      }
+    }
+  },
   filters: {
     translateTime (item) {
       let times = item.status < 3 ? item.responseTimeLength : item.finishTimeLength
@@ -245,7 +276,7 @@ $headerHeight: 100px;
       display: inline-block;
       position: relative;
       z-index: 2000;
-      padding: 0 20px;
+      padding: 0 60px;
       background: url("../../assets/images/digital-signage/header.png")
         no-repeat;
       background-size: 100% 100%;
@@ -296,7 +327,7 @@ $headerHeight: 100px;
               position: relative;
               i {
                 position: absolute;
-                opacity: 0.3;
+                opacity: 0.2;
               }
               span {
                 margin-left: 50px;
@@ -334,6 +365,7 @@ $headerHeight: 100px;
           }
           .table-header {
             position: absolute;
+            color: rgba(255, 255, 255, 0.8);
             box-shadow: 0px 0px 20px 0px rgba(255, 255, 255, 0.4) inset;
           }
           .table-body {
@@ -344,20 +376,45 @@ $headerHeight: 100px;
               height: 100%;
             }
             tr {
+              position: relative;
               cursor: pointer;
               &:nth-child(even),
               &:hover {
-                background: rgba(255, 255, 255, 0.02);
+                background: #182847;
               }
               &.warning {
                 font-size: 38px;
                 color: yellow;
+              }
+              td {
+                position: relative;
+                overflow: hidden;
+              }
+              .scorll_auto {
+                padding-right: 80px;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                white-space: nowrap;
+                animation: van-notice-bar-play-infinite linear infinite both;
               }
             }
           }
         }
       }
     }
+  }
+}
+@keyframes van-notice-bar-play {
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes van-notice-bar-play-infinite {
+  to {
+    transform: translate3d(-100%, 0, 0);
   }
 }
 </style>

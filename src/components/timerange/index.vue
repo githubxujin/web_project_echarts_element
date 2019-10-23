@@ -1,6 +1,6 @@
 <template>
   <div class="time-range">
-    <div class="time" :style="{height:outerHeight,lineHeight:outerHeight}">
+    <div class="time" :style="{height:outerHeight,lineHeight:outerHeight}" v-if="!timeName">
       <span style="float:left;">时间粒度：</span>
       <ul
         class="tab-content"
@@ -15,6 +15,7 @@
         >{{ item.name }}</li>
       </ul>
     </div>
+    <span style="float:left;" v-if="timeName">{{timeName}}：</span>
     <div class="data-picked">
       <year-picker
         :default-start-time="startTime"
@@ -34,6 +35,15 @@ export default {
     yearPicker
   },
   props: {
+    tab_Index: {
+      type: Number,
+      default: 1
+    },
+    timeName: {
+      type: String,
+      default: ''
+    },
+
     granularityHeight: { // 时间粒度的高度
       type: String,
       default: '32px'
@@ -60,10 +70,11 @@ export default {
     // }
   },
   data () {
+    let nowDt = new Date();
     return {
       tabIndex: 1,
-      startTime: datetimeUtils.getPreDate(15),
-      endTime: new Date(),
+      startTime: datetimeUtils.getPreDate(15, nowDt),
+      endTime: nowDt,
       marginTop: 0
     }
   },
@@ -71,6 +82,7 @@ export default {
     if (this.defaultStartTime) {
       this.startTime = new Date(this.defaultStartTime)
     }
+    this.endTime = new Date();
     this.initTop();
   },
   methods: {
@@ -98,15 +110,17 @@ export default {
     switchGranularity (val) {
       switch (val) {
         case 0: //时
-          this.startTime = datetimeUtils.getPreDate(3);//.format('L');
-          this.endTime = new Date();
+          let d = datetimeUtils.getCurYmdTime() + ' 00:00:00';
+          this.startTime = datetimeUtils.getPreDate(2);//.format('L');
+          console.log('this.startTime :', this.startTime);
+          this.endTime = datetimeUtils.GMTToStr(new Date());
           break;
         case 1: //日
-            if (this.defaultStartTime) {
-                this.startTime = new Date(this.defaultStartTime)
-            }else{
-                this.startTime = datetimeUtils.getPreDate(15);//.format('L');
-            }
+          if (this.defaultStartTime) {
+            this.startTime = new Date(this.defaultStartTime)
+          } else {
+            this.startTime = datetimeUtils.getPreDate(15);//.format('L');
+          }
           this.endTime = new Date();
           break;
         case 2: //月
@@ -114,7 +128,7 @@ export default {
           this.endTime = new Date();
           break;
         case 3: //年
-          this.startTime = new Date(new Date().getFullYear() - 12, '01', '01')
+          this.startTime = new Date(new Date().getFullYear(), '01', '01')
           this.endTime = new Date();
           break;
       }
@@ -122,6 +136,14 @@ export default {
     checkedTime (data) {
       this.$emit("checkedTime", data);
       this.$emit('input', data);
+    }
+  }
+  , watch: {
+    tab_Index (val, oldVal) {
+      if (val != oldVal) {
+        this.tabIndex = val;
+        this.switchGranularity(val);
+      }
     }
   }
 }

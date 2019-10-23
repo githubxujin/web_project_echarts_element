@@ -50,7 +50,11 @@
         <el-table-column type="index" label="序号" :index="indexMethod" width="50"></el-table-column>
         <el-table-column prop="billNumber" label="工单号" align="center"></el-table-column>
         <el-table-column prop="billName" label="工单名称" align="center"></el-table-column>
-        <el-table-column prop="deviceNames" label="设备名称"></el-table-column>
+        <el-table-column prop="deviceNames" label="设备名称">
+          <template slot-scope="scope">
+            <span class="two-text-ellipse" :title="scope.row.deviceNames">{{scope.row.deviceNames}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="startTimeStr" label="开始时间" align="center"></el-table-column>
         <el-table-column prop="endTimeStr" label="截止时间" align="center"></el-table-column>
         <el-table-column label="是否超限" align="center">
@@ -59,7 +63,7 @@
         <el-table-column label="状态" align="center">
           <template slot-scope="scope">{{ scope.row.statusStr }}</template>
         </el-table-column>
-        <el-table-column fixed="right" align="center" label="操作" width="180">
+        <el-table-column align="center" label="操作" width="180">
           <template slot-scope="scope">
             <div class="opration-btn">
               <el-button
@@ -144,7 +148,7 @@
         v-if="showCancleAuditWin"
         @onHide="showCancleAuditWin = false"
         @submitForm="submitAudit"
-        :msg="curCheckMsg"
+        :msg="curMaintainMsg"
       ></cancle-audit>
     </el-dialog>
     <!-- 撤单 -->
@@ -279,7 +283,7 @@ export default {
     },
     //显示评价审核按钮
     showAppraiseAuditBtn (row) {
-      return (1 == 1 || this.showBtn('appraise-audit')) && row.status == this.BillStatusEnum.waitAppraise;
+      return this.showBtn('audit') && row.status == this.BillStatusEnum.waitAppraise;
     },
     //-------------------------------end---------------------------------------
     //控制loading隐藏和显示
@@ -347,7 +351,7 @@ export default {
     },
     //执行派工操作
     submitDispatching (data) {
-      let item = { billNumber: this.curBill.billNumber, userId: data.user.id };
+      let item = { billNumber: this.curBill.billNumber, userId: data.user.userId };
       // console.log('item', item);
       maintainDispatch(item).then(res => {
         //console.log('res', res);
@@ -374,7 +378,7 @@ export default {
     },
     //提交撤单审核
     submitAudit (data) {
-      let item = { billNumber: this.curBill.billNumber, maintainResult: data.maintainResult, rejectInfo: data.rejectInfo };
+      let item = { billNumber: this.curBill.billNumber, checkResult: data.checkResult, rejectInfo: data.rejectInfo };
       maintainAudit(item).then(res => {
         //console.log('res', res);
         if (res.code == 200) {
@@ -389,7 +393,7 @@ export default {
     },
     //提交评价审核
     submitAppraiseAudit (data) {
-      let item = { billNumber: this.curBill.billNumber, maintainResult: data.maintainResult, rejectInfo: data.rejectInfo, appraiseInfo: data.appraiseInfo, score: data.score };
+      let item = { billNumber: this.curBill.billNumber, checkResult: data.checkResult, rejectInfo: data.rejectInfo, appraiseInfo: data.appraiseInfo, score: data.score };
       maintainAudit(item).then(res => {
         if (res.code == 200) {
           this.$common.winCallBack(this, '审核成功！', () => { this.showAppraiseAuditWin = false; });
@@ -400,8 +404,6 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
 <style  lang="scss">
 .maintain-bill {
   .u-layout-search .TreeSelect {

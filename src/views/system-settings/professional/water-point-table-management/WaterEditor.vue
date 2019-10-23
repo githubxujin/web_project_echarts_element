@@ -173,6 +173,7 @@ import { drainagePointTableGetInfo, drainagePointTableAdd, drainagePointTableEdi
 import axios from '@/axios/axios.js'
 import { statusEnum, paramStateEnum } from '@/enum/dicts.js'
 import Regexps from '@/utils/regexp.js'
+let RegexpNumber = /^[+-]{0,1}(\d+)$|^[+-]{0,1}(\d+\.\d{0,2})$/;
 export default {
   components: { TreeSelect },
   props: {
@@ -302,11 +303,12 @@ export default {
         funName = 'drainagePointTableAdd'
       }
       // 校验上限值不能大于水箱高度
-      if (this.form.dataType == 0 && this.form.upperLimit ) {
+      if (this.form.dataType == 0 && this.form.upperLimit) {
         for (var i = 0; i < this.deviceList.length; i++) {
           var device = this.deviceList[i];
+          console.log(device)
           if (device.id == this.form.drainageDeviceId && device.height && this.form.upperLimit > device.height) {
-            this.$message.error("上限值不应高于水箱高度:" + device.height);
+            this.$message.error(`上限值不应高于${device.name}高度:${device.height}m`);
             return;
           }
         }
@@ -340,6 +342,9 @@ export default {
       if (!value && value !== 0) {
         return callback(new Error('请输入返回值'))
       }
+      if (!/^[+-]{0,1}(\d+)$/.test(value)) {
+        return callback(new Error('请输入整数'))
+      }
       let mappingValueList = this.mappingValueList.filter((item, itemIndex) => itemIndex !== index)
       if (mappingValueList.some(val => val === value)) {
         return callback(new Error('返回值重复'))
@@ -358,9 +363,9 @@ export default {
       return callback()
     },
     validateUpperLimit (rule, value, callback) {
-      if (!Regexps.positiveNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit)) {
-        if (value && !Regexps.positiveNumber.test(value)) {
-          return callback(new Error('仅输入正数'))
+      if (!RegexpNumber.test(this.form.upperLimit) || !RegexpNumber.test(this.form.lowerLimit)) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
         }
         return callback()
       }
@@ -370,9 +375,9 @@ export default {
       return callback()
     },
     validateLowerLimit (rule, value, callback) {
-      if (!Regexps.positiveNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit)) { 
-        if (value && !Regexps.positiveNumber.test(value)) {
-          return callback(new Error('仅输入正数'))
+      if (!RegexpNumber.test(this.form.upperLimit) || !RegexpNumber.test(this.form.lowerLimit)) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
         }
         return callback()
       }

@@ -14,7 +14,7 @@
           v-for="item in orderHandler"
           :key="item.id"
           :label="item.realName"
-          :value="item.id"
+          :value="item.userId"
           :disabled="item.disabled"
         ></el-option>
       </el-select>
@@ -83,7 +83,8 @@ export default {
   },
   created () {
     this.alarmInfo = this.info;
-    this.userId = this.orderHandler.length > 0 ? this.orderHandler[0].id : '';
+    this.userId = this.orderHandler.length > 0 ? this.orderHandler[0].userId : '';
+    // this.alarmInfo.data.handlerName = this.alarmInfo.data.handlerName || this.orderHandler.find(item => item.id === this.info.handlerId).realName
   },
   computed: {
     showText () {
@@ -107,6 +108,7 @@ export default {
       generateAlarmOrder({ alarmId: this.info.data.alarmId, handlerId: this.userId }).then(res => {
         if (res.code == 200) {
           this.$message.success('工单已生成，可进入工单详情页查看');
+          this.isHide();
         } else {
           this.$message('工单生成失败');
         }

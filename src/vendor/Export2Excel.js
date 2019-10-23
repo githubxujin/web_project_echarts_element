@@ -2,6 +2,7 @@
 require('script-loader!file-saver') //保存文件用
 require('script-loader!@/vendor/Blob') //转二进制用
 require('script-loader!xlsx/dist/xlsx.core.min') //xlsx核心
+import { branchParamsDesc } from './Enum'
 function generateArray(table) {
     var out = []
     var rows = table.querySelectorAll('tr')
@@ -143,10 +144,68 @@ export function export_json_to_excel(th, jsonData, defaultTitle) {
 
     var wb = new Workbook(),
         ws = sheet_from_array_of_arrays(data)
-
     /* add worksheet to workbook */
-    wb.SheetNames.push(ws_name)
-    wb.Sheets[ws_name] = ws
+    wb.SheetNames.push('SheetJS1')
+    wb.Sheets['SheetJS1'] = ws
+    wb.SheetNames.push('SheetJS2')
+    wb.Sheets['SheetJS2'] = ws
+    var wbout = XLSX.write(wb, {
+        bookType: 'xlsx',
+        bookSST: false,
+        type: 'binary'
+    })
+    var title = defaultTitle || '列表'
+    saveAs(
+        new Blob([s2ab(wbout)], { type: 'application/octet-stream' }),
+        title + '.xlsx'
+    )
+}
+export function export_json_to_excel_all(th, jsonData, defaultTitle) {
+    /* original data */
+    let ws_name_list = [
+        '变压器导入',
+        '采集器管理',
+        '支路导入',
+        '分项信息',
+        '视频监控导入',
+        '给排水设备',
+        '冷站设备',
+        '电梯设备',
+        '给排水参数',
+        '配电参数',
+        '冷站参数',
+        '用户配置',
+        '保养标准',
+        '巡检标准',
+        '备品配件',
+        '录入说明'
+    ]
+    var wb = new Workbook()
+    jsonData.forEach((list, i) => {
+        if (list.length) {
+            var ws_name = ws_name_list[i]
+            let data = list
+            let headers = Object.keys(branchParamsDesc[i])
+            let infos = []
+            data.forEach(item => {
+                let current = []
+                headers.forEach(key => {
+                    current.push(item[key] || '')
+                })
+                current.push(item['errMsg'])
+                current.unshift('')
+                infos.push(current)
+            })
+            headers = headers.map(k => branchParamsDesc[i][k])
+            headers.unshift('')
+            headers = headers.concat(['错误信息'])
+            infos.unshift(headers)
+            infos.unshift([])
+            wb.SheetNames.push(ws_name)
+            wb.Sheets[ws_name] = sheet_from_array_of_arrays(infos)
+        }
+    })
+    /* add worksheet to workbook */
 
     var wbout = XLSX.write(wb, {
         bookType: 'xlsx',

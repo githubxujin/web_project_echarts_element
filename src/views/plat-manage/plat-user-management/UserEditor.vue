@@ -13,7 +13,12 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="realName" label="姓名">
-            <el-input v-model.trim="form.realName" placeholder="请输入" clearable :maxlength="16"></el-input>
+            <el-input
+              v-model.trim="form.realName"
+              placeholder="请输入"
+              :clearable="false"
+              :maxlength="16"
+            ></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -29,7 +34,7 @@
               :on-error="handleAvatarError"
               :before-upload="beforeAvatarUpload"
               :file-list="fileList"
-              accept="jpg, png, gif"
+              :accept="$common.getMimeTypeList('jpg,png,gif').join(',')"
             >
               <img v-if="imageUrl" :src="imageUrl" class="avatar" />
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -49,7 +54,7 @@
             ></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="isEdit?10:12">
           <el-form-item prop="password" label="密码">
             <pwd-btn
               v-model.trim="form.password"
@@ -57,11 +62,11 @@
               :showPrefix="false"
               :maxlength="16"
               :disabled="isEdit"
-              style="width:160px;"
+              :style="!isEdit?'':'width:160px;'"
             ></pwd-btn>
           </el-form-item>
         </el-col>
-        <el-col :span="2">
+        <el-col :span="2" v-if="isEdit">
           <el-form-item>
             <el-button round size="mini" @click="resetPassWord" style="height:28px;">重 置</el-button>
           </el-form-item>
@@ -164,6 +169,7 @@ export default {
   components: { projectTree, TreeSelect, PwdBtn },
   data () {
     return {
+      isimg: true,
       Regexps, // 正则集合
       workStateEnum, // 工作状态
       orgList: [],
@@ -196,7 +202,8 @@ export default {
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { validator: validateUserName, trigger: 'blur' }
+          { validator: validatePwd, trigger: 'blur' },
+          this.$baseConfig.validate.pwd
         ],
         roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
         shopNumbers: [{ type: 'array', required: true, message: '请选择所属门店', trigger: 'change' }],
@@ -262,7 +269,7 @@ export default {
       adminResetPwd(this.params).then(res => {
         if (res.code === 200) {
           this.$message.success('密码重置成功！');
-          this.form.password = 123456;
+          this.form.password = '123456';
         }
       })
     },
@@ -314,9 +321,9 @@ export default {
           message: '上传的图片必须为jpg、png、gif格式!',
           type: 'error'
         });
-        this.submitLoading = false;
+        this.submitLoading = false; this.isimg = false;
         return;
-      }
+      } this.isimg = true;
       this.imgSize = file.size / 1024 < 500 ? '1' : '0';
       if (this.imgSize === '0') {
         this.$message({
@@ -346,19 +353,45 @@ export default {
       this.updateImageUrl = data.filePath
     },
     handleAvatarError (err, file, fileList) { // 头像上传失败
+      if (!this.isimg) { return; }
       this.submitLoading = false
       this.$message.error('头像上传失败！');
     },
   },
   watch: {
     'form.shopNumbers': (val, oldVal) => {
-      console.log('shopNumbers:', val, oldVal);
+      // console.log('shopNumbers:', val, oldVal);
     },
     dialogVisible: { // 监听userItem，获取用户信息
       immediate: true,
       deep: true,
       handler: function (visible) {
-        if (!visible || !this.userItem) return
+        let roleId = 1;
+        if (this.roleList.length > 0 && this.roleList[0].hasOwnProperty("id")) {
+          roleId = this.roleList[0].id;
+        };
+        this.imageUrl = "";
+        this.form = {
+          id: '',
+          userId: '',
+          userName: '',
+          password: '',
+          roleId: roleId,
+          roleName: '',
+          jobNumber: '',
+          realName: '',
+          phone: '',
+          orgId: '',
+          orgName: '',
+          positionId: '',
+          positionName: '',
+          payRollStatus: 1,
+          picture: '',
+          pictureName: '',
+          shopNumbers: []
+        };
+
+        if (!visible || !this.userItem) { visible = true; return; }
         Object.keys(this.form).forEach(prop => {
           this.form[prop] = this.userItem[prop]
         }, this)

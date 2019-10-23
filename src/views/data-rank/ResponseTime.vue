@@ -47,7 +47,7 @@
           />
           <div
             class="echartsTitle" v-if="!isdata&&(chartOption.series.length != 0&&chartOption.series[0].data.length != 0)"
-          >{{datetimeUtils.GMTToStr(checkTime.start).length>0?datetimeUtils.GMTToStr(checkTime.start).split(' ')[0]:''}}~{{datetimeUtils.GMTToStr(checkTime.end).length>0?datetimeUtils.GMTToStr(checkTime.end).split(' ')[0]:''}}门店确认时间排名</div>
+          >{{datetimeUtils.GMTToStr(checkTime.start).length>0?datetimeUtils.GMTToStr(checkTime.start).split(' ')[0]:''}}~{{datetimeUtils.GMTToStr(checkTime.end).length>0?datetimeUtils.GMTToStr(checkTime.end).split(' ')[0]:''}}门店响应时间排名</div>
             <div  v-if="chartOption.series.length == 0||chartOption.series[0].data.length == 0" style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px">
                 <span>暂无数据</span></div>
         </div>
@@ -168,6 +168,7 @@ export default {
         ],
         yAxis: [
           {
+              minInterval:1,
             type: 'value',
             name: '时间(min)',
             nameTextStyle: {
@@ -233,12 +234,8 @@ export default {
   }
 
   , created () {
-    // this.echartwidth = document.body.clientWidth * 0.84 + 'px';
-    // this.tablewidth = document.body.clientWidth * 0.8 + 'px';
   }, mounted () {
-
     this.query();
-    // this.initCharts()
   },
   methods: {
     query () {
@@ -259,7 +256,7 @@ export default {
         }else{
             this.chartOption.legend.data.push('完成时间排名');
             this.chartOption.series[0].name='完成时间排名';
-            this.tableData.tHead.push({ text: '完成时间(min)', prop: 'responseTimeLength', sortable: true });
+            this.tableData.tHead.push({ text: '完成时间(min)', prop: 'finishTimeLength', sortable: true });
         }
         this.chartOption.tooltip.formatter = function (params, ticket, callback) {
             let htmlStr = "<div>"+ params[0].name+"</br>";
@@ -280,7 +277,12 @@ export default {
           let o = this.list[i];
             if (!o||!o.shopName){ continue;}
           this.chartOption.xAxis[0].data.push(o.shopName);
-          this.chartOption.series[0].data.push(o.responseTimeLength);
+            if(this.indexType==1){
+                this.chartOption.series[0].data.push(o.responseTimeLength);
+            }
+         else {
+                this.chartOption.series[0].data.push(o.finishTimeLength);
+            }
         }
         console.log(JSON.stringify(this.chartOption))
           if(this.chartOption.series.length==0){
@@ -308,7 +310,6 @@ export default {
                   topShopNumers += ','
               }
           });
-//{shopNumber:topShopNumers, indexType: this.indexType, start: this.checkTime.start, end: this.checkTime.end }
           exportAlarmResponseList(`?token=${localStorage.getItem('$token_info')}&shopNumber=${topShopNumers}&start=${this.checkTime.start }&end=${
               this.checkTime.end
               }&indexType=${this.indexType}`);

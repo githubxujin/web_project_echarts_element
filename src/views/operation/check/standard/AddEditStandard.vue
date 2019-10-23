@@ -158,118 +158,76 @@
 <script>
 import TreeSelect from '@/components/treeSelect';
 import { getDeviceTypeTree, getUnit, getCheckStandardInfo } from '@/services/operation';
-import { RiskJudge, inputTypeOptions, judgeTypeOptions } from '@/enum/operation-enum';
-import { validateIntOrNumber } from '@/utils/validate-utils.js';
+import { validateIntOrNumber, validateNumberLess, validateNumberGreater, validateCompare, checkChartLength } from '@/utils/validate-utils.js';
+import { standardOptions } from '@/utils/mixins/standardOptions.js';
 export default {
   props: ['id'],
   components: {
     TreeSelect,
   },
+  mixins: [standardOptions],
   data () {
-    var validateStandard = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请输入标准值'));
-      }
-      else if (this.ruleForm.inputType == 2 && !value.isNumber()) { //输入类型为数值量时标准值必须是整数 
-        callback(new Error('请输入数字'));
-      }
-      callback();
-    };
     return {
-      dialogLoading: false,
-      RiskJudge,
-      inputTypeOptions,
-      unitTypeOptions: [],//单位列表
-      judgeTypeOptions,//风险判断列表
-      treeData: [],
-      defaultProps: {
-        children: 'childList',
-        label: 'name',
-        key: 'id',
-        disabled: 'disabled'
-      },
-      ruleForm: {
-        deviceTypeIdAndTopId: '', //设备类型
-        paraName: '',//巡检参数
-        checkMethod: '',//巡检方法
-        riskJudge: 0,//风险判断
-        inputType: 0,//输入类型
-        unit: '',//单位ID
-        riskAssess: 0,//风险评估
-        standardValue: '',//标准值
-        normalMax: '',//正常最大值
-        normalMin: '', //正常最小值
-        lowMax: '', //低风险最大值
-        lowMin: '',//低风险最小值
-        middleMax: '', //中风险最大值
-        middleMin: '', //中风险最小值
-        highMax: '', //高风险最大值
-        highMin: '',//高风险最小值
-        //文本量
-        normalText: '', //正常描述文本
-        abnormalText: '',//非正常描述文本
-        lowText: '',//低风险描述文本
-        middleText: '', //中风险描述文本
-        highText: '', //高风险描述文本
-      },
       rules: {
         deviceTypeIdAndTopId: [
-          { required: true, message: '请选择设备类型', trigger: 'blur' },
+          { required: true, message: '请选择设备类型', trigger: 'change' },
         ],
         paraName: [
           { required: true, message: '请输入巡检参数', trigger: 'blur' },
-          { min: 2, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
         ],
         checkMethod: [
           { required: true, message: '请输入巡检方法', trigger: 'blur' },
-          { min: 2, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
         ],
         inputType: [
           { required: true, message: '请选择输入类型', trigger: 'blur' },
         ],
         standardValue: [
-          { required: true, validator: validateStandard, trigger: 'blur' },
-          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { required: true, validator: this.validateStandard, trigger: 'blur' },
+          { min: 1, max: 9, message: '长度在 1 到 9 个字符', trigger: 'blur' }
         ],
         normalMax: [
           { required: true, message: '请输入最大值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberGreater(rule, value, callback, this.ruleForm.normalMin) }, trigger: 'blur' }
         ],
         normalMin: [
           { required: true, message: '请输入最小值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberLess(rule, value, callback, this.ruleForm.normalMax) }, trigger: 'blur' }
         ],
         lowMax: [
           { required: true, message: '请输入最大值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberGreater(rule, value, callback, this.ruleForm.lowMin) }, trigger: 'blur' }
         ],
         lowMin: [
           { required: true, message: '请输入最小值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberLess(rule, value, callback, this.ruleForm.lowMax) }, trigger: 'blur' }
         ],
         middleMax: [
           { required: true, message: '请输入最大值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberGreater(rule, value, callback, this.ruleForm.middleMin) }, trigger: 'blur' }
         ],
         middleMin: [
           { required: true, message: '请输入最小值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberLess(rule, value, callback, this.ruleForm.middleMax) }, trigger: 'blur' }
         ],
         highMax: [
           { required: true, message: '请输入最大值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberGreater(rule, value, callback, this.ruleForm.highMin) }, trigger: 'blur' }
         ],
         highMin: [
           { required: true, message: '请输入最小值', trigger: 'blur' },
-          { validator: validateIntOrNumber, trigger: 'blur' }
+          { validator: (rule, value, callback) => { return validateNumberLess(rule, value, callback, this.ruleForm.highMax) }, trigger: 'blur' }
         ],
         normalText: [
           { required: true, message: '请输入正常文本', trigger: 'blur' },
-          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { min: 1, max: 8, message: '长度在 1 到 8 个字符', trigger: 'blur' },
+          { validator: (rule, value, callback) => { return checkChartLength(rule, value, callback, 8, '正常文本') }, trigger: 'blur' }
         ],
         abnormalText: [
           { required: true, message: '请输入非正常文本', trigger: 'blur' },
-          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { min: 1, max: 8, message: '长度在 1 到 8 个字符', trigger: 'blur' },
+          { validator: (rule, value, callback) => { return validateCompare(rule, value, callback, this.ruleForm.normalText) }, trigger: 'blur' }
         ],
         lowText: [
           { required: true, message: '请输入低风险文本', trigger: 'blur' },
@@ -347,7 +305,15 @@ export default {
     submitForm () {
       this.$refs['ruleForm'].validate((valid) => {
         if (valid) {
-          this.$emit("submitForm", this.ruleForm);
+          if (this.validateOther()) {
+            this.$emit("submitForm", this.ruleForm);
+          } else {
+            this.$message({
+              message: '四个区间值不能交叉',
+              type: 'error',
+              duration: this.$baseConfig.messageDuration
+            });
+          }
         } else {
           console.log('error submit!!');
           return false;

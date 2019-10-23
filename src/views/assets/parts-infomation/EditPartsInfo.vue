@@ -12,12 +12,12 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="配件编码" prop="number">
-            <el-input v-model="form.number" maxlength="20" clearable></el-input>
+            <el-input v-model="form.number" maxlength="20" clearable :disabled="isEdit"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="配件名称" prop="name">
-            <el-input v-model="form.name" maxlength="20" clearable></el-input>
+            <el-input v-model="form.name" maxlength="16" clearable></el-input>
           </el-form-item>
         </el-col>
       </el-row>
@@ -35,15 +35,15 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="规格型号" prop="specification" maxlength="20">
-            <el-input v-model="form.specification" clearable></el-input>
+          <el-form-item label="规格型号" prop="specification">
+            <el-input v-model="form.specification" clearable maxlength="25"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="库存警戒值" prop="stockAlertValue">
-            <el-input v-model="form.stockAlertValue" maxlength="20" type="number" clearable></el-input>
+            <el-input v-model="form.stockAlertValue" clearable maxlength="6"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -73,7 +73,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="是否启用" prop="status">
+          <el-form-item label="状态" prop="status">
             <el-radio-group v-model="form.status">
               <el-radio
                 v-for="item in statusEnum"
@@ -138,7 +138,7 @@ export default {
           { required: true, message: '请输入配件名称', trigger: 'blur' },
         ],
         type: [
-          { required: true, message: '请输入配件名称', trigger: 'blur' }
+          { required: true, message: '请选择配件类型', trigger: 'change' }
         ],
         specification: [
           { required: true, message: '请输入规格型号', trigger: 'blur' },
@@ -186,6 +186,7 @@ export default {
       console.log(this.detailData)
       if (this.detailData.id) {
         this.form = JSON.parse(JSON.stringify(this.detailData))
+        this.form.deviceType = Number(this.form.deviceType)
         if (this.form && this.form.hasOwnProperty("id")) {
           this.isEdit = true;
         } else {
@@ -218,6 +219,9 @@ export default {
         console.log('获取单位列表失败' + err)
       })
     },
+    // getAlertValue (val) {
+    //   this.form.stockAlertValue = this.form.stockAlertValue.slice(0, 6)
+    // },
     submit () {
       let result = false
       this.$refs.form.validate(res => {

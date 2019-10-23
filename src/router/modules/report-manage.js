@@ -3,7 +3,7 @@ const reportManageRouter = {
     component: resolve =>
         require(['@/components/layout/platform/home.vue'], resolve),
     meta: {
-        title: '数据对比'
+        title: '报表管理'
     },
     children: [
         {

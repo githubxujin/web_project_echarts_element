@@ -2,15 +2,15 @@
  * 首页相关的业务操作
  */
 
-import url from '../axios/url';
-import request from '../axios/request';
+import url from '../axios/url'
+import request from '../axios/request'
 
 /**
  * 报警概览|集团首页待解决报警详情
  */
 
 export function getAlarmList(params) {
-    return request.post(url.dashboard.getAlarmList, params);
+    return request.post(url.dashboard.getAlarmList, params)
 }
 
 /**
@@ -18,7 +18,7 @@ export function getAlarmList(params) {
  */
 
 export function getAlarmRankList(params) {
-    return request.post(url.dashboard.getAlarmRankList, params);
+    return request.post(url.dashboard.getAlarmRankList, params)
 }
 
 /**
@@ -27,7 +27,7 @@ export function getAlarmRankList(params) {
  */
 
 export function getDataMap(params) {
-    return request.post(url.dashboard.getDataMap, params);
+    return request.post(url.dashboard.getDataMap, params)
 }
 
 /**
@@ -35,7 +35,7 @@ export function getDataMap(params) {
  */
 
 export function getShopAlarmList(params) {
-    return request.post(url.dashboard.getShopAlarmList, params);
+    return request.post(url.dashboard.getShopAlarmList, params)
 }
 /**
  * 门店首页电梯报警信息
@@ -44,35 +44,50 @@ export function getShopAlarmList(params) {
 //     return request.get(url.dashboard.getLiftAlarmList + '/' + params);
 // }
 export function getLiftAlarmList(params) {
-    return request.get(url.safety.sketchMap + '/' + params);
+    return request.get(url.safety.sketchMap + '/' + params)
 }
 /**
  * 门店首页给排水报警信息
  */
 export function getWaterAlarmList(params) {
-    return request.get(url.dashboard.getWaterAlarmList + '/' + params);
+    return request.get(url.dashboard.getWaterAlarmList + '/' + params)
 }
 /**
  * 门店首页配电报警信息
  */
 export function getElectricAlarmList(params) {
-    return request.postForm(url.dashboard.getElectricAlarmList, params);
+    return request.postForm(url.dashboard.getElectricAlarmList, params)
 }
+// /**
+//  * 门店首页能耗报警信息
+//  */
+// export function getEnergyAlarmList(params) {
+//     return request.get(url.dashboard.getEnergyAlarmList, params);
+// }
 /**
  * 门店首页能耗报警信息
  */
 export function getEnergyAlarmList(params) {
-    return request.get(url.dashboard.getEnergyAlarmList, params);
+    return request.get(url.dashboard.getEnergyAlarmList, params)
+}
+export function getEnergyConsumeAndCost(params) {
+    return request.get(url.dashboard.getEnergyConsumeAndCost, params)
 }
 /**
  * 根据门店编码获取工单处理人
  */
 export function getOrderHandlerByShop(params) {
-    return request.get(url.dashboard.getOrderHandlerByShop, params);
+    return request.get(url.dashboard.getOrderHandlerByShop, params)
 }
 /**
  * 根据报警id和处理人id生成报警工单
  */
 export function generateAlarmOrder(params) {
-    return request.get(url.dashboard.generateAlarmOrder, params);
+    return request.get(url.dashboard.generateAlarmOrder, params)
+}
+/**
+ * 今日/本月能耗费用查询（门店首页）
+ */
+export function energyConsumeAndCost(params) {
+    return request.get(url.dashboard.energyConsumeAndCost, params)
 }

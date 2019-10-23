@@ -25,7 +25,7 @@ tbody tr {
 }
 
 table thead {
-    width: calc(100% - 9px);
+    width: calc(100% - 18px);
 }
 
 // 表头固定 end ----------------
@@ -43,7 +43,7 @@ table {
 
         tr:last-child {
             td {
-                border-bottom: none;
+                border-bottom: 1px solid #ebeef5;
             }
         }
     }

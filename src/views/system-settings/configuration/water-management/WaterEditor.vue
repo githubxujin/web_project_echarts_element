@@ -72,7 +72,7 @@
             <el-select v-model="form.belongTo" placeholder="请选择" clearable>
               <el-option
                 v-for="item in deviceList"
-                :label="item.number"
+                :label="item.name"
                 :value="item.id"
                 :key="item.id"
               ></el-option>
@@ -125,7 +125,7 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="12" v-if="[14,15].includes(~~form.deviceType)">
+        <el-col class="height-input" :span="12" v-if="[14,15].includes(~~form.deviceType)">
           <el-form-item prop="height" label="高度">
             <el-input v-model.trim="form.height" placeholder="请输入" clearable :maxlength="16">
               <span slot="suffix">m</span>
@@ -216,6 +216,11 @@ export default {
     deviceTypeListCopy () {
       let deviceTypeList = JSON.parse(JSON.stringify(this.deviceTypeList || []))
       deviceTypeList.shift()
+      deviceTypeList = deviceTypeList.map(item => {
+        item.pid = item.id === 12 ? 14 : item.pid;
+        item.pid = item.id === 16 ? 15 : item.pid;
+        return item
+      })
       console.log('deviceTypeList:', deviceTypeList);
       return deviceTypeList
     },
@@ -278,7 +283,7 @@ export default {
       })
     },
     deviceTypeChange (value) { // 设备类型变化
-      // console.log("设备类型：",value)
+      // console.log("设备类型：", value)
       this.form.belongTo = ''
       if (value === 12 || value === 16) {//设备类型为水泵时，禁用体积
         this.form.volume = '';
@@ -292,6 +297,7 @@ export default {
         this.volumeEdited = false;
         this.flowEdited = false;
       }
+      this.form.belongTo = '';
       this.initDevice(value)
     },
     submit () { // 提交编辑或新增
@@ -362,6 +368,16 @@ export default {
 .water-editor {
   .text-center {
     text-align: center;
+  }
+  /deep/ .height-input {
+    .el-form-item__label:before {
+      position: absolute;
+      top: 0;
+      left: -9px;
+      content: "*";
+      color: #f56c6c;
+      margin-right: 4px;
+    }
   }
 }
 </style>

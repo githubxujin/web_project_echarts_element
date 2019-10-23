@@ -17,7 +17,7 @@
               <i
                 class="ele-camera"
                 :class="[item.cameraStatus?'active':'',item.anyData?'':'graying']"
-                @click="showCamera(item)"
+                @click="showCamera(item,ind)"
               ></i>
               <div class="ele-floor">
                 <span class="up-arrow" :class="{active:item.runningStatus==1}">
@@ -38,6 +38,10 @@
           </div>
         </div>
       </el-col>
+      <span
+        style="display: block;text-align: center;line-height: 200px;"
+        v-if="!eleList.length"
+      >暂无数据</span>
     </el-row>
     <el-dialog
       v-dialogDrag
@@ -68,7 +72,8 @@ export default {
       showPop: false,
       videoUrl: '',
       number: '',//当前设备编号
-      eleList: []
+      eleList: [],
+      isFirst: []
     }
   },
   created () {
@@ -77,14 +82,25 @@ export default {
   watch: {
     eleData (val) {
       this.eleList = this.eleData;
+      this.eleList.forEach(item => {
+        this.isFirst.push(false)
+      })
     }
   },
   methods: {
-    showCamera (item) {
+    showCamera (item, ind) {
+      let that = this
       this.number = item.number;
       if (item.anyData) {
         if (item.cameraStatus) {
+          if (this.isFirst[ind]) {
+            return
+          }
           this.$message.error('摄像头故障，请及时处理');
+          this.isFirst[ind] = true;
+          setTimeout(function () {
+            that.isFirst[ind] = false;
+          }, 3000);
         } else {
           getVideoUrl({ shopNumber: this.$store.getters.shopNumber, number: this.number }).then(res => {
             console.log(res)

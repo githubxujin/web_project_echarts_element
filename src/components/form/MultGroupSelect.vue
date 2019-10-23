@@ -14,6 +14,7 @@
         v-for="group in multipleSelectOption"
         :key="group.value"
         :label="group.label"
+        :title="group.label"
         @click.native="checkAll(group.value)"
       >
         <el-option
@@ -21,6 +22,7 @@
           :key="item.value"
           :label="item.label"
           :value="item.value"
+          :title="item.label"
         ></el-option>
       </el-option-group>
     </el-select>
@@ -94,4 +96,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/deep/ .el-select-group__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 380px;
+}
 </style>

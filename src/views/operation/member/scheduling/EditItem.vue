@@ -58,7 +58,7 @@
                   @click.stop="clickIcon(d,day,rowIndex)"
                   v-for="(d,index) in tbData[rowIndex].data[day-1]"
                   :key="index"
-                  :class="[getIconByClassId(d),tbData[rowIndex].data[day-1].length<2?'big':'small']"
+                  :class="[getIconByClassId(d,day),tbData[rowIndex].data[day-1].length<2?'big':'small']"
                 ></i>
               </span>
             </td>
@@ -97,13 +97,13 @@ export default {
   props: {
     //当前班次月份
     curMonth: {
-      type: Date,
-      default: () => new Date()
+      type: String,
+      default: ''
     }
   },
   data () {
     return {
-      month: this.curMonth,    //获取当前班次
+      month: dateUtils.stringToDate(this.curMonth + '-01'),    //获取当前班次
       showEditClassWin: false,//是否显示编辑班次
       curClassId: '',//当前选中班次ID
       divisions: [],//已选中班次列表
@@ -270,10 +270,12 @@ export default {
       this.$emit('onHide')
     },
     //根据班次id获取班次图标
-    getIconByClassId (id) {
+    getIconByClassId (id, day) {
+      let disabled = day <= this.curDay && this.month <= this.monthLastDate;
+      let classData = disabled == true ? this.allClassData : this.divisions; //如果是历史日期就取所有班次，否则取当前班次
       let name = '';
-      if (this.allClassData.length > 0 && id) {
-        let item = this.allClassData.find(n => n.id == id);
+      if (classData.length > 0 && id) {
+        let item = classData.find(n => n.id == id);
         name = item ? item.classesType : '';
       }
       return name ? this.GetIconByClassName(name) : '';

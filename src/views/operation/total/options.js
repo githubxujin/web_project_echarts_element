@@ -18,6 +18,7 @@ export const BarOption = {
             type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
         }
     },
+    dataZoom: _ConstDataZoom,
     legend: {
         data: ['供配电', '给排水', '空调', '电梯'],
         itemWidth: 9,
@@ -146,7 +147,7 @@ export const PieOption = {
     // },
     tooltip: {
         trigger: 'item',
-        formatter: '{a} <br/>{b} : {c} ({d}%)'
+        formatter: '{b} : {c} ({d}%)'
     },
     legend: {
         data: ['供配电', '给排水', '空调', '电梯'],
@@ -164,7 +165,7 @@ export const PieOption = {
     },
     series: [
         {
-            name: '访问来源',
+            name: '',
             type: 'pie',
             radius: '65%',
             center: ['50%', '55%'],
@@ -202,20 +203,20 @@ export const CheckMaintainPieOption = {
         text: 0,
         textStyle: {
             color: '#3A3A3A',
-            fontSize: 30,
+            fontSize: 16,
             fontWeight: 'normal'
         },
         subtext: '',
         subtextStyle: {
             color: '#3A3A3A',
-            fontSize: 14
+            fontSize: 28
         },
         x: 'center',
-        y: '48%'
+        y: '46%'
     },
     series: [
         {
-            name: '访问来源',
+            name: '',
             type: 'pie',
             radius: ['40%', '60%'],
             itemStyle: {

@@ -69,8 +69,8 @@
         <div class="i-show-head">
           <span
             class="i-show-name"
-            @click="goToShopIndex(curShopPoint.shopNumber)"
-          >{{curShopPoint.shopName}}</span>
+            @click="goToShopIndex(curShopPoint.number)"
+          >{{curShopPoint.name}}</span>
           <dl>
             <dd v-for="(item,index) in curShopPoint.alarmStatisticGroupBySystem" :key="index">
               <i class="iconfont fl i-icon" :class="alarmSystemIcon[item.alarmType]"></i>
@@ -173,8 +173,8 @@ export default {
       dataName: 0,
       //门店详情实体--当前点击的门店节点信息
       curShopPoint: {
-        shopName: '', unresolvedAlarmTotal: 0, addAlarmTotalToday: 0, resolvedAlarmTotal: 0, avarageResponseTime: 0,
-        area: 0, address: '', telephone: '', joinTime: '', shopNumber: ''
+        name: '', unresolvedAlarmTotal: 0, addAlarmTotalToday: 0, resolvedAlarmTotal: 0, avarageResponseTime: 0,
+        area: 0, address: '', telephone: '', joinTime: '', number: ''
       },
       countAnimation: {
         start: 0,
@@ -192,6 +192,7 @@ export default {
   mounted () {
     this.mapChartsInit();
     // this.setMapView();
+    this.$autoStop();
   },
   methods: {
     //跳转到门店首页
@@ -242,7 +243,7 @@ export default {
     //构造Item项
     getItem (item) {
       let obj = { name: '', value: [] };
-      obj.name = item ? item.shopName : '';
+      obj.name = item ? item.name : '';
       obj.value.push(item.x);
       obj.value.push(item.y);
       Object.assign(item, obj);
@@ -272,12 +273,13 @@ export default {
       this.setMapView(pointsSeriesData, alarmPointSeriesData, uplinePointSeriesData);
     },
     initData (shopNumber) {
+      if (!shopNumber) { this.loading = false; return; };
+      let that = this;
       getDataMap({ shopNumbers: shopNumber }).then((res) => {
         // console.log('地图数据', res)
-        let that = this;
         that.updateMapData(res);
         that.mapChart.on('click', function (params) {
-          // console.log('data', params, params.data)
+          console.log('data', params, params.data)
           if (params.data) {
             that.dataName = params.name;
             //seriesIndex
@@ -291,12 +293,12 @@ export default {
         that.loading = false;
       }).catch((error) => {
         console.log(error)
-        this.loading = false;
+        that.loading = false;
       });
       //如果当前选中的门店编码中包含选中的门店则显示弹窗详情，否则隐藏
       console.log('initData :', shopNumber);
-      console.log('this.curShopPoint.shopNumber :', this.curShopPoint.shopNumber);
-      if (this.curShopPoint.shopNumber && shopNumber && shopNumber.indexOf(this.curShopPoint.shopNumber) != -1) {
+      console.log('this.curShopPoint.number :', this.curShopPoint.number);
+      if (this.curShopPoint.number && shopNumber && shopNumber.indexOf(this.curShopPoint.number) != -1) {
         this.ctrlShopDetail(true);
       } else {
         this.ctrlShopDetail(false);

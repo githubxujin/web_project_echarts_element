@@ -457,6 +457,14 @@ export default {
     savePoint () {
       this.pointsArr[this.currentPointIndex] = this.currentPointUnitForm;
       console.log('savePoint保存的坐标', this.currentPointUnitForm)
+      if (!this.currentPointUnitForm.id) {
+        this.$message({
+          message: '集水井不能为空',
+          type: 'error',
+          duration: this.$baseConfig.messageDuration
+        });
+        return;
+      }
       let x = this.currentPointUnitForm.x;
       let y = this.currentPointUnitForm.y;
       if (x < 0 || x > 980) {

@@ -80,8 +80,8 @@ export default {
     handleExpression (item, index) { // 点击支路表达式
       this.expressionsIndex = index // 保存编辑表达式的位置
       this.selectedExpressions = item.expressionJson ? JSON.parse(unescape(item.expressionJson || [])) : [];
-      const shopNumber = this.$store.getters.getUserInfo.shopNumber
-      this.subentryGetArray({ shopNumber, energyType: item.energyType, includeMeter: true }).then(res => { // 请求对应支路列表和分项列表
+      const buildId = this.$store.getters.getUserInfo.shopNumber
+      this.subentryGetArray({ buildId, subType: item.energyType, includeMeter: true }).then(res => { // 请求对应支路列表和分项列表
         this.expressionsTabsData[0].resList = res.data.meter
         let subentryList = res.data.subentry
         subentryList.forEach(item => {
@@ -97,7 +97,7 @@ export default {
       let expression = "";
       expressions.forEach(item => {
         if (item.type === "branch") {
-          expression += `[${item.number}]${item.name}`;
+          expression += `[${item.electricAddr}]${item.name}`;
         } else if (item.type === "number") {
           expression += item.value;
         } else if (item.type === 'sub') {
@@ -126,6 +126,7 @@ export default {
           return
         }
         this.nodeList = JSON.parse(JSON.stringify(val))
+        console.log('nodeList', this.nodeList)
       }
     }
   }

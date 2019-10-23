@@ -32,18 +32,18 @@
         <i
           class="iconfont icon-dianti-deep active"
           v-if="item.name==='elevator'&&item.num"
-          @click="goPage('air')"
+          @click="goPage('elevator')"
         ></i>
         <span class="warn-num" v-show="item.num">X{{item.num}}</span>
       </span>
     </div>
     <div class="warning-notice">
       <!-- <div v-if="detailInfo!=null"> -->
-      <el-row class="e-row" v-show="detailInfo!=null">
+      <el-row class="e-row" v-show="!isEmpty">
         <el-col :span="2">报警时间</el-col>
         <el-col :span="2">位置</el-col>
-        <el-col :span="2">设备</el-col>
-        <el-col :span="3">报警名称</el-col>
+        <el-col :span="2" style="padding-left:15px;box-sizing:border-box;">设备</el-col>
+        <el-col :span="3" style="padding-left:15px;box-sizing:border-box;">报警名称</el-col>
 
         <el-col :span="7" :offset="3">
           <ul class="steps">
@@ -57,12 +57,7 @@
         <el-col :span="2" style="text-align:center;">处理人</el-col>
         <el-col :span="3" style="text-align:center;">响应时间</el-col>
       </el-row>
-      <el-row
-        class="e-row"
-        v-for="(item,index) in detailInfo"
-        :key="index"
-        v-show="detailInfo!=null"
-      >
+      <el-row class="e-row" v-for="(item,index) in detailInfo" :key="index" v-show="!isEmpty">
         <div
           @click="goToPage(item)"
           @mouseenter="setBackColor(index)"
@@ -75,10 +70,18 @@
           <el-col :span="2" :title="item.alarmLocation">
             <span class="text">{{item.alarmLocation}}</span>
           </el-col>
-          <el-col :span="2" :title="item.deviceName">
+          <el-col
+            :span="2"
+            :title="item.deviceName"
+            style="padding-left:15px; box-sizing:border-box;"
+          >
             <span class="text">{{item.deviceName}}</span>
           </el-col>
-          <el-col :span="3" :title="item.alarmName">
+          <el-col
+            :span="3"
+            :title="item.alarmName"
+            style="padding-left:15px; box-sizing:border-box;"
+          >
             <span class="text">{{item.alarmName}}</span>
           </el-col>
           <el-col :span="1" style="text-align:center">
@@ -123,8 +126,8 @@
           </el-col>
         </div>
       </el-row>
+      <span v-show="isEmpty" class="good-run-status">当前各系统运行状态良好，无报警信息</span>
       <!-- </div> -->
-      <span v-show="detailInfo==null" class="good-run-status">当前各系统运行状态良好，无报警信息</span>
     </div>
   </div>
 </template>
@@ -154,6 +157,7 @@ export default {
         { name: 'elevator', num: '' }
       ],
       detailInfo: [],
+      isEmpty: false,
       loading: true,
       alarmSystemIcon
     }
@@ -168,7 +172,8 @@ export default {
       this.getShopAlarmList()
     },
     itemData (val) {
-      this.getWebData(val)
+      this.getWebData(val);
+      this.isEmpty = false;
     }
   },
   methods: {
@@ -178,8 +183,11 @@ export default {
         this.loading = false;
         if (res.data && res.data.list.length > 0) {
           this.getWebData(res)
+          this.isEmpty = false;
         } else {
-          this.detailInfo = []
+          this.detailInfo = [];
+          this.isEmpty = true;
+
         }
       } else {
         console.log(res.msg)
@@ -193,16 +201,19 @@ export default {
         this.warnNum[2].num = res.data.airConditioner;
         this.warnNum[3].num = res.data.elevator;
         this.detailInfo = res.data.list.filter((item, index) => {
+          this.isEmpty = false;
           return item.alarmTime = item.alarmTime.slice(5, 16)
           // return index < 9;
         });
       } else {
+        // console.log(JSON.parse(res), 4444)
         this.warnNum[0].num = JSON.parse(res).data.data.ele;
         this.warnNum[1].num = JSON.parse(res).data.data.water;
         this.warnNum[2].num = JSON.parse(res).data.data.airConditioner;
         this.warnNum[3].num = JSON.parse(res).data.data.elevator;
         // this.detailInfo = JSON.parse(res).data.list
         this.detailInfo = JSON.parse(res).data.data.list.filter((item, index) => {
+          this.isEmpty = false;
           return item.alarmTime = item.alarmTime.slice(5, 16)
         });
       }
@@ -296,18 +307,20 @@ export default {
       height: 45px;
       line-height: 45px;
       .el-col {
+        height: 45px;
         text-align: left;
       }
       .el-col-3,
       .el-col-2 {
-        white-space: nowrap; /* 自适应宽度*/
-        overflow: hidden;
-        text-overflow: ellipsis;
+        height: 45px;
       }
       .text {
         display: inline-block;
         width: 100%;
         height: 100%;
+        white-space: nowrap; /* 自适应宽度*/
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .steps {
         width: 100%;

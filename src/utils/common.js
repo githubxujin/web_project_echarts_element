@@ -115,18 +115,12 @@ export default class common extends Vue {
         generateToken()
             .then(res => {
                 if (!res.data.token) return Promise.reject(res);
-                let url = `http://${ip}/auto-login?token=${
-                    res.data.token
-                }&userName=${userName}`;
+                let url = `${ip}/auto-login?token=${res.data.token}&userName=${userName}`;
                 if (referer) {
-                    url = `http://${ip}/auto-login?token=${
-                        res.data.token
-                    }&userName=${userName}&referer=${referer}`;
+                    url = `${ip}/auto-login?token=${res.data.token}&userName=${userName}&referer=${referer}`;
                 }
                 if (id) {
-                    url = `http://${ip}/auto-login?token=${
-                        res.data.token
-                    }&userName=${userName}&referer=${referer}&id=${id}`;
+                    url = `${ip}/auto-login?token=${res.data.token}&userName=${userName}&referer=${referer}&id=${id}`;
                 }
                 window.open(url, '_self');
             })
@@ -188,7 +182,9 @@ export default class common extends Vue {
      */
     static updateLoadingStatus(status) {
         store.commit('base/updatePageLoadingStatus', status); //页面启用loading标识
-        store.commit('base/updateLoadingStatus', { isLoading: status });
+        store.commit('base/updateLoadingStatus', {
+            isLoading: status
+        });
     }
     /**
      * 防抖函数
@@ -199,24 +195,28 @@ export default class common extends Vue {
      *  function
      * }
      */
-    static debounce(method, delay = 400) {
-        let timer = null;
+    static debounce(fn, delay = 400) {
+        let timeout = null;
         return function() {
-            const self = this;
+            const context = this;
             const args = arguments;
-            timer && clearTimeout(timer);
-            timer = setTimeout(function() {
-                method.apply(self, args);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                fn.apply(context, args);
             }, delay);
         };
     }
     //节流函数
-    static throttle(method, context) {
-        clearTimeout(method.tId);
+    static throttle(fn, delay = 1000) {
+        let preTime = 0;
         return function() {
-            method.tId = setTimeout(function() {
-                method.call(context);
-            }, 300);
+            const context = this;
+            const args = arguments;
+            const now = +new Date();
+            if (now - preTime > delay) {
+                fn.apply(context, args);
+                preTime = now;
+            }
         };
     }
     static getType(val) {

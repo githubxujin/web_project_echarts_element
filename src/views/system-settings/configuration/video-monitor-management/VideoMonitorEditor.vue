@@ -55,7 +55,7 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="cameraPort" label="端口">
-            <el-input v-model.trim="form.cameraPort" placeholder="请输入端口" clearable :maxlength="20"></el-input>
+            <el-input v-model.trim="form.cameraPort" placeholder="请输入端口" clearable :maxlength="5"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -72,12 +72,13 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="cameraPassword" label="密码">
-            <el-input
+            <pwd-btn :maxlength="10" v-model.trim="form.cameraPassword" placeholder="请输入密码"></pwd-btn>
+            <!-- <el-input
               v-model.trim="form.cameraPassword"
               placeholder="请输入密码"
               clearable
               :maxlength="10"
-            ></el-input>
+            ></el-input>-->
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -122,6 +123,7 @@
 import { monitorGetInfo, videoMonitorEdit, videoMonitorAdd, getSumpPosition } from '@/services/system-settings.js'
 import { statusEnum } from '@/enum/dicts.js'
 import Regexps from '@/utils/regexp.js'
+import PwdBtn from '@/components/form/PwdBtn'
 export default {
   props: {
     editDialogVisible: Boolean,
@@ -136,6 +138,7 @@ export default {
       default: () => null
     }
   },
+  components: { PwdBtn },
   data () {
     return {
       statusEnum, // 启用，禁用\
@@ -154,13 +157,13 @@ export default {
         remark: ''
       },
       formRules: { // 表单规则
-        number: [{ required: true, message: '请输入监控编号', trigger: 'blur' }, { pattern: /^[0-9a-zA-Z-.]+$/, message: '请输入正确监控编号', trigger: 'blur' }],
+        number: [{ required: true, message: '请输入监控编号', trigger: 'blur' }, { validator: this.testNumber, message: '编号不能包含汉字', trigger: 'blur' }],
         name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
         type: [{ required: true, message: '请选择类型', trigger: 'change' }],
         cameraIP: [
           { required: true, message: '请输入视频监控IP', trigger: 'blur' },
           { pattern: Regexps.checkIP, message: '请输入正确IP地址', trigger: 'blur' }],
-        cameraPort: [{ required: true, message: '请输入端口号', trigger: 'blur' }, { pattern: Regexps.checkPort, message: '请输入正确端口号', trigger: 'blur' }],
+        cameraPort: [{ required: true, message: '请输入端口号', trigger: 'blur' }, { pattern: Regexps.checkPort, message: '端口号应在0-65535之间', trigger: 'blur' }],
         cameraAccount: [{ required: true, message: '请输入登录名', trigger: 'blur' }],
         cameraPassword: [{ required: true, message: '请输入密码', trigger: 'blur' }],
         // remark: [{ required: true, message: '请输入备注', trigger: 'blur' }],
@@ -180,6 +183,13 @@ export default {
     }
   },
   methods: {
+    testNumber (rule, value, callback) {
+      if (!rule) return callback()
+      if (Regexps.chinese.test(value)) {
+        return callback(new Error('编号不能包含汉字)'))
+      }
+      return callback()
+    },
     //类型改变
     changeType (id) {
       // console.log("id=",id,",this.selectedType=",this.selectedType)

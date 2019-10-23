@@ -108,6 +108,14 @@ export default {
 
           let pieOption = Object.assign({}, this.checkMaintainPieOption);
           pieOption.color = optons.color;
+          let sum = 0;
+          res.data.pie.forEach(n => {
+            for (var p in n) {
+              sum += n[p]
+            }
+          });
+          pieOption.title.subtext = sum;
+          pieOption.title.text = '总计划数(单)';
           pieOption.series[0].data = getPieSeriesData(res.data.pie);
           this.checkMaintainPieOption = pieOption;
         }

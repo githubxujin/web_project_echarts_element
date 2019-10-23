@@ -196,14 +196,14 @@ export default {
     submit () { // 提交编辑或新增
       let result = false
       this.$refs.form.validate(res => {
-        result = res
+        this.result = res
       })
-      if (!result) return
-      result = this.validateForm();
-      if (result) {
-        this.$message.error('采集器端口总长度请限制在64字符以内')
-        return
-      }
+      if (!this.result) return
+      this.result = this.validateForm();
+      // if (this.result) {
+      //   this.$message.error('采集器端口总长度请限制在16字符以内')
+      //   return
+      // }
       let funName = 'collectorEdit'
       if (!this.isEdit) {
         funName = 'collectorAdd'

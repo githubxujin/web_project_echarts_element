@@ -7,7 +7,8 @@
     <card-head :title="title" :num="deviceData.warnNum" @goToPage="goToPage"></card-head>
     <div class="main-container">
       <div class="left-charts" @click="goToPage">
-        <v-guage :loadValue="airValue"></v-guage>
+        <!--<v-guage :loadValue="airValue"></v-guage>-->
+        <SvgScale :score="airValue"></SvgScale>
         <p class="Text">{{airValue}}</p>
         <span class="title">系统COP</span>
         <p class="info">冷负荷：{{coolingLoad}}kW</p>
@@ -18,9 +19,9 @@
           <tr v-for="(item,index) in deviceData.tableData" :key="index">
             <td>{{item.name}}</td>
             <td>
-              <ul class="detail-info clear">
+              <ul class="detail-info">
                 <li
-                  class="item fl"
+                  class="item"
                   v-for="(sub,ind) in item.list"
                   :key="ind"
                   @mouseenter="showBox(index,ind)"
@@ -47,9 +48,10 @@
 import cardHead from './ShopCartHead';
 import vChart from '@/components/echarts/index';
 import vGuage from '@/components/Guage.vue';
+import SvgScale from '@/components/SvgScale/SvgScale.vue';
 import { getAirList } from '../../../services/safety.js';
 export default {
-  components: { cardHead, vChart, vGuage },
+  components: { cardHead, vChart, SvgScale },
   props: {
     shopNumber: {
       type: String
@@ -143,41 +145,55 @@ export default {
           v = rbj[i].val;
           address = rbj[i].Address;
           if (!address) { continue; }
-          // console.log(address);
-          if (address.substring(0, 3).indexOf('CHL') > -1 && address.indexOf('_PWR') > -1 && v > 0 && address.length >= 8) {
+          if (address.substring(0, 3).indexOf('CHL') > -1 &&v > 0) {
             NO = parseInt(address.substring(3, 4));
-            this.deviceData.tableData[0].list[NO - 1].status = 1;
-
+            if (address.indexOf('_PWR') > -1&& address.length==8){
+                this.deviceData.tableData[0].list[NO - 1].status = 1;
+            }
+              if (address.substring(address.length -8, address.length).indexOf('_VFD_ALM') > -1 && address.indexOf('SYS_') == -1) {
+                debugger
+                  this.deviceData.warnNum += v;
+                  this.deviceData.tableData[0].list[NO - 1].status =2;
+              }
           }
-
-          else if (address.substring(0, 4).indexOf('CHWP') > -1 && address.indexOf('_PWR') > -1 && v > 0 && address.length >= 9) {
+          else if (address.substring(0, 4).indexOf('CHWP') > -1  && v > 0) {
             NO = parseInt(address.substring(4, 5));
-            this.deviceData.tableData[1].list[NO - 1].status = 1;
-
+              if (address.indexOf('_PWR') > -1&& address.length==9){
+                  this.deviceData.tableData[1].list[NO - 1].status = 1;
+              }
+              if (address.substring(address.length -8, address.length).indexOf('_VFD_ALM') > -1 && address.indexOf('SYS_') == -1) {
+                  debugger
+                  this.deviceData.warnNum += v;
+                  this.deviceData.tableData[1].list[NO - 1].status =2;
+              }
           }
-
-          else if (address.substring(0, 3).indexOf('CWP') > -1 && address.indexOf('_PWR') > -1 && v > 0 && address.length >= 8) {
+          else if (address.substring(0, 3).indexOf('CWP') > -1  && v > 0) {
             NO = parseInt(address.substring(3, 4));
-            this.deviceData.tableData[2].list[NO - 1].status = 1;
-
+              if (address.indexOf('_PWR') > -1 && address.length==8){
+                  this.deviceData.tableData[2].list[NO - 1].status = 1;
+              }
+              if (address.substring(address.length -8, address.length).indexOf('_VFD_ALM') > -1 && address.indexOf('SYS_') == -1) {
+                  debugger
+                  this.deviceData.warnNum += v;
+                  this.deviceData.tableData[2].list[NO - 1].status =2;
+              }
           }
-
-          else if (address.substring(0, 2).indexOf('CT') > -1 && address.indexOf('_PWR') > -1 && v > 0 && address.length >= 7) {
+          else if (address.substring(0, 2).indexOf('CT') > -1  && v > 0) {
             NO = parseInt(address.substring(2, 3));
-            this.deviceData.tableData[3].list[NO - 1].status = 1;
-
-          }
-          //console.log('点：'+address.substring(address.length-4,address.length)+":"+address);
-
-          if (address.substring(address.length - 4, address.length).indexOf('_ALM') > -1 && address.indexOf('SYS_') == -1) {
-            this.deviceData.warnNum += v;
+              if (address.indexOf('_PWR') > -1 && address.length==7){
+                  this.deviceData.tableData[3].list[NO - 1].status = 1;
+              }
+              if (address.substring(address.length -8, address.length).indexOf('_VFD_ALM') > -1 && address.indexOf('SYS_') == -1) {
+                  debugger
+                  this.deviceData.warnNum += v;
+                  this.deviceData.tableData[3].list[NO - 1].status =2;
+              }
           }
           if (address == 'CHW_FLOW') { CHW_FLOW = v; }
           if (address == 'CHW_ST') { CHW_ST = v; }
           if (address == 'CHW_RT') { CHW_RT = v; }
           if (CHW_RT != 0 && CHW_ST != 0 && CHW_FLOW != 0 && LFH == 0) {
             LFH = (parseInt(CHW_RT) - parseInt(CHW_ST)) * parseInt(CHW_FLOW) * 1.167;
-            // console.log("CHW_RT:" + CHW_RT + ";CHW_FLOW:" + CHW_FLOW + "CHW_ST:" + CHW_ST);
             if (LFH < 0) {
               LFH = LFH * -1;
             }
@@ -213,9 +229,10 @@ export default {
               //   this.airValue=((1 - (ZGL / LFH)) * 100).toFixed(2) - 0;
 
             }
-          }
-
+          }  console.log('点：'+JSON.stringify(this.deviceData.tableData));
         }
+
+
       }).catch(error => {
       })
 
@@ -224,7 +241,7 @@ export default {
       this.deviceData.tableData.forEach((item, index) => {
         let arr = [];
         item.list.forEach(sub => {
-          if (sub.status === 2) {
+          if (sub.status === 2 || sub.status === 1) {
             arr.push(true)
           } else {
             arr.push(false)
@@ -298,12 +315,17 @@ export default {
     }
     .device-table {
       width: calc(100% - 160px);
+      min-width: 220px;
       height: 100%;
       float: left;
       color: #d7e3f0;
       padding-bottom: 20px;
+      overflow-x: auto;
       box-sizing: border-box;
       cursor: pointer;
+      .item {
+        display: inline-block;
+      }
       .devices {
         width: 100%;
         height: 100%;
@@ -311,6 +333,7 @@ export default {
         border-collapse: collapse;
         border-spacing: 0;
         tr {
+          width: 100%;
           height: 25%;
           &:last-child {
             td {
@@ -318,7 +341,8 @@ export default {
             }
           }
           td {
-            text-align: center;
+            width: 100%;
+            // text-align: center;
             font-size: 14px;
             position: relative;
             white-space: nowrap; /* 自适应宽度*/
@@ -331,7 +355,7 @@ export default {
             .detail-info {
               box-sizing: border-box;
               .item {
-                width: 18%;
+                width: 15%;
                 text-align: center;
                 position: relative;
                 .float-box {

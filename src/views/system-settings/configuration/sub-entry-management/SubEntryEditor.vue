@@ -13,24 +13,24 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="number" label="分项编号">
-            <el-input v-model.trim="form.number" placeholder="请输入" :maxlength="16" :disabled="true"></el-input>
+            <el-input
+              v-model.trim="form.number"
+              placeholder="请输入"
+              :maxlength="16"
+              :disabled="!!subentryItem"
+            ></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item prop="subName" label="分项名称">
-            <el-input
-              :disabled="true"
-              v-model.trim="form.subName"
-              placeholder="请输入"
-              :maxlength="16"
-            ></el-input>
+            <el-input v-model.trim="form.subName" placeholder="请输入" :maxlength="16"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="energyType" label="能耗类型">
-            <el-select v-model="form.energyType" placeholder="全部" :disabled="true">
+          <el-form-item prop="subType" label="能耗类型">
+            <el-select v-model="form.subType" placeholder="全部" @change="changeSubType">
               <el-option
                 v-for="(item,index) in energyTypeEnum"
                 :key="index"
@@ -42,7 +42,7 @@
         </el-col>
         <el-col :span="12">
           <el-form-item prop="energyUnit" label="能耗单位">
-            <el-select v-model="form.energyUnit" placeholder="全部" :disabled="true">
+            <el-select v-model="form.energyUnit" placeholder="全部">
               <el-option
                 v-for="(item,index) in unitList"
                 :key="index"
@@ -56,12 +56,22 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="parentCode" label="所属分项">
-            <el-input
-              :disabled="true"
-              v-model.trim="form.parentName"
-              placeholder="请输入"
-              :maxlength="16"
-            ></el-input>
+            <!-- <el-select v-model="form.parentCode" placeholder="全部">
+              <el-option
+                v-for="(item,index) in treeArray"
+                :key="index"
+                :label="item.subName"
+                :value="item.number"
+              ></el-option>
+            </el-select>-->
+            <tree-select
+              v-model="form.parentCode"
+              placeholder="请选择分项"
+              :data="treeArray"
+              :defaultProps="defaultProps"
+              :onlyLeafSelect="false"
+              @change="nodeChange"
+            ></tree-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -123,7 +133,7 @@
 <script>
 import BranchExpressions from '@/components/expressions/BranchExpressions.vue'
 import TreeSelect from '@/components/treeSelect'
-import { subentryAdd, subentryEdit, configTypeQuery, subentryGetArray } from '@/services/system-settings.js'
+import { subentryAdd, subentryAddOne, subentryEdit, configTypeQuery, subentryGetArray, subentryGetTreeArray } from '@/services/system-settings.js'
 import { energyTypeEnum, statusEnum } from '@/enum/dicts.js'
 import Regexps from '@/utils/regexp.js'
 import axios from '@/axios/axios.js'
@@ -144,7 +154,7 @@ export default {
         id: '',
         number: '',
         subName: '',
-        energyType: '',
+        subType: '',
         energyUnit: '',
         parentCode: '',
         expression: '',
@@ -152,20 +162,21 @@ export default {
         expressionText: '',
         subentryInfo: '',
         descr: '',
-        shopNumber: '',
-        status: '',
-        parentName:''
+        buildId: '',
+        status: 0,
+        parentName: ''
       },
       formRules: { // 表单规则
-        // number: [{ required: true, message: '请填写分项编号', trigger: 'blur' }],
-        // subName: [{ required: true, message: '请填写分项名称', trigger: 'blur' }]
+        number: [{ required: true, message: '请输入分项编号', trigger: 'blur' }],
+        subName: [{ required: true, message: '请输入分项名称', trigger: 'blur' }],
+        subType: [{ required: true, message: '请选择能耗类型', trigger: 'change' }]
       },
       unitList: [], // 能耗下拉列表
       treeData: [], // 分项下拉列表
       defaultProps: { // treeSelect默认属性
-        children: 'childList',
-        label: 'name',
-        key: 'id',
+        children: 'children',
+        label: 'subName',
+        key: 'number',
         disabled: 'disabled'
       },
       selectedExpressions: [], // 传入支路表达式列表
@@ -181,7 +192,8 @@ export default {
           label: 'sub',
           resList: []
         }
-      ]
+      ],
+      treeArray: []
     }
   },
   computed: {
@@ -199,13 +211,34 @@ export default {
     configTypeQuery, // 全局配置
     subentryGetArray, // 获取分项对应支路列表及分项列表
     initData () { // 初始化能耗单位列表
-      const shopNumber = this.params.shopNumber
+      const buildId = this.params.buildId
       const configType = 32
       this.configTypeQuery({ configType }).then(res => {
         this.unitList = (res.data || {})[32] // 能耗单位列表
       }).catch(_ => {
         console.error('能耗单位列表获取失败(errorMessage):', _);
       })
+      this.getTreeArray();
+    },
+    getTreeArray () {
+      subentryGetTreeArray({ shopNumber: (this.$store.getters.getUserInfo || {}).shopNumber }).then(res => {
+        this.treeArray = res.data.array;
+      })
+    },
+    nodeChange (node, data) {
+      if (!this.form.subType) return;
+      if (data.subType !== this.form.subType) {
+        this.$message.error('该分项不属于当前能耗类型，请重新选择！');
+        setTimeout(() => {
+          this.form.parentCode = '';
+        }, 20);
+      }
+      if (this.subentryItem && this.form.number === data.number) {
+        this.$message.error('分项重复，请重新选择！');
+        setTimeout(() => {
+          this.form.parentCode = '';
+        }, 20);
+      }
     },
     submit () { // 提交编辑
       let result = false
@@ -213,20 +246,36 @@ export default {
         result = res
       })
       if (!result) return
-      this.dialogLoading = true
-      this.subentryEdit(this.params).then(res => {
-        this.dialogLoading = false
-        this.$message.success('编辑成功！')
-        this.$emit('success')
-        this.cancle()
-      }).catch(_ => {
-        console.error('编辑分项信息失败(errorMessage):', _);
-        this.dialogLoading = false
-      })
+      this.dialogLoading = true;
+      if (this.subentryItem) {
+        this.subentryEdit(this.params).then(res => {
+          this.dialogLoading = false
+          this.$message.success('编辑成功！')
+          this.$emit('success')
+          this.cancle()
+        }).catch(_ => {
+          console.error('编辑分项信息失败(errorMessage):', _);
+          this.dialogLoading = false
+        })
+      } else {
+        subentryAddOne({ ...this.params, buildId: this.$store.getters.getUserInfo.shopNumber }).then(res => {
+          this.dialogLoading = false
+          this.$message.success('新增成功！')
+          this.$emit('success')
+          this.cancle()
+        }).catch(_ => {
+          console.error('编辑分项信息失败(errorMessage):', _);
+          this.dialogLoading = false
+        })
+      }
+
     },
     cancle () { // 重置表单并关闭表单
       Object.keys(this.form).forEach(prop => {
-        this.form[prop] = ''
+        switch (prop) {
+          case 'status': this.form[prop] = 0; break;
+          default: this.form[prop] = ''; break;
+        }
       }, this)
       this.$nextTick(_ => {
         this.$refs.form && this.$refs.form.clearValidate()
@@ -237,8 +286,8 @@ export default {
     },
     handleExpression () { // 点击编辑支路表达式
       this.selectedExpressions = this.form.expressionJson ? JSON.parse(unescape(this.form.expressionJson)) : [];
-      const shopNumber = this.params.shopNumber
-      this.subentryGetArray({ shopNumber, energyType: this.form.energyType, includeMeter: true }).then(res => {
+      const buildId = this.params.buildId || this.$store.getters.getUserInfo.shopNumber;
+      this.subentryGetArray({ buildId, subType: this.form.subType, includeMeter: true }).then(res => {
         this.expressionsTabsData[0].resList = res.data.meter
         let subentryList = res.data.subentry
         subentryList.forEach(item => {
@@ -254,7 +303,7 @@ export default {
       let expression = "";
       expressions.forEach(item => {
         if (item.type === "branch") {
-          expression += `[${item.number}]${item.name}`;
+          expression += `[${item.electricAddr}]${item.name}`;
         } else if (item.type === "number") {
           expression += item.value;
         } else if (item.type === 'sub') {
@@ -265,6 +314,9 @@ export default {
       });
       this.form.expression = expression // 设置数据列表显示的表达式
       this.form.expressionJson = escape(JSON.stringify(expressions)) // 设置数据列表传送给后端的表达式
+    },
+    changeSubType () {
+      this.form.parentCode = '';
     }
   },
   watch: {
@@ -272,10 +324,15 @@ export default {
       immediate: true,
       deep: true,
       handler: function (val) {
-        if (!val && val !== 0) return
+        if (!val) return
         Object.keys(this.form).forEach(prop => {
           this.form[prop] = val[prop]
         }, this)
+      }
+    },
+    dialogVisible: function (val) {
+      if (val) {
+        this.getTreeArray();
       }
     }
   }

@@ -1,6 +1,6 @@
 <template>
   <div class="date-picker">
-    <span class="desc-name">{{ title }}:</span>
+    <span class="desc-name">{{ title }}：</span>
     <el-date-picker
       v-model="value"
       type="daterange"
@@ -9,6 +9,7 @@
       end-placeholder="结束日期"
       :picker-options="pickerOptions"
       @change="getTime"
+      :editable="false"
     />
   </div>
 </template>

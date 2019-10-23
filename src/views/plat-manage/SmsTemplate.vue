@@ -4,34 +4,22 @@
       <div class="u-layout-left-proviso">
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">
-              短信标题：
-            </p>
+            <p class="text">短信标题：</p>
             <div class="input-container">
-
-              <div style="border-radius: 2px;"
-                   class="item select-input">
+              <div style="border-radius: 2px;" class="item select-input">
                 <!--el-ui 根据需求增加配置-->
-                <el-input v-model="title"
-                          :clearable="true"
-                          placeholder="请输入短信标题"></el-input>
+                <el-input v-model.trim="title" :clearable="true" placeholder="请输入短信标题"></el-input>
               </div>
             </div>
           </div>
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">
-              短信内容：
-            </p>
+            <p class="text">短信内容：</p>
             <div class="input-container">
-
-              <div style="border-radius: 2px;"
-                   class="item select-input">
+              <div style="border-radius: 2px;" class="item select-input">
                 <!--el-ui 根据需求增加配置-->
-                <el-input v-model="content"
-                          :clearable="true"
-                          placeholder="请输入短信内容"></el-input>
+                <el-input v-model="content" :clearable="true" placeholder="请输入短信内容"></el-input>
               </div>
             </div>
           </div>
@@ -39,87 +27,84 @@
 
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">
-              状态：
-            </p>
+            <p class="text">状态：</p>
             <div class="input-container">
-
-              <div style="border-radius: 2px;"
-                   class="item select-input">
-
-                <el-select v-model="status"
-                           :clearable="true"
-                           placeholder="请选择">
-                  <el-option v-for="item in statusOptions"
-                             :key="item.value"
-                             :label="item.label"
-                             :value="item.value"></el-option>
+              <div style="border-radius: 2px;" class="item select-input">
+                <el-select v-model="status" :clearable="true" placeholder="请选择">
+                  <el-option
+                    v-for="item in statusOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
                 </el-select>
               </div>
             </div>
           </div>
         </div>
         <div class="u-layout-left-item">
-          <el-button @click="query"
-                     class="el-button el-button--primary el-button--small is-round">查询</el-button>
+          <el-button
+            @click="query"
+            icon="el-icon-search"
+            class="el-button el-button--primary el-button--small is-round"
+          >查询</el-button>
         </div>
       </div>
-        <div class="u-layout-right-item">
-            <el-button type="primary"
-                       size="mini"
-                       v-if="pageBtns.some(val=>val=='add')"
-                       @click="set">推送配置</el-button>
-        </div>
       <div class="u-layout-right-item">
-        <el-button type="primary"
-                   size="mini"
-                   icon="el-icon-plus"
-                   v-if="pageBtns.some(val=>val=='add')"
-                   @click="add">新增</el-button>
+        <el-button
+          type="primary"
+          size="mini"
+          v-if="pageBtns.some(val=>val=='add')"
+          @click="set"
+        >推送配置</el-button>
+      </div>
+      <div class="u-layout-right-item">
+        <el-button
+          type="primary"
+          size="mini"
+          icon="el-icon-plus"
+          v-if="pageBtns.some(val=>val=='add')"
+          @click="add"
+        >新增</el-button>
       </div>
     </div>
     <div style="padding-left:40px;height:630px;	overflow: auto;	overflow-x: hidden;">
-      <div class="sms"
-           v-bind:style="{backgroundImage:'url('+returnPath+')'}"
-           v-for="(item,index) in list"
-           :key="index">
+      <div
+        class="sms"
+        v-bind:style="{backgroundImage:'url('+returnPath+')'}"
+        v-for="(item,index) in list"
+        :class="{'bg_gray':item.status === 1}"
+        :key="index"
+      >
         <div class="smstitle">{{item.title.length>20?item.title.substring(1,20)+'...':item.title}}</div>
-        <div class="smscontent">{{item.content.length>99?item.content.substring(1,99)+'......':item.content}}</div>
-        <div class="smsbottom"
-             icon="el-icon-search"
-             v-if="pageBtns.some(val=>val=='edit')"
-             @click="edit(item)">
+        <div
+          class="smscontent"
+        >{{item.content.length>99?item.content.substring(1,99)+'......':item.content}}</div>
+        <div
+          class="smsbottom"
+          icon="el-icon-search"
+          v-if="pageBtns.some(val=>val=='edit')"
+          @click="edit(item)"
+        >
           <i class="el-icon-edit-outline"></i>
-          编辑</div>
+          编辑
+        </div>
       </div>
     </div>
-    <pager :pager="pager"
-           @query="query"
-           @setPager="setPager"
-           :pageSize="[6,12,24]"></pager>
+    <pager :pager="pager" @query="query" @setPager="setPager" :pageSize="[6,12,24]"></pager>
 
-    <el-dialog :visible.sync="dialogVisible"
-               width="40%"
-               :close-on-click-modal="false">
-      <span slot="title"
-           >{{eTitle}}</span>
+    <el-dialog :visible.sync="dialogVisible" width="40%" :close-on-click-modal="false">
+      <span slot="title">{{eTitle}}</span>
 
-
-        <EditSms  :dialogVisible.sync="dialogVisible"
-                        :smsInfo="smsInfo" v-if="dialogVisible"></EditSms>
+      <EditSms :dialogVisible.sync="dialogVisible" :smsInfo="smsInfo" v-if="dialogVisible"></EditSms>
     </el-dialog>
 
-      <el-dialog :visible.sync="configdialogVisible"
-                 width="40%"
-                 :close-on-click-modal="false">
-      <span slot="title"
-           >{{eTitle}}</span>
+    <el-dialog :visible.sync="configdialogVisible" width="40%" :close-on-click-modal="false">
+      <span slot="title">{{eTitle}}</span>
 
-          <EditConfigure  :configdialogVisible.sync="configdialogVisible"
-                        v-if="configdialogVisible"></EditConfigure>
-      </el-dialog>
+      <EditConfigure :configdialogVisible.sync="configdialogVisible" v-if="configdialogVisible"></EditConfigure>
+    </el-dialog>
   </div>
-
 </template>
 
 <script>
@@ -131,14 +116,14 @@ import pager from "@/components/table/Pager";
 import baseOptions from '@/utils/baseOptions';
 export default {
   extends: baseOptions,
-  components: { datePick, EditSms, EditConfigure,pager },
+  components: { datePick, EditSms, EditConfigure, pager },
   data () {
     return {
       eTitle: '编辑模版',
       smsInfo: {},
       title: '',
       dialogVisible: false,
-        configdialogVisible:false,
+      configdialogVisible: false,
       list: [],
       echartwidth: '100%',
       tablewidth: '100%',
@@ -168,7 +153,6 @@ export default {
   created () {
 
   }, mounted () {
-    // this.tablewidth = document.body.clientWidth * 0.8 + 'px';
     this.query();
   },
   methods: {
@@ -205,12 +189,11 @@ export default {
       this.eTitle = '新增短信模版';
       this.smsInfo = {};
     },
-      set () {
-         debugger
-          this.eTitle = '短信推送配置';
-          this.configdialogVisible = true;
-          this.dialogVisible = false;
-      },
+    set () {
+      this.eTitle = '短信推送配置';
+      this.configdialogVisible = true;
+      this.dialogVisible = false;
+    },
     getCharts () {
       this.isdata = false;
     }, edit (item) {
@@ -222,9 +205,6 @@ export default {
       this.smsInfo.status = item.status;
       this.dialogVisible = true;
     }
-    // ,returnPath(){
-    //  return "background-image:url("+require('../../src/assets/images/common/sms.png')+")";
-    //   }
   }, watch: {
     dialogVisible: {
       handler: function (newval, oldval) {
@@ -260,13 +240,17 @@ $defaultGrayBg: #f7f7f7;
   color: #ffffff;
   background-size: 500px 272px;
   background-repeat: no-repeat;
-
+  &.bg_gray {
+    -moz-filter: grayscale(100%);
+    filter: grayscale(100%);
+    filter: gray;
+  }
   /*opacity:0.1;*/
 }
 
 .smstitle {
-/*  padding-left: 200px;*/
-    text-align: center;
+  /*  padding-left: 200px;*/
+  text-align: center;
   padding-top: 20px;
   font-size: 20px;
 }
@@ -274,9 +258,9 @@ $defaultGrayBg: #f7f7f7;
   padding: 10px 20px 10px 20px;
   font-size: 18px;
   height: 156px;
-    word-wrap: break-word;
-    word-break: break-all;
-    overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  overflow: hidden;
 }
 .smsbottom {
   font-size: 17px;

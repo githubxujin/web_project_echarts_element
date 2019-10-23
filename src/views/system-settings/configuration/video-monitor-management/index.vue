@@ -205,7 +205,9 @@ export default {
     }
   },
   created () {
+    console.log('statusEnum', this.statusEnum)
     this.search();
+    this.statusEnum.unshift({ label: "全部", value: '' })
   },
   methods: {
     videoMonitorQuery,

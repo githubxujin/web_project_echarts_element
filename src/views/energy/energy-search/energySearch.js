@@ -47,11 +47,10 @@ export const lineOption = {
         containLabel: true
     },
     calculable: true,
-    xAxis: [
-        {
+    xAxis: [{
             type: "category",
             // boundaryGap: false,
-            name: '',//this.dateName,
+            name: '', //this.dateName,
             nameTextStyle: {
                 color: "#3a3a3a"
             },
@@ -84,21 +83,16 @@ export const lineOption = {
         {
             type: "category",
             // boundaryGap: false,
-            name: '',//this.dateName,
+            name: '', //this.dateName,
             nameTextStyle: {
                 color: "#3a3a3a"
             },
-            // axisTick: {
-            //     alignWithLabel: true
-            // },
             axisLabel: {
                 //X轴文字颜色
                 show: true,
                 textStyle: {
                     color: "#3A3A3A"
                 },
-                // interval: 1,
-                // rotate: 20,
             },
             splitLine: {
                 //X轴方向网格线颜色
@@ -107,7 +101,9 @@ export const lineOption = {
                     color: ["#E5EFF5"]
                 }
             },
-
+            // axisTick: {
+            //     alignWithLabel: true
+            // },
             axisLine: {
                 //X轴颜色
                 lineStyle: {
@@ -116,39 +112,37 @@ export const lineOption = {
                 }
             },
             data: []
-        },
-    ],
-    yAxis: [
-        {
-            type: "value",
-            name: '',
-            nameTextStyle: {
-                color: "#3a3a3a"
-            },
-            splitLine: {
-                show: true,
-                lineStyle: {
-                    color: ["#E5EFF5"]
-                }
-            },
-            axisTick: {
-                show: false
-            },
-            axisLabel: {
-                show: true,
-                textStyle: {
-                    color: "#3A3A3A"
-                }
-            },
-            nameGap: '20',
-            // nameLocation: 'middle',
-            axisLine: {
-                lineStyle: {
-                    color: "#D6D6D6",
-                    width: 1
-                }
-            }
         }
     ],
+    yAxis: [{
+        type: "value",
+        name: '',
+        nameTextStyle: {
+            color: "#3a3a3a"
+        },
+        splitLine: {
+            show: true,
+            lineStyle: {
+                color: ["#E5EFF5"]
+            }
+        },
+        axisTick: {
+            show: false
+        },
+        axisLabel: {
+            show: true,
+            textStyle: {
+                color: "#3A3A3A"
+            }
+        },
+        nameGap: '20',
+        // nameLocation: 'middle',
+        axisLine: {
+            lineStyle: {
+                color: "#D6D6D6",
+                width: 1
+            }
+        }
+    }],
     series: []
 };

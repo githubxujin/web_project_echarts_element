@@ -3,7 +3,7 @@
     <el-input
       :id="id"
       ref="reference"
-      :value="selectedLabel || placeholder"
+      :value="selectedLabel"
       :type="inputType"
       :placeholder="placeholder"
       :name="name"
@@ -114,7 +114,7 @@ import utils from '@/utils/common.js';
 import axios from '@/axios/request'
 /**
      * 支持chang事件 返回checkKeyList 与ckeckNodeList
-     * 支持通过修改v-model的传值改变选中项目 
+     * 支持通过修改v-model的传值改变选中项目
      * 支持nodeClick原生事件
      * 支持是否复选isMultiple
      * 支持是否默认全选
@@ -279,7 +279,7 @@ export default {
       // 其它选中情况
       switch (checkedLen) {
         case 0:
-          return this.placeholder;
+          return "";
         case 1:
           return this.checkedLabel || (checkedItem[checkedItem.length - 1] || {})[this.defaultProps.label] || this.placeholder;
         case allLen:
@@ -415,18 +415,50 @@ export default {
         if (res.code !== 200) {
           return Promise.reject('门店列表数据请求失败')
         }
+        if (res.data.array && res.data.array[0].data.length == 0) {
+          return;
+        }
+        if (res.data.array[0].data[0].hasOwnProperty("children")) {
+          let objTree = "";
+          res.data.array[0].data[0].children.forEach(function (item, i) {
+
+            if (item.hasOwnProperty("children")) {
+              item.children.forEach(function (item_j, j) {
+
+                if (item_j.hasOwnProperty("children")) {
+
+                  item_j.children.forEach(function (item_k, k) {
+                    objTree += item_k.number + ",";
+                    // if (item_j.children.length - 1 != k) {
+                    //   objTree += ','
+                    // }
+                  })
+                }else{
+                    objTree += item_j.number + ",";
+                }
+              })
+            }
+          })
+          let storage = window.localStorage;
+          storage.setItem("objTree", objTree);
+        }
         this.data = (res.data || {}).array || [];
         this.$emit('ajaxSuccess', JSON.parse(JSON.stringify(this.data)), this.getAllItemArr(this.dataCopy))
+
         this.$nextTick(_ => { // 请求完数据后如果为全选则设置全选
           this.initAllCkeckedNode()
         })
       }).catch(_ => {
         this.isLoading = false
         console.error('项目列表数据请求失败(errorMessage):', _);
+        this.$store.commit('base/updateLoadingStatus', {
+          isLoading: false
+        }); //关闭loading
         this.$emit('ajaxError', _) // ajax数据请求失败  触发ajaxError事件 并返回错误信息
       })
     },
     initAllCkeckedNode () {
+      localStorage.setItem("allTreeNode", JSON.stringify(this.getAllItemArr(this.dataCopy)));
       if (this.allChecked && this.$refs.elTree) {
         let allItem = this.getAllItemArr(this.dataCopy) // 获取所有无子项节点
         this.$refs.elTree.setCheckedNodes(allItem);
@@ -479,7 +511,7 @@ export default {
       // 节点树过滤方法
       if (!value) return true;
       let resultName = data[this.defaultProps.label].indexOf(value) !== -1;
-      let resultNumber = data[this.defaultProps.key] ? (data[this.defaultProps.key]+"").indexOf(value) !== -1 : false;
+      let resultNumber = data[this.defaultProps.key] ? (data[this.defaultProps.key] + "").indexOf(value) !== -1 : false;
       return resultName || resultNumber;
     },
     nodeClick (...args) {
@@ -533,6 +565,7 @@ export default {
           allArr.push(item);
         }
       }, this);
+
       return allArr;
     },
     arrayEqual (arr1 = [], arr2 = []) {
@@ -729,6 +762,13 @@ $active: #7ef7fe;
       border-bottom-color: $background;
     }
   }
+}
+/deep/ .el-icon-circle-check {
+    display: none;
+    width: 0px;
+}
+/deep/ .el-icon-circle-check:before {
+    content: "";
 }
 </style>
 

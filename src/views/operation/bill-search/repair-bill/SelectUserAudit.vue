@@ -12,7 +12,7 @@
         <el-input v-model="ruleForm.rejectInfo"></el-input>
       </el-form-item>
     </el-form>
-    <div v-if="ruleForm.checkResult==0" class="datatable-box">
+    <div v-show="ruleForm.checkResult==0" class="datatable-box">
       <el-table
         v-loading="loading"
         ref="Table"
@@ -33,7 +33,7 @@
     </div>
     <div slot="footer" class="dialog-footer">
       <div style="display: inline-block">
-        <el-button type="primary" @click="submitForm()">确 定</el-button>
+        <el-button type="primary" @click="$common.throttle(submitForm)()" :loading="btnLoading">确 定</el-button>
         <el-button @click="isHide">取 消</el-button>
       </div>
     </div>
@@ -62,11 +62,6 @@ export default {
       default: 1
     }
   },
-  watch: {
-    changeTag (val) {
-      this.initData();
-    }
-  },
   data () {
     return {
       loading: false,
@@ -84,6 +79,9 @@ export default {
   computed: {
     shopNumber () {
       return this.$store.getters.shopNumber;
+    },
+    btnLoading: function () {
+      return this.$store.getters.getBtnLoading;
     }
   },
   created () {
@@ -93,8 +91,8 @@ export default {
     //初始化数据
     initData () {
       this.loading = true;
-      this.ruleForm.msg = '';
-      executeList(this.shopNumber).then(res => {
+      this.ruleForm.msg = this.msg;
+      executeList({ shopNumber: this.shopNumber, billNumber: '' }).then(res => {
         console.log('res', res);
         if (res.code == 200) {
           this.userTableData = res.data.array;
@@ -106,7 +104,7 @@ export default {
     },
     //确定
     submitForm () {
-      console.log('选中', this.multipleSelection);
+      console.log('选中', this.multipleSelection, this.ruleForm);
       if (this.ruleForm.checkResult == 0 && this.multipleSelection.length == 0) { //如果是通过
         this.$message({
           message: '请选择人员！',
@@ -116,16 +114,18 @@ export default {
         return;
       }
       let item = { user: this.multipleSelection.length > 0 ? this.multipleSelection[0] : null, ruleForm: this.ruleForm };
-      console.log('转单', this.handleType);
+      console.log('转单', item, this.handleType);
       if (this.handleType == 1) { //派工
+        this.$store.commit('base/updateBtnLoading', true);
         this.$emit("submitForm", item);
       } else { //转单
         this.$refs['ruleForm'].validate((valid) => {
           console.log('valid :', valid);
           if (valid) {
+            this.$store.commit('base/updateBtnLoading', true);
+            this.$emit("submitForm", item);
             // 点击关闭 数据重置
             this.$refs['ruleForm'].resetFields();
-            this.$emit("submitForm", item);
           }
         });
       }

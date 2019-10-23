@@ -185,7 +185,7 @@ export default {
       return data[this.defaultProps.label].indexOf(value) !== -1;
     },
     nodeClick (data, node) {
-      // console.log(data, node)
+      console.log(data, node)
       if (node.key === this.value || data[this.defaultProps.disabled]) return;
       if (this.onlyLeafSelect) { //临时解决方案，等后端接口支持了，此处逻辑要删掉:&& data.pid == 0
         if (!node.isLeaf || data.id.toString().indexOf(',') == -1) {
@@ -212,6 +212,7 @@ export default {
       this.visible = false
     },
     clearData () { // 清除数据
+      this.query = ''
       this.$emit('input', '')
       this.$emit('change', null)
       this.dispatch('ElFormItem', 'el.form.change', '');

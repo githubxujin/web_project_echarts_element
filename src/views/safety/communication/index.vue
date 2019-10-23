@@ -255,8 +255,9 @@ export default {
         this.$message.error("时间不能为空！")
         return;
       }
-      this.meterstatu = '设备三天内在线率' + this.curSelectItem.onlineRate + '%，' + this.metersTag;
-      this.getMeterDetailsFun(4);
+      // this.meterstatu = '设备三天内在线率' + this.curSelectItem.onlineRate + '%，' + this.metersTag;
+      let tag = '三天内';
+      this.getMeterDetailsFun(4, tag);
     },
     //采集器left
     metermonLeft (index, meterMonitor) {
@@ -331,11 +332,13 @@ export default {
     getClassByStatus (status) {
       return status == 1 ? "normal" : "abnormal";
     },
-    getMeterDetailsFun (index) {
+    getMeterDetailsFun (index, tag) {
       getMeterMonitorHistoryData({ dayType: index, shopNumber: this.shopNumber, meterNumber: this.curMeterNumber, queryTime: this.queryHistoryDate }).
         then(res => {
           if (res.code == 200) {
             this.meterDetail = res.data.dataList;
+            this.curSelectItem.onlineRate = res.data.onlineRate;
+            this.meterstatu = '设备' + tag + '在线率' + this.curSelectItem.onlineRate + '%，' + this.metersTag;
           } else {
             this.$message.error(res.msg);
           }
@@ -357,8 +360,7 @@ export default {
       })
       item.active = true;
       let tag = (index != 4 ? item.time : '三天内') || '';
-      this.meterstatu = '设备' + tag + '在线率' + this.curSelectItem.onlineRate + '%，' + this.metersTag;
-      this.getMeterDetailsFun(index);
+      this.getMeterDetailsFun(index, tag);
     }
   },
   destroyed () {
@@ -469,7 +471,7 @@ export default {
     li {
       padding-left: 34px;
       &:after {
-        content: "";
+        content: '';
         display: block;
         width: 23px;
         height: 9px;
@@ -494,7 +496,7 @@ export default {
 
 .metermon_info .left li:after,
 .collection_msg .cicle:after {
-  content: "";
+  content: '';
   display: block;
   width: 14px;
   height: 14px;
@@ -589,7 +591,7 @@ export default {
       width: 100%;
     }
     &:after {
-      content: "";
+      content: '';
       display: block;
       width: 2px;
       height: 62px;

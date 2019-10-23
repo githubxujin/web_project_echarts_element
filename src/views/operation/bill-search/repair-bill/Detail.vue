@@ -24,7 +24,14 @@
               <div>{{billDetail.deviceName}}</div>
             </el-col>
           </el-row>
-
+          <el-row>
+            <el-col :span="4">
+              <div>是否紧急：</div>
+            </el-col>
+            <el-col :span="20">
+              <div>{{billDetail.urgent==1?'紧急':'通常'}}</div>
+            </el-col>
+          </el-row>
           <el-row>
             <el-col :span="4">
               <div>故障类型：</div>
@@ -47,6 +54,22 @@
             </el-col>
             <el-col :span="20">
               <div>{{curBill.sourceStr}}</div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="4" v-show="billDetail.source==BillSource.WX">
+              <div>商户名称：</div>
+            </el-col>
+            <el-col :span="20">
+              <div>{{billDetail.businessName}}</div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="4">
+              <div>报修人：</div>
+            </el-col>
+            <el-col :span="20">
+              <div>{{billDetail.reportName}}</div>
             </el-col>
           </el-row>
           <el-row>
@@ -84,6 +107,27 @@
               </viewer>
             </el-col>
           </el-row>
+          <el-row v-if="billDetail.voiceUrl">
+            <el-col :span="4">
+              <div>报修语音：</div>
+            </el-col>
+            <el-col :span="20">
+              <audio
+                :src="billDetail.voiceUrl"
+                controls="controls"
+                style="width:250px; height:54px;vertical-align: middle; "
+                autoplay="autoplay"
+              ></audio>
+            </el-col>
+          </el-row>
+          <el-row v-if="billDetail.videoUrl">
+            <el-col :span="4">
+              <div>报修视频：</div>
+            </el-col>
+            <el-col :span="20">
+              <video width="100%" height="150px" controls :src="billDetail.videoUrl"></video>
+            </el-col>
+          </el-row>
           <el-row>
             <el-col :span="4">
               <div>备注：</div>
@@ -95,7 +139,7 @@
           <!-- 完工 -->
           <div v-if="billDetail.status!=BillStatusEnum.waiting">
             <el-row>
-              <el-col :span="24">完成情况</el-col>
+              <el-col :span="24" class="title-text">完成情况</el-col>
             </el-row>
             <el-row>
               <el-col :span="4">
@@ -257,7 +301,7 @@ export default {
       let res = 0;
       if (this.curBill.status == this.BillStatusEnum.waiting) {
         res = 0;
-      } else if (this.curBill.status == this.BillStatusEnum.closed) {
+      } else if (this.curBill.status == this.BillStatusEnum.closed || this.curBill.status == this.BillStatusEnum.canceled) {
         res = 2;
       } else {
         res = 1;
@@ -297,7 +341,7 @@ export default {
     },
     //执行派工操作
     submitDispatching (data) {
-      let item = { billNumber: this.curBill.billNumber, userId: data.user.id };
+      let item = { billNumber: this.curBill.billNumber, userId: data.user.userId };
       repairDispatch(item).then(res => {
         // console.log('res', res);
         if (res.code == 200) {
@@ -314,7 +358,7 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 .repair-detail {
   .el-timeline {
     padding-left: 4px;
@@ -324,12 +368,21 @@ export default {
 </style>
 
 <style lang="scss" scoped>
-/deep/ .el-rate {
-  height: 40px;
-  line-height: 40px;
+.title-text {
+  font-weight: bold;
 }
 /deep/ .el-rate__item {
   line-height: 40px;
+  /deep/ .el-rate__icon {
+    height: 40px;
+    line-height: 40px;
+  }
+}
+/deep/ .el-rate__text {
+  height: 40px;
+  line-height: 40px;
+  display: inline-block;
+  padding-bottom: 2px;
 }
 /deep/ .el-step.is-horizontal .el-step__line {
   top: 18px;
@@ -345,7 +398,7 @@ export default {
   }
 }
 /deep/ .el-tabs__content {
-  height: 500px;
+  height: 480px;
   overflow-y: auto;
 }
 /deep/ .el-tabs__nav-scroll {

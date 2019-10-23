@@ -5,7 +5,7 @@
       <div class="layout-tree" v-if="roleType==1">
         <Projecttree v-model="treeData" :isMultiple="false" @change="treeCheckChange"></Projecttree>
       </div>
-      <span v-else class="shop-title">{{subBranchName}}</span>
+      <span v-else class="shop-title text-ellipse" :title="subBranchName">{{subBranchName}}</span>
       <top-user />
       <top-nav />
     </div>
@@ -75,10 +75,12 @@ import AlarmPage from './AlarmPage.vue';
 import Projecttree from '../../../components/projecttree/index.js';
 import { initWebSocket } from "@/utils/websocket";
 import { getOrderHandlerByShop } from "@/services/dashboard";
+import forbidBack from '@/utils/mixins/forbidBack.js';
 
 let count = 0;
 export default {
   components: { Logo, TopUser, TopNav, leftBar, PowerSystem, waterSystem, EnergySystem, ElevatorSystem, AirSystem, AlarmInfo, AlarmPage, Projecttree }, //Menu
+  mixins: [forbidBack],
   data () {
     return {
       treeData: [],
@@ -206,11 +208,13 @@ export default {
     // websocket回调函数，对数据进行分配
     getComponentData (res) {
       if (typeof (res) == "string") {
-        this.allData.totalInfoData = res
+        this.allData.totalInfoData = res;
+        // console.log('综合报警信息', res)
       } else {
         switch (res.code) { //综合报警信息
           case 1:
-            this.allData.totalInfoData = res
+            console.log('shuju', res)
+            this.allData.totalInfoData = res.data
             break;
           case 2://供配电
             this.allData.powerData = res.data;
@@ -229,6 +233,7 @@ export default {
             break;
           default:
             this.AlarmObject.push(res.data);
+            console.log('报警弹窗中显示的报警信息', this.AlarmObject)
             if (this.AlarmObject.length > 0) {
               this.showAlarmPwPopup = true;
             }
@@ -243,7 +248,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/components/layout/scss/head.scss';
+@import "@/components/layout/scss/head.scss";
 .shop-home-page {
   width: 100%;
   height: 100%;
@@ -320,7 +325,8 @@ export default {
         width: 100%;
         height: 310px;
         display: flex;
-        align-content: space-around;
+        justify-content: space-between;
+        // align-content: space-around;
         .air-system,
         .elevator-system,
         .energy-system {
@@ -336,6 +342,24 @@ export default {
         }
       }
     }
+  }
+}
+@media screen and (max-width: 1870px) {
+  /deep/ .pm-title {
+    display: none !important;
+  }
+  .shop-title {
+    max-width: 300px;
+  }
+}
+@media screen and (max-width: 1520px) {
+  .shop-title {
+    max-width: 250px;
+  }
+}
+@media screen and (max-width: 1446px) {
+  .shop-title {
+    max-width: 200px;
   }
 }
 </style>

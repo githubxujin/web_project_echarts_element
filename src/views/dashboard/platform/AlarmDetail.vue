@@ -79,6 +79,7 @@ export default {
   },
   created () {
     // this.initData()
+    this.$autoStop();
   },
   methods: {
     //数据更新

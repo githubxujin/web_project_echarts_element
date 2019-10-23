@@ -39,6 +39,7 @@
               type="text"
               v-model="tableData.tData[scope.$index][item.prop]"
               ref="myInput"
+              maxlength="17"
               @blur="sumTotal(scope.row,scope.$index,item.prop)"
             />
             <span
@@ -299,7 +300,7 @@ export default {
       this.showEdit[index][prop] = false;
       this.showBorder = JSON.parse(JSON.stringify(this.showEdit))
       if (isNaN(parseInt(row[prop]))) {
-        row[prop] = 0;
+        row[prop] = '--';
       } else {
         row[prop] = parseInt(row[prop]);
       }
@@ -315,70 +316,97 @@ export default {
         }
       }
 
-      this.tableData.tData[index][prop] = parseInt(row[prop]);
+      this.tableData.tData[index][prop] = row[prop];
+      console.log(222, this.tableData.tData[index][prop])
       // 实现基准=定额+节能目标的联动
       switch (this.type) {
         case '01':
-          if (index == 3 && this.tableData.tData[3][prop] >= 0) {
-            if (this.tableData.tData[0][prop] > this.tableData.tData[3][prop]) {
-              this.tableData.tData[2][prop] = parseInt(this.tableData.tData[0][prop]) - parseInt(this.tableData.tData[3][prop]);
-            } else {
-              this.tableData.tData[0][prop] = this.tableData.tData[2][prop] + this.tableData.tData[3][prop];
-            }
-          } else if (index == 2 && this.tableData.tData[2][prop] >= 0) {
-            if (this.tableData.tData[0][prop] > this.tableData.tData[2][prop]) {
-              this.tableData.tData[3][prop] = this.tableData.tData[0][prop] - this.tableData.tData[2][prop];
-            } else {
-              this.tableData.tData[0][prop] = this.tableData.tData[3][prop] + this.tableData.tData[2][prop];
-            }
-          } else if (index == 0 && this.tableData.tData[0][prop] >= 0) {
-            let gap = this.tableData.tData[3][prop] - this.tableData.tData[0][prop]
-            if (gap > 0) {//定额大于基准的情况
-              if (this.tableData.tData[2][prop] > this.tableData.tData[0][prop]) {
-                this.tableData.tData[3][prop] = 0;
-                this.tableData.tData[2][prop] = this.tableData.tData[0][prop];
+          if (index == 3) {
+            if (this.tableData.tData[3][prop] >= 0) {
+              if (this.tableData.tData[0][prop] > this.tableData.tData[3][prop]) {
+                this.tableData.tData[2][prop] = parseInt(this.tableData.tData[0][prop]) - parseInt(this.tableData.tData[3][prop]);
               } else {
+                this.tableData.tData[0][prop] = this.tableData.tData[2][prop] != '--' ? this.tableData.tData[2][prop] + this.tableData.tData[3][prop] : this.tableData.tData[3][prop];
+              }
+            } else if (this.tableData.tData[3][prop] == '--') {
+              this.tableData.tData[0][prop] = this.tableData.tData[2][prop] != '--' ? this.tableData.tData[2][prop] : '--';
+            }
+          } else if (index == 2) {
+            if (this.tableData.tData[2][prop] >= 0) {
+              if (this.tableData.tData[0][prop] > this.tableData.tData[2][prop]) {
                 this.tableData.tData[3][prop] = this.tableData.tData[0][prop] - this.tableData.tData[2][prop];
-              }
-            } else {//基准大于定额
-              if (this.tableData.tData[2][prop] > this.tableData.tData[0][prop]) {
-                this.tableData.tData[3][prop] = 0;
-                this.tableData.tData[2][prop] = this.tableData.tData[0][prop];
               } else {
-                this.tableData.tData[3][prop] = this.tableData.tData[0][prop] - this.tableData.tData[2][prop]
+                this.tableData.tData[0][prop] = this.tableData.tData[3][prop] != '--' ? this.tableData.tData[3][prop] + this.tableData.tData[2][prop] : this.tableData.tData[2][prop];
               }
+            } else if (this.tableData.tData[2][prop] == '--') {
+              this.tableData.tData[0][prop] = this.tableData.tData[3][prop] != '--' ? this.tableData.tData[3][prop] : '--';
+            }
+          } else if (index == 0) {
+            if (this.tableData.tData[0][prop] >= 0) {
+              let gap = this.tableData.tData[3][prop] - this.tableData.tData[0][prop]
+              if (gap > 0) {//定额大于基准的情况
+                if (this.tableData.tData[2][prop] > this.tableData.tData[0][prop]) {
+                  this.tableData.tData[3][prop] = 0;
+                  this.tableData.tData[2][prop] = this.tableData.tData[0][prop];
+                } else {
+                  this.tableData.tData[3][prop] = this.tableData.tData[0][prop] - this.tableData.tData[2][prop];
+                }
+              } else {//基准大于定额
+                if (this.tableData.tData[2][prop] > this.tableData.tData[0][prop]) {
+                  this.tableData.tData[3][prop] = 0;
+                  this.tableData.tData[2][prop] = this.tableData.tData[0][prop];
+                } else {
+                  this.tableData.tData[3][prop] = this.tableData.tData[2][prop] != '--' ? this.tableData.tData[0][prop] - this.tableData.tData[2][prop] : this.tableData.tData[0][prop]
+                }
+              }
+            } else if (this.tableData.tData[0][prop] == '--') {
+              this.tableData.tData[3][prop] = '--'
             }
           }
           break;
         default:
-          if (index == 2 && this.tableData.tData[2][prop] >= 0) {
-            if (this.tableData.tData[0][prop] > this.tableData.tData[2][prop]) {
-              this.tableData.tData[1][prop] = parseInt(this.tableData.tData[0][prop]) - parseInt(this.tableData.tData[2][prop]);
-            } else {
-              this.tableData.tData[0][prop] = this.tableData.tData[2][prop] + this.tableData.tData[1][prop];
-            }
-          } else if (index == 1 && this.tableData.tData[1][prop] >= 0) {
-            if (this.tableData.tData[0][prop] > this.tableData.tData[1][prop]) {
-              this.tableData.tData[2][prop] = this.tableData.tData[0][prop] - this.tableData.tData[1][prop];
-            } else {
-              this.tableData.tData[0][prop] = this.tableData.tData[1][prop] + this.tableData.tData[2][prop];
-            }
-          } else if (index == 0 && this.tableData.tData[0][prop] >= 0) {
-            let gap = this.tableData.tData[2][prop] - this.tableData.tData[0][prop]
-            if (gap > 0) {//定额大于基准的情况
-              if (this.tableData.tData[1][prop] > this.tableData.tData[0][prop]) {
-                this.tableData.tData[2][prop] = 0;
-                this.tableData.tData[1][prop] = this.tableData.tData[0][prop];
+          if (index == 2) {
+            if (this.tableData.tData[2][prop] >= 0) {
+              if (this.tableData.tData[0][prop] > this.tableData.tData[2][prop]) {
+                this.tableData.tData[1][prop] = parseInt(this.tableData.tData[0][prop]) - parseInt(this.tableData.tData[2][prop]);
               } else {
+                this.tableData.tData[0][prop] = this.tableData.tData[1][prop] != '--' ? this.tableData.tData[2][prop] + this.tableData.tData[1][prop] : this.tableData.tData[2][prop];
+              }
+            } else if (this.tableData.tData[2][prop] == '--') {
+              this.tableData.tData[0][prop] = this.tableData.tData[1][prop] != '--' ? this.tableData.tData[1][prop] : '--';
+            }
+
+          } else if (index == 1) {
+            if (this.tableData.tData[1][prop] >= 0) {
+              if (this.tableData.tData[0][prop] > this.tableData.tData[1][prop]) {
                 this.tableData.tData[2][prop] = this.tableData.tData[0][prop] - this.tableData.tData[1][prop];
-              }
-            } else {//基准大于定额
-              if (this.tableData.tData[1][prop] > this.tableData.tData[0][prop]) {
-                this.tableData.tData[2][prop] = 0;
-                this.tableData.tData[1][prop] = this.tableData.tData[0][prop];
               } else {
-                this.tableData.tData[2][prop] = this.tableData.tData[0][prop] - this.tableData.tData[1][prop]
+                this.tableData.tData[0][prop] = this.tableData.tData[2][prop] != '--' ? this.tableData.tData[1][prop] + this.tableData.tData[2][prop] : this.tableData.tData[1][prop];
               }
+            } else if (this.tableData.tData[1][prop] == '--') {
+              this.tableData.tData[0][prop] = this.tableData.tData[2][prop] != '--' ? this.tableData.tData[2][prop] : '--';
+            }
+
+          } else if (index == 0) {
+            if (this.tableData.tData[0][prop] >= 0) {
+              let gap = this.tableData.tData[2][prop] - this.tableData.tData[0][prop]
+              if (gap > 0) {//定额大于基准的情况
+                if (this.tableData.tData[1][prop] > this.tableData.tData[0][prop]) {
+                  this.tableData.tData[2][prop] = 0;
+                  this.tableData.tData[1][prop] = this.tableData.tData[0][prop];
+                } else {
+                  this.tableData.tData[2][prop] = this.tableData.tData[0][prop] - this.tableData.tData[1][prop];
+                }
+              } else {//基准大于定额
+                if (this.tableData.tData[1][prop] > this.tableData.tData[0][prop]) {
+                  this.tableData.tData[2][prop] = 0;
+                  this.tableData.tData[1][prop] = this.tableData.tData[0][prop];
+                } else {
+                  this.tableData.tData[2][prop] = this.tableData.tData[1][prop] != '--' ? this.tableData.tData[0][prop] - this.tableData.tData[1][prop] : this.tableData.tData[0][prop]
+                }
+              }
+            } else if (this.tableData.tData[0][prop] == '--') {
+              this.tableData.tData[2][prop] = '--'
             }
           }
           break;
@@ -395,6 +423,7 @@ export default {
         }
         item['total'] = item['itemName'] !== '温度（℃）' ? total : '--';
       })
+      console.log(this.tableData.tData)
       this.handlerTableDate(this.tableData.tData)
     },
     // 将表格数据出处理成后台需要的格式
@@ -430,14 +459,15 @@ export default {
           this.waterData[key] = obj[key]
         }
       }
-      // console.log(this.waterData, this.elecData)
+      console.log(this.waterData, this.elecData)
     },
     handlerTableObject (item, obj) {
       let data = utils.deepCopy(item);
       delete data.itemName;
       delete data.total;
       for (const key in data) {
-        obj[parseInt(key) - 1] = parseFloat(data[key])
+        // obj[parseInt(key) - 1] = parseFloat(data[key])
+        obj[parseInt(key) - 1] = data[key]
       }
       return obj
     },

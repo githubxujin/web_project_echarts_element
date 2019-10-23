@@ -10,7 +10,6 @@
         :action="$store.state.base.uploadUrl"
         :on-success="handleAvatarSuccess"
         :show-file-list="false"
-        :file-list="pictureList"
         :accept="$common.getMimeTypeList('jpg,png,gif').join(',')"
       >
         <div class="plus-block">
@@ -25,9 +24,9 @@
           view-class="picture-list"
         >
           <div class="back-tip" v-show="!pictureList.length">请上传门店图片</div>
-          <viewer :images="images" class="img-viewer">
-            <div class="img-cell" v-for="(item, index) in pictureList" :key="index">
-              <img height="100%" :src="item.url" alt />
+          <viewer :images="pictureList" class="img-viewer">
+            <div class="img-cell" v-for="item in pictureList" :key="item.url">
+              <img height="100%" :src="item.pictureUrl" alt />
               <div class="handle-bar">
                 <el-upload
                   :headers="{token:tokenInfo}"
@@ -104,22 +103,38 @@ export default {
         console.error('获取门店图片列表失败(errorMessage):', _);
       })
     },
-    handleAvatarSuccess (res, file) { // 门店图片上传完成
+    handleAvatarSuccess (res, file, fileList) { // 门店图片上传完成
       let data = res.data
-      console.log('图片信息：', data)
+      console.log('图片信息：', res, file, fileList)
       let item = [{
         pictureName: data.fileName,
         pictureUrl: data.filePath,
         shopNumber: this.shopNumber
-      }]
+      }];
       // 保存修改后的图片链接，提交时候判断是否有，有则提交picture无则给picture置空
       this.shopPictureAdd(item).then(res => {
         if (res.code !== 200) return Promise.reject('上传失败')
+        this.addImg(data, file, res.data.array[0].id);
         // 不论新增还是更新删除都要重新获取~
-        this.initData()
+        // this.initData()
       }).catch(_ => {
         console.error('新增图片失败(errorMessage):', _);
       })
+    },
+    addImg (data, file, id) {
+      // this.pictureList = [];
+      let fullPath = (data.imgServer || '') + '/' + data.filePath;
+      this.pictureList.unshift({ id: id, originUrl: data.filePath, pictureName: file.name, pictureUrl: fullPath, shopNumber: this.shopNumber, updateId: null });
+      console.log('add this.pictureList :', this.pictureList);
+    },
+    removeImg (file) {
+      console.log('data', file, this.pictureList)
+      let index = this.pictureList.findIndex(n => n.name == file.name && n.url == file.url);
+      console.log('index', index)
+      if (index != -1) {
+        this.pictureList.splice(index, 1);
+      }
+      console.log('删除this.pictureList', this.pictureList)
     },
     handleEditSuccess (res, file, fileList) { // 门店图片上传完成
       let { id, originalUrl, shopNumber } = (fileList[0] || {})
@@ -149,7 +164,8 @@ export default {
         this.shopPictureDelete(image).then(res => {
           if (res.code !== 200) return Promise.reject('删除失败!')
           this.$message.success('删除门店图片成功！')
-          this.initData()
+          this.removeImg(image);
+          // this.initData()
         }).catch(_ => {
           console.error('删除门店图片失败(errorMessage):', _);
           this.$message.error('删除门店图片失败！')
@@ -224,10 +240,13 @@ export default {
               color: #ddd;
             }
             .img-viewer {
+              display: flex;
               height: 100%;
               .img-cell {
                 display: inline-block;
                 height: 100%;
+                min-width: 160px;
+                text-align: center;
                 position: relative;
                 margin-left: 20px;
                 &:first-child {
@@ -235,6 +254,7 @@ export default {
                 }
                 img {
                   cursor: pointer;
+                  width: 180px;
                 }
                 .handle-bar {
                   position: absolute;

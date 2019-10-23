@@ -337,6 +337,7 @@ const menus = [
             {
                 icon: 'iconfont nhjc-shouyegailan',
                 index: '/energy/energy-search',
+                name: 'energy-search',
                 pid: 68,
                 remark: '用能管理-能耗查询',
                 id: 70,
@@ -545,7 +546,7 @@ const menus = [
             }
         ]
     }
-]
+];
 const platMenus = [
     {
         icon: 'iconfont nhjc-shouyegailan',
@@ -709,7 +710,7 @@ const platMenus = [
             }
         ]
     }
-]
+];
 const shopMenus = [
     {
         icon: 'iconfont nhjc-shouyegailan',
@@ -751,5 +752,5 @@ const shopMenus = [
         id: 5,
         title: '资产管理'
     }
-]
-export { menus, platMenus, shopMenus }
+];
+export { menus, platMenus, shopMenus };

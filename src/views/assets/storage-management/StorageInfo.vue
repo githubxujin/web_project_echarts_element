@@ -1,3 +1,7 @@
+/**
+*@Author: lucy
+*@Create: 2019/06/07
+ */
 <template>
   <div class="inspection">
     <div class="u-layout-search two u-layout-dobule">
@@ -15,7 +19,7 @@
 
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">配件名称：</p>
+            <p class="text">入库配件：</p>
             <div class="input-container">
               <div class="item select-input">
                 <!--el-ui 根据需求增加配置-->
@@ -33,7 +37,7 @@
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <datePick v-model="checkTime" title="操作时间" :defaultStartTime="defaultStartTime"></datePick>
+            <datePick v-model="checkTime" title="入库时间" :defaultStartTime="defaultStartTime"></datePick>
           </div>
         </div>
         <div class="u-layout-left-item">
@@ -70,7 +74,7 @@
         <el-table-column prop="sparePartName" label="入库配件"></el-table-column>
         <el-table-column prop="inAmount" label="金额"></el-table-column>
         <el-table-column prop="operatorName" label="操作人"></el-table-column>
-        <el-table-column prop="inTime" label="操作时间"></el-table-column>
+        <el-table-column prop="inTime" label="入库时间"></el-table-column>
         <el-table-column fixed="right" label="操作" width="180">
           <template slot-scope="scope">
             <el-button
@@ -182,6 +186,21 @@ export default {
     curShop: function () {
       return this.$store.getters.getCurShop;
     },
+    // -----------------按钮权限---------------------
+    //显示转单按钮
+    showAddBtn () {
+      return this.pageBtns.some(val => val == 'add');
+    },
+    showEditBtn () {
+      return this.pageBtns.some(val => val == 'edit');
+    },
+    showDetailBtn () {
+      return this.pageBtns.some(val => val == 'detail');
+    },
+    showDeleteBtn () {
+      return this.pageBtns.some(val => val == 'delete');
+    }
+    // -----------------按钮权限结束---------------------
   },
   watch: {
     shopNumber (val) {
@@ -199,32 +218,21 @@ export default {
     }
   },
   methods: {
-    // -----------------按钮权限---------------------
-    //显示转单按钮
-    showAddBtn () {
-      return this.pageBtns.some(val => val == 'add');
-    },
-    showEditBtn () {
-      return this.pageBtns.some(val => val == 'edit');
-    },
-    showDetailBtn () {
-      return this.pageBtns.some(val => val == 'detail');
-    },
-    showDeleteBtn () {
-      return this.pageBtns.some(val => val == 'delete');
-    },
-    showImportBtn () {
-      return this.pageBtns.some(val => val == 'import');
-    },
-    // -----------------按钮权限结束---------------------
+
     getPartsType () {
       getSparePartTree({ shopNumber: this.shopNumber }).then(res => {
         this.partsType = res.data || []
       })
     },
     getPartKey (node, data) {
-      this.sparePartId = data.isSparePart ? data.id : '';
-      this.sparePartType = data.isSparePart ? '' : data.id
+      console.log(node)
+      if (node != null) {
+        this.sparePartId = data.id ? data.id : '';
+        this.sparePartType = data.configType ? data.configType : ''
+      } else {
+        this.sparePartId = '';
+        this.sparePartType = ''
+      }
     },
     //初始化界面数据
     getinStorageList () {

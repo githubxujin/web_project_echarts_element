@@ -62,6 +62,19 @@
         </el-form-item>
       </el-row>
       <el-row>
+        <el-col :span="12">
+          <el-form-item prop="status" label="状态">
+            <el-radio-group v-model="form.status">
+              <el-radio
+                :key="index"
+                v-for="(item, index) in statusEnum"
+                :label="item.value"
+              >{{item.label}}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
         <el-form-item prop="remark" label="备注">
           <el-input
             style="width:520px;"
@@ -90,6 +103,7 @@ import ProjectTree from '@/components/projecttree'
 import url from '@/axios/url.js'
 import { transformerAdd, transformerEdit, meterGetTreeArray } from '@/services/system-settings.js'
 import Regexps from '@/utils/regexp.js'
+import { statusEnum } from '@/enum/dicts.js'
 export default {
   components: { ProjectTree },
   props: {
@@ -98,6 +112,7 @@ export default {
   },
   data () {
     return {
+      statusEnum,
       Regexps, // 正则集合
       dialogLoading: false, // 弹框loading
       submitLoading: false, // 提交按钮loading
@@ -110,7 +125,8 @@ export default {
         meterIds: [],
         meterInfo: '',
         remark: '',
-        shopNumber: ''
+        shopNumber: '',
+        status: 0
       },
       formRules: { // 表单规则
         number: [{ required: true, message: '请输入变压器编号', trigger: 'blur' }],
@@ -182,6 +198,7 @@ export default {
     cancle () { // 重置表单并关闭表单
       Object.keys(this.form).forEach(prop => {
         switch (prop) {
+          case 'status': this.form[prop] = 0; break;
           case 'meterIds': this.form[prop] = []; break;
           default: this.form[prop] = ''; break;
         }
@@ -196,7 +213,7 @@ export default {
     branchChange () { // 支路change事件
       // let checkedNodeList = arguments[1].filter(item => !item.children)
       let labelList = arguments[1].map(item => {
-        return `[${item.number}]${item.name}`
+        return `[${item.electricAddr}]${item.name}`
       })
       this.form.meterInfo = labelList.join(',') || '请选择支路'
       console.log('branchChange args:', arguments[1], this.form.meterInfo);
@@ -212,6 +229,9 @@ export default {
         Object.keys(this.form).forEach(prop => {
           this.form[prop] = val[prop]
         }, this)
+        if (val.status) {
+
+        }
       }
     }
   }

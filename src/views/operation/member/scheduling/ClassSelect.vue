@@ -3,16 +3,44 @@
     <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="60px">
       <el-checkbox v-model="ruleForm.oneClassChecked">一班倒</el-checkbox>
       <el-form-item label="整班">
-        <vue-timepicker v-if="showCom" v-model="ruleForm.oneClassData.on" :minute-interval="10"></vue-timepicker>
-        <vue-timepicker v-if="showCom" v-model="ruleForm.oneClassData.off" :minute-interval="10"></vue-timepicker>
+        <vue-timepicker
+          v-if="showCom"
+          :disabled="disabledOne"
+          v-model="ruleForm.oneClassData.on"
+          :minute-interval="10"
+        ></vue-timepicker>
+        <vue-timepicker
+          v-if="showCom"
+          :disabled="disabledOne"
+          v-model="ruleForm.oneClassData.off"
+          :minute-interval="10"
+        ></vue-timepicker>
       </el-form-item>
-      <el-checkbox v-model="ruleForm.twoClassChecked">两班倒</el-checkbox>
+      <div>
+        <el-checkbox v-model="ruleForm.twoClassChecked">两班倒</el-checkbox>
+        <!-- 跨天的班次属于
+        <el-select v-model="twoAccross" placeholder="请选择" popper-class="accross" size="mini">
+          <el-option
+            v-for="item in acrossOtions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>-->
+      </div>
+
       <el-row>
         <el-col :span="12">
           <el-form-item label="白班">
-            <vue-timepicker v-if="showCom" v-model="ruleForm.dayClassData.on" :minute-interval="10"></vue-timepicker>
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledTwo"
+              v-model="ruleForm.dayClassData.on"
+              :minute-interval="10"
+            ></vue-timepicker>
+            <vue-timepicker
+              v-if="showCom"
+              :disabled="disabledTwo"
               v-model="ruleForm.dayClassData.off"
               :minute-interval="10"
             ></vue-timepicker>
@@ -22,28 +50,43 @@
           <el-form-item label="夜班">
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledTwo"
               v-model="ruleForm.nightClassData.on"
               :minute-interval="10"
             ></vue-timepicker>
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledTwo"
               v-model="ruleForm.nightClassData.off"
               :minute-interval="10"
             ></vue-timepicker>
           </el-form-item>
         </el-col>
       </el-row>
-      <el-checkbox v-model="ruleForm.threeClassChecked">三班倒</el-checkbox>
+      <div>
+        <el-checkbox v-model="ruleForm.threeClassChecked">三班倒</el-checkbox>
+        <!-- 跨天的班次属于
+        <el-select v-model="threeAccross" placeholder="请选择" popper-class="accross" size="mini">
+          <el-option
+            v-for="item in acrossOtions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>-->
+      </div>
       <el-row>
         <el-col :span="12">
           <el-form-item label="早班">
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.mornClassData.on"
               :minute-interval="10"
             ></vue-timepicker>
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.mornClassData.off"
               :minute-interval="10"
             ></vue-timepicker>
@@ -53,11 +96,13 @@
           <el-form-item label="中班">
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.noonClassData.on"
               :minute-interval="10"
             ></vue-timepicker>
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.noonClassData.off"
               :minute-interval="10"
             ></vue-timepicker>
@@ -69,11 +114,13 @@
           <el-form-item label="晚班">
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.eveningClassData.on"
               :minute-interval="10"
             ></vue-timepicker>
             <vue-timepicker
               v-if="showCom"
+              :disabled="disabledThree"
               v-model="ruleForm.eveningClassData.off"
               :minute-interval="10"
             ></vue-timepicker>
@@ -99,6 +146,15 @@ export default {
   },
   data () {
     return {
+      acrossOtions: [{
+        value: 1,
+        label: '第一天'
+      }, {
+        value: 2,
+        label: '第二天'
+      }],
+      twoAccross: 1,
+      threeAccross: 1,
       showCom: false,//显示组件
       ruleForm: {
         oneClassChecked: '',
@@ -173,9 +229,6 @@ export default {
         }
       },
       rules: {
-        oneClassChecked: [
-          { required: true, message: '请输入设备名称', trigger: 'blur' },
-        ],
       },
       classData: [],
       formData: []
@@ -189,6 +242,18 @@ export default {
     shopNumber () {
       return this.$store.getters.shopNumber;
     },
+    // 一班的禁用
+    disabledOne () {
+      return !this.ruleForm.oneClassChecked;
+    },
+    // 二班的禁用
+    disabledTwo () {
+      return !this.ruleForm.twoClassChecked;
+    },
+    // 三班的禁用
+    disabledThree () {
+      return !this.ruleForm.threeClassChecked;
+    }
   },
   methods: {
     initData () {
@@ -396,6 +461,11 @@ export default {
   width: 80px;
   float: left;
   margin-left: 15px;
+}
+.class-select {
+  .el-select {
+    width: 90px;
+  }
 }
 </style>
 <style lang="scss">

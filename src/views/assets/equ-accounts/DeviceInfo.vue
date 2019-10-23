@@ -86,6 +86,7 @@
           @click="showLedger"
           v-if="showAddBtn"
         >台账统计</el-button>
+
         <el-button
           style="background: #f3f5fa;color:#222222"
           v-if="showImportBtn"
@@ -124,7 +125,23 @@
               size="small"
               v-if="showDetailBtn"
             >详情</el-button>
-            <el-button type="text" size="small" v-if="showEditBtn">二维码</el-button>
+            <el-popover placement="bottom" width="150" trigger="click">
+              <!-- <canvas style="width:200px;" :id="'canvas'+scope.row.id"></canvas> -->
+              <div
+                v-loading="loading"
+                style="width:150px;height:150px;"
+                :id="'qrCode' + scope.row.id"
+                :ref="'qrCode' + scope.row.id"
+              ></div>
+              <el-button
+                slot="reference"
+                @click="returnCode(scope.row)"
+                type="text"
+                size="small"
+                v-if="showEditBtn"
+              >二维码</el-button>
+            </el-popover>
+
             <el-button
               @click="editdetails(scope.row)"
               type="text"
@@ -146,6 +163,7 @@
       <span slot="title" class="dialog-header">设备详情</span>
       <deviceinfodetails
         :dialogVisible.sync="dialogVisible"
+        :tabInfoDetail="tabInfoDetail"
         :details="details"
         v-if="dialogVisible"
       ></deviceinfodetails>
@@ -156,6 +174,7 @@
       <editdeviceinfo
         :editdialogVisible.sync="editdialogVisible"
         :details="details"
+        :tabInfoDetail="tabInfoDetail"
         v-if="editdialogVisible"
         :deviceList="treeData"
         :brandList="brandList"
@@ -167,7 +186,11 @@
     <!-- 台账统计弹窗 -->
     <el-dialog :visible.sync="LedgerDialogVisible" width="50%" :close-on-click-modal="false">
       <span slot="title" class="dialog-header">台账统计</span>
-      <ledger-statistic :LedgerDialogVisible.sync="LedgerDialogVisible" :shopNumber="shopNumber"></ledger-statistic>
+      <ledger-statistic
+        :deviceList="treeData"
+        :LedgerDialogVisible.sync="LedgerDialogVisible"
+        :shopNumber="shopNumber"
+      ></ledger-statistic>
     </el-dialog>
 
     <!-- 导入弹窗 -->
@@ -177,7 +200,7 @@
       :before-close="resetDialogForm"
       :close-on-click-modal="false"
     >
-      <span slot="title" class="dialog-header">导入支路信息</span>
+      <span slot="title" class="dialog-header">导入设备</span>
       <device-import ref="deviceImport" :importDialogVisible.sync="importDialogVisible"></device-import>
     </el-dialog>
   </div>
@@ -194,6 +217,8 @@ import LedgerStatistic from './LedgerStatistic'
 import { getDeviceTypeTree } from '@/services/operation.js';
 import { getDeviceList, getBrand, getInfo, delDevice } from '@/services/assets.js';
 import baseOptions from '@/utils/baseOptions';
+// import QRCode from 'qrcode';
+import QRCode from 'qrcodejs2';
 export default {
   extends: baseOptions,
   components: { tableDataList, pager, deviceinfodetails, editdeviceinfo, TreeSelect, deviceImport, LedgerStatistic },
@@ -221,6 +246,7 @@ export default {
       dialogVisible: false,
       title: '设备新增',
       details: {},
+      tabInfoDetail: {},
       tableHeight: 400,
       editdialogVisible: false,
       LedgerDialogVisible: false,
@@ -231,7 +257,8 @@ export default {
         pageNum: 1,
         pageSize: 15,
       },
-      importDialogVisible: false
+      importDialogVisible: false,
+      loading: false
     }
   },
   created () {
@@ -246,9 +273,7 @@ export default {
     //门店编码
     shopNumber () {
       return this.$store.getters.shopNumber;
-    }
-  },
-  methods: {
+    },
     // -----------------按钮权限---------------------
     //显示转单按钮
     showAddBtn () {
@@ -267,8 +292,12 @@ export default {
       return this.pageBtns.some(val => val == 'import');
     },
     // -----------------按钮权限结束---------------------
+  },
+  methods: {
+
     //初始化界面数据
     initData () {
+
       getDeviceTypeTree().then(res => {
         if (res.code == 200) {
           this.treeData = res.data.array;
@@ -319,6 +348,8 @@ export default {
     },
     addDevice () {
       this.title = "设备新增";
+      this.details = {};
+      this.tabInfoDetail = {};
       this.editdialogVisible = true
     },
     showLedger () {
@@ -329,9 +360,45 @@ export default {
       this.getInfo(item.id);
       this.editdialogVisible = true;
     },
+    returnCode (item) {
+      this.loading = true;
+      document.getElementById('qrCode' + item.id).innerHTML = "";
+      const dom = this.$refs['qrCode' + item.id];
+      if (dom) dom.innerHTML = "";
+      getInfo(item.id).then(res => {
+        let details = res.data.basic;
+        setTimeout(_ => {
+          this.loading = false;
+          // let text = `
+          //   <span>设备名称：${details.deviceName}</span><br/>
+          //   <span>设备编号：${details.deviceNumber}</span><br/>
+          //   <span>规格型号：${details.deviceModel}</span><br/>
+          //   <span>使用部门：${details.useOrgIdStr}</span><br/>
+          //   <span>品牌：${details.brand}</span><br/>
+          //   <span>生产厂家：${details.factoryName}</span><br/>
+          //   <span>投入日期：${details.useTimeStr}</span><br/>
+          // `
+          let text = `
+            设备名称：${details.deviceName || ''}\n设备编号：${details.deviceNumber || ''}\n设备类型：${details.deviceTypeStr || ''}\n规格型号：${details.deviceModel || ''}\n使用部门：${details.useOrgIdStr || ''}\n品牌：${details.brand || ''}\n生产厂家：${details.factoryName || ''}\n投入日期：${details.useTimeStr || ''}
+          `
+
+          new QRCode(this.$refs['qrCode' + item.id], {
+            text,
+            width: 150,
+            height: 150,
+            colorDark: "#333333", //二维码颜色
+            colorLight: "#ffffff", //二维码背景色
+            correctLevel: QRCode.CorrectLevel.L//容错率，L/M/H
+          })
+        }, 100)
+      }).catch(err => {
+        console.log(err)
+      })
+    },
     getInfo (id) {
       getInfo(id).then(res => {
-        this.details = res.data
+        this.details = res.data.basic;
+        this.tabInfoDetail = res.data.detail
       }).catch(err => {
         console.log(err)
       })
@@ -366,6 +433,10 @@ export default {
 <style scoped lang="scss">
 .warn {
   color: red;
+}
+/deep/ .el-popover {
+  display: flex;
+  justify-content: center;
 }
 </style>
 

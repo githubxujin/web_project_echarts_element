@@ -2,23 +2,23 @@
   <div class="inspection">
     <div class="u-layout-search two u-layout-dobule">
       <div class="u-layout-left-proviso">
-
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <p class="text">
-              系统：
-            </p>
+            <p class="text">系统：</p>
             <div class="input-container">
               <div class="item select-input">
                 <!--el-ui 根据需求增加配置-->
-                <el-select v-model="systemId"
-                           @change="getCategoryOptions(systemId)"
-                           placeholder="请选择">
-                  <el-option v-for="item in systemIds"
-                             :key="item.systemId"
-                             :label="item.name"
-                             :value="item.systemId">
-                  </el-option>
+                <el-select
+                  v-model="systemId"
+                  @change="getCategoryOptions(systemId)"
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="item in systemIds"
+                    :key="item.systemId"
+                    :label="item.name"
+                    :value="item.systemId"
+                  ></el-option>
                 </el-select>
               </div>
             </div>
@@ -27,86 +27,94 @@
 
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <p class="text">
-              设备：
-            </p>
-            <div class="input-container multiple"
-                 :style="{width:getWidth()}">
-              <div style="border-radius: 2px;"
-                   class="item select-input">
+            <p class="text">设备：</p>
+            <div class="input-container multiple" style="width:250px ">
+              <div style="border-radius: 2px;" class="item select-input">
                 <!--el-ui 根据需求增加配置-->
-                <el-select v-model="equipmentId"
-                           :style="{width:getWidth()}"
-                           multiple
-                           clearable
-                           placeholder="请选择">
-                  <el-option v-for="item in category_options"
-                             :key="item.equipmentId"
-                             :label="item.name"
-                             :value="item.equipmentId">
-                  </el-option>
-                </el-select>
+                <mult-select v-model="equipmentId" :options="category_options"></mult-select>
+                <!--<el-select v-model="equipmentId"-->
+                <!--:style="{width:getWidth()}"-->
+                <!--multiple-->
+                <!--clearable-->
+                <!--placeholder="请选择">-->
+                <!--<el-option v-for="item in category_options"-->
+                <!--:key="item.equipmentId"-->
+                <!--:label="item.name"-->
+                <!--:value="item.equipmentId">
+                 </el-option>
+                </el-select>-->
               </div>
             </div>
           </div>
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <datePick v-model="checkTime"
-                      title="录入时间"
-                      :defaultStartTime="defaultStartTime"></datePick>
+            <datePick v-model="checkTime" title="录入时间" :defaultStartTime="defaultStartTime"></datePick>
           </div>
         </div>
         <div class="u-layout-left-item">
-          <el-button class="el-button el-button--primary el-button--small is-round"
-                     icon="el-icon-search"
-                     @click="query">查询</el-button>
+          <el-button
+            class="el-button el-button--primary el-button--small is-round"
+            icon="el-icon-search"
+            @click="query"
+          >查询</el-button>
         </div>
-
       </div>
       <div class="u-layout-left-item">
-        <el-button @click="getCharts"
-                   class="el-button el-button--primary el-button--small">图形</el-button>
-        <el-button @click="getData"
-                   class="el-button el-button--primary el-button--small">数据</el-button>
-        <el-button class="el-button el-button--primary el-button--small"  @click="exportData"
-                   v-if="pageBtns.some(val=>val=='export')">导出</el-button>
+        <el-button @click="getCharts" class="el-button el-button--primary el-button--small">图形</el-button>
+        <el-button @click="getData" class="el-button el-button--primary el-button--small">数据</el-button>
+        <el-button
+          class="el-button el-button--primary el-button--small"
+          @click="exportData"
+          v-if="pageBtns.some(val=>val=='export')"
+        >导出</el-button>
       </div>
     </div>
-    <div v-show="!isdata"
-         id="containers"
-         style="width:100%;height:620px;overflow: auto;overflow-x: hidden;">
-      <myEcharts :id="'exampleId4'"
-                 v-if="systemId!=7&&chartOption.series.length != 0"
-                 :style="{width:echartwidth, height: '665px'}"
-                 :option="chartOption" />
-      <div v-if="chartOption.series.length == 0"
-           style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px">
-          <span>暂无数据</span>
+    <div
+      v-show="!isdata"
+      id="containers"
+      style="width:100%;height:620px;overflow: auto;overflow-x: hidden;"
+    >
+      <myEcharts
+        :id="'exampleId4'"
+        v-if="systemId!=7&&chartOption.series.length != 0"
+        :style="{width:echartwidth, height: '665px'}"
+        :option="chartOption"
+      />
+      <div
+        v-if="(systemId!=7&&chartOption.series.length == 0)||(systemId==7&&loadText =='暂无数据')"
+        style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px"
+      >
+        <span>{{loadText}}</span>
       </div>
-      <div id="container"
-           style="height: 665px"></div>
+      <div id="container" v-show="showContainer" style="height: 665px"></div>
       <!--<div class="echartsTitle">   msg_end.scrollIntoView(); -->
       <!--{{datetimeUtils.GMTToStr(checkTime.start).length>0?datetimeUtils.GMTToStr(checkTime.start).split(' ')[0]:''}}~{{datetimeUtils.GMTToStr(checkTime.end).length>0?datetimeUtils.GMTToStr(checkTime.end).split(' ')[0]:''}}-->
       <!--电梯明细</div>-->
     </div>
-    <div v-if="isdata"
-         class="datatable-box">
-      <tableDataList id="tableList"
-                     v-show="systemId!=7"
-                     style="width: 48%;float: left"
-                     :show-sequence="tableData_LiquidLevel.showSequence"
-                     :v-table-data="tableData_LiquidLevel">
-      </tableDataList>
-      <tableDataList id="tableList1"
-                     :style="systemId!=7?'width: 48%;float: left; padding-left: 10px':'width: 100%;float: left; padding-left: 10px'"
-                     :show-sequence="tableData.showSequence"
-                     :v-table-data="tableData">
-      </tableDataList>
+    <div v-if="isdata" class="datatable-box">
+      <tableDataList
+        id="tableList"
+        v-show="systemId!=7"
+        style="width: 48%;float: left"
+        :show-sequence="tableData_LiquidLevel.showSequence"
+        :v-table-data="tableData_LiquidLevel"
+      ></tableDataList>
+      <tableDataList
+        id="tableList1"
+        :style="systemId!=7?'width: 48%;float: left; padding-left: 10px':'width: 100%;float: left; padding-left: 10px'"
+        :show-sequence="tableData.showSequence"
+        :v-table-data="tableData"
+      ></tableDataList>
     </div>
   </div>
 </template>
 <script>
+import moment from 'moment';
+//设定moment区域为中国
+import 'moment/locale/zh-cn';
+moment.locale('zh-cn');
+import MultSelect from '@/components/form/MultSelect.vue';
 import datePick from "@/components/timerange/separateTime";
 import myEcharts from '@/components/echarts/index';
 import tableDataList from "@/components/table/tableDataList.vue";
@@ -117,11 +125,14 @@ import {  getWaterSupplyDrainageSysStyle, getWaterSupplyDrainageEquipStyle, getW
   getElevatorFaultGraph, getElevatorFaultList, exportDrainage} from '@/services/safety'
 var myChart, echarts, _rawData;
 import baseOptions from '@/utils/baseOptions';
+var t_time = '';
 export default {
   extends: baseOptions,
-  components: { datePick, myEcharts, tableDataList },
+  components: { datePick, myEcharts, tableDataList, MultSelect },
   data () {
     return {
+      showContainer: true,
+      loadText: '暂无数据',
       systemId: null,
       systemIds: [],
       ischart: true,
@@ -129,25 +140,8 @@ export default {
       echartwidth: '100%',
       tablewidth: '100%',
       isdata: false,
-      type_options: [{
-        value: '待处理报警',
-        label: '待处理报警'
-      }, {
-        value: '所有报警',
-        label: '所有报警'
-      }]
-      , category_options: [{
-        value: '1号集水井',
-        label: '1号集水井'
-      }, {
-        value: '2号集水井',
-        label: '2号集水井'
-      }
-        , {
-        value: '3号集水井',
-        label: '3号集水井'
-      }
-      ],
+      type_options: []
+      , category_options: [],
       value: '', equipmentId: [], defaultStartTime: datetimeUtils.getPreDate(10),
       checkTime: { start: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(10), '-'), end: datetimeUtils.getSpecialDay(new Date(), '-') },
       tableData: {
@@ -160,11 +154,11 @@ export default {
         showSequence: false,
       },
       chartOption: {
-        color: ['#41A0F2', '#DE6662', '#69B6EF', '##70C676'],
+        color: ['#028CF7', '#4852DD', '#9D67FF', '#0DD789', '#F19F02', '#11AA07', '#F14D4D', '#00FFFC', '#FF8080', '#6FD1FF', '#A39823'],
         grid: {
           left: '3%',
           right: '5%',
-            top: '30px',
+          top: '30px',
           bottom: '5%'
         },
         legend: {
@@ -202,7 +196,7 @@ export default {
           }
         }],
         yAxis: {
-          name: '液位：米(m)',
+          name: '液位(m)',
           type: 'value',
           nameTextStyle: {
             color: '#838383'
@@ -232,22 +226,26 @@ export default {
           smooth: true
         }],
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          // formatter: function (param) {
+          //   console.log('param', param)
+          // }
         },
       }
     }
   }, created () {
+    this.$message.closeAll();
+    t_time = (this.datetimeUtils.GMTToStr(this.checkTime.start).length > 0 ? this.datetimeUtils.GMTToStr(this.checkTime.start).split(' ')[0] : '') + '~' + (this.datetimeUtils.GMTToStr(this.checkTime.end).length > 0 ? this.datetimeUtils.GMTToStr(this.checkTime.end).split(' ')[0] : '');
     echarts = this.$echarts;
   }, mounted () {
+    var obj = document.getElementsByClassName("el-select__tags");
+    obj[0].style = "";
+    var obj = document.getElementsByClassName("el-select el-select--small");
+    obj[1].style = "width: 250px;";
     _rawData = {
       parkingApron: {
         data: [
-          ["6号集水井"],
-          ["5号集水井"],
-          ["4号集水井"],
-          ["3号集水井"],
-          ["2号集水井"],
-          ["1号集水井"]
+
         ]
       },
       flight: {
@@ -264,6 +262,8 @@ export default {
     init () {
       this.chartOption.xAxis[0].data = [];
       this.chartOption.series = [];
+      this.category_options = [];
+      let that = this;
       getWaterSupplyDrainageSysStyle({
       }).then((res) => {
         if (res.code == 200) {
@@ -272,8 +272,10 @@ export default {
           getWaterSupplyDrainageEquipStyle({ shopNumber: this.shopNumber, systemId: this.systemId }).then((rd) => {
             if (rd.code == 200) {
               if (rd.data.length > 0) {
-                this.equipmentId.push(rd.data[0].equipmentId);
-                this.category_options = rd.data;
+                that.equipmentId.push(rd.data[0].equipmentId);
+                rd.data.forEach(function (item, i) {
+                  that.category_options.push({ label: item.name, value: item.equipmentId })
+                });
                 this.query();
               }
             }
@@ -282,6 +284,8 @@ export default {
       });
     },
     query () {
+      this.showContainer = true;
+      t_time = (this.datetimeUtils.GMTToStr(this.checkTime.start).length > 0 ? this.datetimeUtils.GMTToStr(this.checkTime.start).split(' ')[0] : '') + '~' + (this.datetimeUtils.GMTToStr(this.checkTime.end).length > 0 ? this.datetimeUtils.GMTToStr(this.checkTime.end).split(' ')[0] : '');
       let equipment_Ids = '';
       let t = this;
       this.equipmentId.forEach(function (n, i) {
@@ -305,14 +309,20 @@ export default {
         systemId: this.systemId
       };
       if (!this.isdata) {
+
+        this.loadText = "加载中...";
+        this.ischart = true;
+        this.chartOption.xAxis[0].data = [];
+        this.chartOption.series = [];
+        this.chartOption.legend.data = [];
         if (this.systemId == 6) {
-          this.ischart = true;
-          this.chartOption.xAxis[0].data = [];
-          this.chartOption.series = [];
+
           getWaterSupplyDrainageByLineChart(o).then((res) => {
+            this.loadText = "";
             if (res.code == 200) {
+
               let obj = res.data;
-              this.chartOption.legend.data = [];
+
               for (let i = 0; i < obj.length; i++) {
                 let obji = obj[i].paramValue;
                 this.chartOption.legend.data.push(obj[i].name);
@@ -324,60 +334,29 @@ export default {
                 };
                 for (let j = 0; j < obji.length; j++) {
                   let objj = obji[j];
-                  if (i == 0) {
+                  if (!this.chartOption.xAxis[0].data.includes(objj.time)) {
                     this.chartOption.xAxis[0].data.push(objj.time);
                   }
                   param.data.push(objj.currValue)
                 }
                 this.chartOption.series.push(param);
-                //console.log('legend:'+JSON.stringify(this.chartOption.legend))
-                //console.log('series:'+JSON.stringify(this.chartOption.series))
-
               }
               if (this.chartOption.series.length == 0 && !this.isdata) {
                 document.getElementById("containers").scrollTop = document.getElementById("containers").scrollHeight;
-
               }
-            }
-              _rawData.parkingApron.data = []; _rawData.flight.data = [];
-              getWaterSupplyDrainageByGanttChart(o).then((res) => {
-                  if (res.code == 200) {
-                      for (let i = 0; i < res.data.length; i++) {
-                          let obj = res.data[i];
-                          _rawData.parkingApron.data.push([obj.name]);
-                          for (let j = 0; j < obj.time.length; j++) {
-                              let objItem = obj.time[j];
-                              _rawData.flight.data.push([i, new Date(objItem.faultStartTime), new Date(objItem.faultEndTime), obj.name, objItem.type])
-                          }
-                      }
 
-                      myChart = echarts.init(document.getElementById("container"));
-                      myChart.setOption(option = makeOption());
-                  }
-                  if (!this.isdate && _rawData.flight.data.length == 0&& this.chartOption.series.length == 0){
-                      this.$message({
-                          message: '给排水系统和折线图表暂无数据！',
-                          type: 'warning',
-                          duration: 1000
-                      });
-                  }
-                  else  if (_rawData.flight.data.length == 0 && !this.isdata) {
-                      this.$message({
-                          message: '给排水系统暂无数据！',
-                          type: 'warning',
-                          duration: 1000
-                      });
-                  }
-                 else if (this.chartOption.series.length == 0 && !this.isdata) {
-                      this.$message({
-                          message: '折线图表暂无数据！',
-                          type: 'warning',
-                          duration: 500
-                      });
-                  }
-              });
+              this.get_WaterSupplyDrainageByGanttChart(o);
+            }
+
           });
         }
+        else {
+          this.get_WaterSupplyDrainageByGanttChart(o);
+        }
+
+
+
+
 
       }
       else {
@@ -392,7 +371,8 @@ export default {
               { text: '故障明细', prop: 'detail' }
             ];
             this.tableData.data = res.data;
-          }
+          };
+          this.loadText = "暂无数据";
         });
         if (this.systemId == 6) {
           getWaterSupplyDrainageListByLiquidLevel(o).then((res) => {
@@ -405,10 +385,69 @@ export default {
               ];
               this.tableData_LiquidLevel.data = res.data;
             }
+            this.loadText = "暂无数据";
           });        }
 
       }
 
+    },
+    get_WaterSupplyDrainageByGanttChart (objParam) {
+
+      _rawData.parkingApron.data = []; _rawData.flight.data = [];
+      getWaterSupplyDrainageByGanttChart(objParam).then((res) => {
+        this.loadText = "加载中...";
+        if (res.code == 200) {
+          for (let i = 0; i < res.data.length; i++) {
+            let obj = res.data[i];
+            _rawData.parkingApron.data.push([obj.name]);
+            for (let j = 0; j < obj.time.length; j++) {
+              let objItem = obj.time[j];
+              _rawData.flight.data.push([i, new Date(objItem.runningStartTime), new Date(objItem.runningEndTime), obj.name, false])
+            }
+          }
+
+          myChart = echarts.init(document.getElementById("container"));
+          myChart.setOption(option = makeOption());
+        }
+        if (_rawData.flight.data.length > 0 || this.chartOption.series.length > 0) {
+          if (_rawData.flight.data.length == 0) {
+            this.showContainer = false;
+          }
+        }
+        else if (!this.isdate && _rawData.flight.data.length == 0 && this.chartOption.series.length == 0) {
+          this.loadText = "暂无数据";
+          this.showContainer = false;
+          if (this.systemId == 6) {
+            this.$message({
+              message: '折线图和给排水系统暂无数据！',
+              type: 'warning',
+              duration: 1000
+            });
+          } else {
+            this.$message({
+              message: '给排水系统暂无数据！',
+              type: 'warning',
+              duration: 1000
+            });
+          }
+        }
+        else if (_rawData.flight.data.length == 0 && !this.isdata) {
+          this.showContainer = false;
+          this.$message({
+            message: '给排水系统暂无数据！',
+            type: 'warning',
+            duration: 1000
+          });
+        }
+        else if (this.chartOption.series.length == 0 && !this.isdata) {
+          this.loadText = "暂无数据";
+          this.$message({
+            message: '折线图表暂无数据！',
+            type: 'warning',
+            duration: 500
+          });
+        }
+      });
     },
     initCharts () {
       // this.chartOption = utils.chartNewLine(this.chartOption, 4, 'xAxis');
@@ -425,12 +464,15 @@ export default {
       this.query();
     },
     getCategoryOptions (sysId) {
-      this.equipmentId = [];
+      let that = this;
+      this.equipmentId = []; this.category_options = [];
       getWaterSupplyDrainageEquipStyle({ shopNumber: this.shopNumber, systemId: sysId }).then((rd) => {
         if (rd.code == 200) {
           if (rd.data.length > 0) {
             this.equipmentId.push(rd.data[0].equipmentId);
-            this.category_options = rd.data;
+            rd.data.forEach(function (item, i) {
+              that.category_options.push({ label: item.name, value: item.equipmentId })
+            });
             this.query();
           }
         }
@@ -439,33 +481,32 @@ export default {
       return this.equipmentId.length <= 1 ? defaultWidth + 'px' : defaultWidth + (this.equipmentId.length - 1) * size + 'px';
     },
     exportData () {
-        debugger
-        let equipment_Ids = '';
-        let t = this;
-        this.equipmentId.forEach(function (n, i) {
-            equipment_Ids += n;
-            if (t.equipmentId.length - 1 != i) {
-                equipment_Ids += ','
-            }
-        });
-        if (equipment_Ids == '') {
-            this.$message.error("设备不能为空");
-            return;
+      let equipment_Ids = '';
+      let t = this;
+      this.equipmentId.forEach(function (n, i) {
+        equipment_Ids += n;
+        if (t.equipmentId.length - 1 != i) {
+          equipment_Ids += ','
         }
-        // let o = {
-        //     equipmentIds: equipment_Ids,
-        //     shopNumber: this.shopNumber,
-        //     startTime: this.checkTime.start + " 0:0:0",// this.checkTime.start + ' 00:00:00',
-        //     endTime: this.checkTime.end + " 23:0:0",// this.checkTime.end + ' 23:59:59',
-        //     systemId: this.systemId
-        // };
-        exportDrainage(`?token=${localStorage.getItem('$token_info')}&shopNumber=${this.shopNumber}&startTime=${this.checkTime.start + " 0:0:0"}&endTime=${
+      });
+      if (equipment_Ids == '') {
+        this.$message.error("设备不能为空");
+        return;
+      }
+      // let o = {
+      //     equipmentIds: equipment_Ids,
+      //     shopNumber: this.shopNumber,
+      //     startTime: this.checkTime.start + " 0:0:0",// this.checkTime.start + ' 00:00:00',
+      //     endTime: this.checkTime.end + " 23:0:0",// this.checkTime.end + ' 23:59:59',
+      //     systemId: this.systemId
+      // };
+      exportDrainage(`?token=${localStorage.getItem('$token_info')}&shopNumber=${this.shopNumber}&startTime=${this.checkTime.start + " 0:0:0"}&endTime=${
         this.checkTime.end + " 23:0:0"
         }&equipmentIds=${
-            equipment_Ids
-            }&systemId=${
-            this.systemId
-            }`);
+        equipment_Ids
+        }&systemId=${
+        this.systemId
+        }`);
     }
   }, watch: {
     systemId (oval, nval) {
@@ -492,8 +533,15 @@ function makeOption () {
     tooltip: {},
     animation: false,
     title: {
-      text: '给排水设备运行记录',
+      text: t_time + '给排水设备运行记录',
       left: 'center'
+    },
+    tooltip: {
+      formatter: function (params) {
+        if (params.data.length > 3) {
+          return '报警名称：' + params.data[3] + '<br/>' + '开始时间：' + moment(params.data[1]).format('YYYY-MM-DD HH:mm:ss') + '<br/>' + '结束时间：' + moment(params.data[2]).format('YYYY-MM-DD HH:mm:ss');
+        }
+      }
     },
     dataZoom: [{
       type: 'slider',
@@ -558,12 +606,14 @@ function makeOption () {
       id: 'flightData',
       type: 'custom',
       renderItem: renderGanttItem,
-      dimensions: _rawData.flight.dimensions,
       encode: {
-        x: [DIM_TIME_ARRIVAL, DIM_TIME_DEPARTURE],
-        y: DIM_CATEGORY_INDEX,
-        tooltip: [DIM_CATEGORY_INDEX, DIM_TIME_ARRIVAL, DIM_TIME_DEPARTURE]
+        x: [0, 1, 2],
+        y: 0,
+        // 表示『维度2』和『维度3』和『维度4』要显示到 tooltip 中。
+        // tooltip: [1, 2, 3]
       },
+      // 表示给『维度2』和『维度3』和『维度4』分别取名为『开始时间』和『结束时间』和『报警名称』，显示到 tooltip 中。
+      dimensions: [null, '开始时间', '结束时间', '报警名称'],
       data: _rawData.flight.data
     }, {
       type: 'custom',
@@ -622,6 +672,7 @@ function renderGanttItem (params, api) {
     width: barLength,
     height: barHeight
   });
+  //alert(api.value(5));
   return {
     type: 'group',
     children: [{
@@ -629,14 +680,14 @@ function renderGanttItem (params, api) {
       ignore: !rectNormal,
       shape: rectNormal,
       style: api.style({
-        fill: api.value(4) == 1 ? '#67CC81' : '#EE6D6D'
+        fill: api.value(4) ? '#67CC81' : '#EE6D6D'
       })
     }, {
       type: 'rect',
       ignore: !rectVIP && !api.value(4),
       shape: rectVIP,
       style: api.style({
-        fill: '#79A824'
+        fill: api.value(4) ? '#67CC81' : '#EE6D6D'
       })
     }, {
       type: 'rect',

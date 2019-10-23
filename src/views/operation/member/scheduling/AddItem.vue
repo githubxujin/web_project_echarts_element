@@ -8,6 +8,7 @@
             <el-date-picker
               v-model="month"
               type="month"
+              @change="changeMonth"
               placeholder="选择月"
               :picker-options="pickerBeginMonthAfter"
             ></el-date-picker>
@@ -48,6 +49,7 @@
               v-for="day in days"
               :key="day"
               class="td-data"
+              :class="{disabled:(day<=curDay&&month<=monthLastDate)}"
               @click.self="clickCell(user,day,rowIndex)"
               title="新增排班"
             >
@@ -58,7 +60,7 @@
                   @click.stop="clickIcon(d,day,rowIndex)"
                   v-for="(d,index) in tbData[rowIndex].data[day-1]"
                   :key="index"
-                  :class="[getIconByClassId(d),tbData[rowIndex].data[day-1].length<2?'big':'small']"
+                  :class="[getIconByClassId(d,day),tbData[rowIndex].data[day-1].length<2?'big':'small']"
                 ></i>
               </span>
             </td>
@@ -95,6 +97,10 @@ export default {
     ClassSelect
   },
   props: {
+    nextMonthNums: {
+      type: Number,
+      default: 1
+    },
     //最大班次月份
     curMonth: { type: Date, default: new Date() },
     //排班月份列表
@@ -102,7 +108,7 @@ export default {
   },
   data () {
     return {
-      month: dateUtils.getAfterMonthByDate(this.curMonth, 1) || new Date(),    //获取当前最大班次的下一个月
+      month: this.curMonth,    //获取当前最大班次的下一个月
       showEditClassWin: false,//是否显示编辑班次
       curClassId: '',//当前选中班次ID
       divisions: [],//已选中班次列表
@@ -117,6 +123,8 @@ export default {
       tbData: [],//当前表格数据
       tableHeight: 400,
       isFF: false,//是否是火狐浏览器
+      curDay: new Date().getDate(),//18,获取当天是一个月第多少天
+      monthLastDate: dateUtils.getDateMonthLastDay(new Date())//当前月最后一天
     }
   },
   computed: {
@@ -139,10 +147,14 @@ export default {
       return this.classOptions.map(n => {
         return n.value;
       })
-    }
+    },
   },
   created () {
-    console.log('created', this.days, this.classOptions, this.classOptions.keys);
+    console.log('object :', this.curMonth, this.nextMonthNums, this.month);
+    // console.log('created', this.days, this.classOptions, this.classOptions.keys);
+    if (this.nextMonthNums > 0) {
+      dateUtils.getAfterMonthByDate(this.curMonth, this.nextMonthNums)
+    }
     this.initData();
   },
   mounted: function () {
@@ -151,6 +163,9 @@ export default {
   },
   methods: {
     GetIconByClassName,
+    changeMonth (val) {
+      console.log('monthLastDate :', val, this.curDay, this.monthLastDate);
+    },
     initData () {
       //获取已选班次列表
       this.getClassTitleData();
@@ -205,6 +220,9 @@ export default {
     //点击单元格
     clickCell (user, day, rowIndex) {
       console.log('点击单元格', user, day, rowIndex, this.curClassId);
+      if (day <= this.curDay && this.month <= this.monthLastDate) {
+        return;
+      }
       if (!this.curClassId) {
         this.$message({
           message: '请先选择班次！',
@@ -253,17 +271,33 @@ export default {
     //保存
     submitForm () {
       console.log('this.tbData', JSON.stringify(this.tbData));
-      this.$emit('submitForm', dateUtils.getSpecialDay(this.month), this.tbData)
+      //如果当前班次月份等于当前月份，则只取当天以后的数据进行提交
+      if (dateUtils.getCurYearMonth() == dateUtils.getYearMonthByDate(this.month)) {
+        let newTbData = [];
+        for (let i = 0; i < this.tbData.length; i++) {
+          let row = { user: this.tbData[i].user, data: [] };
+          for (let j = this.curDay; j < this.tbData[i].data.length; j++) {
+            row.data[j - this.curDay] = this.tbData[i].data[j];
+          }
+          newTbData.push(row);
+        }
+        console.log('newTbData :', newTbData);
+        this.$emit('submitForm', dateUtils.getSpecialDay(this.month), newTbData)
+      } else {
+        this.$emit('submitForm', dateUtils.getSpecialDay(this.month), this.tbData)
+      }
     },
     //返回
     onHide () {
       this.$emit('onHide')
     },
     //根据班次id获取班次图标
-    getIconByClassId (id) {
+    getIconByClassId (id, day) {
+      let disabled = day <= this.curDay && this.month <= this.monthLastDate;
+      let classData = disabled == true ? this.allClassData : this.divisions; //如果是历史日期就取所有班次，否则取当前班次
       let name = '';
-      if (this.allClassData.length > 0 && id) {
-        let item = this.allClassData.find(n => n.id == id);
+      if (classData.length > 0 && id) {
+        let item = classData.find(n => n.id == id);
         name = item ? item.classesType : '';
       }
       return name ? this.GetIconByClassName(name) : '';

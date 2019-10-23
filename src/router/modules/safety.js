@@ -23,19 +23,19 @@ const safetyRouter = {
             },
             children: [
                 {
-                    path: '/safety/drainage/out-water',
-                    component: () =>
-                        import('@/views/safety/drainage/out-water/Plane.vue'),
-                    meta: {
-                        title: '排水系统'
-                    }
-                },
-                {
                     path: '/safety/drainage/suppley-water',
                     component: () =>
                         import('@/views/safety/drainage/supply-water/SupplyWater.vue'),
                     meta: {
                         title: '给水系统'
+                    }
+                },
+                {
+                    path: '/safety/drainage/out-water',
+                    component: () =>
+                        import('@/views/safety/drainage/out-water/Plane.vue'),
+                    meta: {
+                        title: '排水系统'
                     }
                 }
             ]

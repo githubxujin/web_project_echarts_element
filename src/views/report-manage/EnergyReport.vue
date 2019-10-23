@@ -3,26 +3,6 @@
     <div class="u-layout-search u-layout-dobule">
       <div class="u-layout-left-proviso">
         <div class="u-layout-left-item">
-          <!--<div class="title-input-group">-->
-          <!--<p class="text">-->
-          <!--能耗类型：-->
-          <!--</p>-->
-          <!--<div class="input-container">-->
-
-          <!--<div style="border-radius: 2px;"-->
-          <!--class="item select-input">-->
-          <!--&lt;!&ndash;el-ui 根据需求增加配置&ndash;&gt;-->
-          <!--<el-select v-model="indexType"-->
-          <!--placeholder="请选择">-->
-          <!--<el-option v-for="item in options"-->
-          <!--:key="item.value"-->
-          <!--:label="item.label"-->
-          <!--:value="item.value">-->
-          <!--</el-option>-->
-          <!--</el-select>-->
-          <!--</div>-->
-          <!--</div>-->
-          <!--</div>-->
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group">
@@ -69,7 +49,7 @@
         <el-table-column prop="shopName"
                          label="门店名称">
         </el-table-column>
-        <el-table-column prop="mergeName"
+        <el-table-column prop="cityName"
                          label="区域">
         </el-table-column>
         <el-table-column prop="actUsed"
@@ -79,11 +59,7 @@
                          :label="areaUsedlabel">
         </el-table-column>
       </el-table>
-
     </div>
-    <!--<pager :pager="pager"-->
-    <!--@query="query"-->
-    <!--@setPager="setPager"></pager>-->
   </div>
 </template>
 
@@ -91,8 +67,7 @@
 import datePick from "@/components/timerange/index";
 import pager from "@/components/table/Pager";
 import { getPlatformEnergyConsume, exportPlatformEnergyConsume } from '@/services/report-manage';
-import datetimeUtils from '@/utils/datetime-utils'
-
+import datetimeUtils from '@/utils/datetime-utils';
 import baseOptions from '@/utils/baseOptions';
 export default {
   extends: baseOptions,
@@ -123,8 +98,6 @@ export default {
     }
   }
   , created () {
-    // this.echartwidth = document.body.clientWidth * 0.85 + 'px';
-    // this.tablewidth = document.body.clientWidth * 0.8 + 'px';
   }, mounted () {
     this.defaultStartTime = datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-');
     this.checkTime = { start: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-'), end: datetimeUtils.getSpecialDay(new Date(), '-') };
@@ -133,13 +106,18 @@ export default {
   },
   methods: {
     query () {
-      let topShopNumers = '', that = this;
-      this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumers += v;
-        if (that.checkedShopNumbers.length - 1 != i) {
-          topShopNumers += ','
+        let topShopNumers = '', that = this;
+        if (this.checkedShopNumbers.length == 0) {
+            let storage = window.localStorage;
+            topShopNumers = storage.getItem("objTree");
+        } else {
+            this.checkedShopNumbers.forEach(function (v, i) {
+                topShopNumers += v;
+                if (that.checkedShopNumbers.length - 1 != i) {
+                    topShopNumers += ','
+                }
+            });
         }
-      });
       this.areaUsedlabel=this.timeType==1?"单位面积日能耗(kWh/㎡)":this.timeType==2?"单位面积月能耗(kWh/㎡)":"单位面积年能耗(kWh/㎡)";
       getPlatformEnergyConsume({        shopNumber: topShopNumers, start: this.checkTime.start + ' 0:0:0', end: this.checkTime.end + ' 23:59:59', timeType: this.timeType, pageNum: this.pager.pageNum,
         pageSize: this.pager.pageSize      }).then((res) => {
@@ -159,13 +137,18 @@ export default {
       this.timeType = index;
     },
     exportData () {
-      let topShopNumers = '', that = this;
-      this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumers += v;
-        if (that.checkedShopNumbers.length - 1 != i) {
-          topShopNumers += ','
+        let topShopNumers = '', that = this;
+        if (this.checkedShopNumbers.length == 0) {
+            let storage = window.localStorage;
+            topShopNumers = storage.getItem("objTree");
+        } else {
+            this.checkedShopNumbers.forEach(function (v, i) {
+                topShopNumers += v;
+                if (that.checkedShopNumbers.length - 1 != i) {
+                    topShopNumers += ','
+                }
+            });
         }
-      });
       exportPlatformEnergyConsume(`?token=${localStorage.getItem('$token_info')}&start=${
       this.checkTime.start + ' 0:0:0'
         }&end=${this.checkTime.end + ' 23:59:59' }&timeType=${

@@ -23,7 +23,7 @@
       <el-col :span="20">
         <viewer :images="imgs" class="img-viewer">
           <!-- //一定要一个数组，否则报错 -->
-          <img v-for="(img,index) in imgs" :src="img.pictureUrl" :key="index" />
+          <img v-for="(img,index) in imgs" :src="img" :key="index" />
         </viewer>
       </el-col>
     </el-row>
@@ -96,5 +96,10 @@ export default {
 <style lang="scss" scoped>
 .el-row {
   line-height: 38px;
+}
+.img-viewer img {
+  width: 100px;
+  height: 100px;
+  float: left;
 }
 </style>

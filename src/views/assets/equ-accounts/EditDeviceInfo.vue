@@ -39,6 +39,7 @@
           <el-form-item prop="deviceType" label="设备类型">
             <TreeSelect
               v-model="form.deviceType"
+              @change="changeDevice"
               placeholder="请选择"
               :clearable="true"
               :data="deviceList"
@@ -76,7 +77,12 @@
         <el-col :span="12">
           <el-form-item prop="orgId" label="产权归属">
             <el-select v-model="form.orgId" placeholder="请选择">
-              <el-option v-for="item in orgList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+              <el-option
+                v-for="item in propertyList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              ></el-option>
             </el-select>
           </el-form-item>
         </el-col>
@@ -129,19 +135,34 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="installTime" label="安装时间">
-            <el-date-picker v-model="form.installTime" type="date" placeholder="选择日期"></el-date-picker>
+            <el-date-picker
+              v-model="form.installTime"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item prop="useTime" label="投入日期">
-            <el-date-picker v-model="form.useTime" type="date" placeholder="选择日期"></el-date-picker>
+            <el-date-picker
+              v-model="form.useTime"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item prop="makTime" label="出厂日期">
-            <el-date-picker v-model="form.makTime" type="date" placeholder="选择日期"></el-date-picker>
+            <el-date-picker
+              v-model="form.makTime"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -208,7 +229,14 @@
       </el-row>
     </el-form>
     <!-- 技术参数，关联设备，设备图片，附件 -->
-    <tab-relative-setting :isEdit="isEdit"></tab-relative-setting>
+    <tab-relative-setting
+      class="device-info"
+      ref="relativeInfo"
+      :isEdit="isEdit"
+      :paramData="paramData"
+      :tabInfoDetail="tabInfoDetail"
+      :unitList="unitList"
+    ></tab-relative-setting>
     <!-- 设备主图 -->
     <div class="device-img text-center">
       <el-upload
@@ -243,18 +271,27 @@
 </template>
 <script>
 import { addDevice, getFactory, getParamsField, editDevice, getDeviceTypeTree, getSafeTime } from '@/services/assets';
-import { meterArray, configTypeTreeQuery } from '@/services/system-settings';
+import { meterGetArray, meterGetArrayByType, meterArray, configTypeTreeQuery } from '@/services/system-settings';
 import { getUnit } from '@/services/operation';
 import Regexps from '@/utils/regexp.js'
 import { usedState, statusEnum, yesOrNoEnum } from '@/enum/dicts.js'
 import TreeSelect from '@/components/treeSelect'
 import tabRelativeSetting from './TabRelativeSetting'
+const tabParams = {
+  "attachment": "",
+  "deviceAccountId": "",
+  "deviceNumber": "sting",
+  "devicePicture": "",
+  "id": "",
+  "techParam": ""
+}
 export default {
   props: {
     editdialogVisible: Boolean,
-    details: {},
+    details: Object,
     brandList: Array,
-    shopNumber: String
+    shopNumber: String,
+    tabInfoDetail: Object
   },
   components: { TreeSelect, tabRelativeSetting },
   data () {
@@ -273,19 +310,19 @@ export default {
       factoryList: [],
       orgList: [],
       propertyList: [
-        { name: '自有', id: '自有' },
-        { name: '租赁', id: '租赁' },
-        { name: '自有+租赁', id: '自有+租赁' },
-        { name: '其他', id: '其他' },
+        { name: '自有', id: 1 },
+        { name: '租赁', id: 2 },
+        { name: '自有+租赁', id: 3 },
+        { name: '其他', id: 4 },
       ],
       branchList: [],
       deviceList: [],
       unitList: [],
       depreciationList: [
-        { name: '平均年限法', id: '平均年限法' },
-        { name: '工作量法', id: '工作量法' },
-        { name: '双倍余数递减法', id: '双倍余数递减法' },
-        { name: '年数总和法', id: '年数总和法' },
+        { name: '平均年限法', id: '1' },
+        { name: '工作量法', id: '2' },
+        { name: '双倍余数递减法', id: '3' },
+        { name: '年数总和法', id: '4' },
       ],
       safeTimeList: [],
       form: {
@@ -296,10 +333,12 @@ export default {
         brand: '',
         factoryName: '',
         installAddress: '',
-        installTimeStr: '',
+        installTime: '',
+        // installTimeStr: '',
         orgId: '',
         deviceModel: '',
         unitId: '',
+        fromSystemType: '',
         makTimeStr: '',
         useTimeStr: '',
         depreciationMethod: '',
@@ -342,8 +381,9 @@ export default {
       },
       shopoptions: [],
       imageUrl: '',
-      paramData: null,//根据设备类型动态返回的技术参数
-      params: {}//放置技术参数
+      paramData: [],//根据设备类型动态返回的技术参数
+      params: {},//放置技术参数
+      meterList: []
     }
   },
   computed: {
@@ -356,7 +396,7 @@ export default {
     this.getDepartment();
     this.getDeviceTypeTree();
     this.getUnit();
-    this.getSafeTime()
+    this.getSafeTime();
   },
   methods: {
     testShopName (rule, value, callback) {
@@ -401,9 +441,9 @@ export default {
       })
     },
     // 获取支路
-    meterGetArray () {
-      meterArray({ shopNumber: this.shopNumber, deviceType: this.form.deviceType }).then(res => {
-        this.branchList = res.code == 200 ? res.data.array : []
+    meterGetArrayByType () {
+      meterGetArrayByType({ buildId: this.shopNumber, deviceType: this.form.deviceType }).then(res => {
+        this.branchList = res.code == 200 ? res.data.array : [];
       })
     },
     // 获取部门
@@ -414,13 +454,23 @@ export default {
     },
     // 根据设备类型获取技术参数
     getParamsField (deviceType) {
-      getParamsField(deviceType).then(res => {
-        if (res.code == 200) {
-          this.paramData = JSON.stringify(res.data) == "{}" ? null : res.data
-        } else {
-          this.paramData = {}
-        }
-      });
+      if (this.details.deviceType && deviceType === this.details.deviceType && this.tabInfoDetail.techParam) {
+        this.paramData = JSON.parse(this.tabInfoDetail.techParam);
+      } else {
+        getParamsField(deviceType).then(res => {
+          if (res.code == 200) {
+            this.paramData = [];
+
+            Object.keys(res.data).forEach(key => {
+              this.paramData.push({ paramName: res.data[key], paramValue: '', key });
+            })
+            console.log('xx', this.paramData)
+            // this.paramData = JSON.stringify(res.data) == "{}" ? null : res.data
+          } else {
+            this.paramData = []
+          }
+        });
+      }
     },
     // 获取单位
     getUnit () {
@@ -453,21 +503,43 @@ export default {
       this.submitLoading = false
       this.imageUrl = URL.createObjectURL(file.raw);
     },
+    // 系统
+    changeDevice (node, data) {
+      let correctSystemType = data.pid;
+      let nodeTemp = node;
+      while (correctSystemType > 5 && nodeTemp) {//说明该层级data是五大子系统的子级，还必须往上取
+        nodeTemp = node.parent;
+        correctSystemType = nodeTemp.data.pid;
+      }
+      this.form.fromSystemType = correctSystemType;
+      this.getParamsField(this.form.deviceType)
+      // this.brandList = this.meterList.filter(item => item.deviceType === this.form.deviceType)
+      this.meterGetArrayByType(this.form.deviceType)
+      this.form.meterId = ''; // 清楚对应支路
+      console.log('form', this.form)
+    },
     handleAvatarError (err, file, fileList) { // 头像上传失败
       this.submitLoading = false
       this.$message.error('头像上传失败！');
     },
     submit () {
-      let result = false
+      let result = false;
+      let techParam = JSON.stringify(this.$refs.relativeInfo.form.techParams)
+      let devicePicture = this.$refs.relativeInfo.showImgList.map(item => item.path).join(',')
       this.$refs.form.validate(res => {
         result = res
       });
+
       if (!result) return;
+      // 新增加技术参数等校验
+
       this.form.shopNumber = this.shopNumber;
       let params = JSON.parse(JSON.stringify(this.form));
+      let attachment = JSON.stringify(this.$refs.relativeInfo.form.files);
       this.dialogLoading = true;
       if (this.isEdit) {
-        editDevice(params).then(res => {
+        editDevice({ deviceAccount: params, deviceAccountDetail: { ...this.$refs.relativeInfo.copyData, deviceNumber: params.deviceNumber, devicePicture, techParam, attachment } }).then(res => {
+          // editDevice(params).then(res => {
           if (res.code == 200) {
             this.dialogLoading = false;
             Object.keys(this.form).forEach(prop => {
@@ -482,7 +554,7 @@ export default {
           this.dialogLoading = false;
         });
       } else {
-        addDevice(params).then(res => {
+        addDevice({ deviceAccount: params, deviceAccountDetail: { ...this.$refs.relativeInfo.copyData, deviceNumber: params.deviceNumber, devicePicture, techParam, attachment } }).then(res => {
           if (res.code == 200) {
             this.dialogLoading = false;
             Object.keys(this.form).forEach(prop => {
@@ -499,7 +571,14 @@ export default {
       }
     },
     close () {
-      this.form = {};
+      Object.keys(this.form).forEach(prop => {
+        switch (prop) {
+          case 'deviceStatus': this.form[prop] = 0; break;
+          case 'status': this.form[prop] = 0; break;
+          case 'special': this.form[prop] = 0; break;
+          default: this.form[prop] = ''; break;
+        }
+      }, this)
       this.imageUrl = ''
       this.$refs.upload && this.$refs.upload.clearFiles()
       this.$emit('update:editdialogVisible', false);
@@ -508,25 +587,31 @@ export default {
   watch: {
     details: {
       handler: function (newData, oldData) {
+        console.log('newData', newData)
         this.form = JSON.parse(JSON.stringify(this.details))
         this.imageUrl = this.form.imgUrlStr;
         if (this.form && this.form.hasOwnProperty("id")) {
           this.isEdit = true;
+          this.getParamsField(this.form.deviceType)
+          this.meterGetArrayByType(this.form.deviceType)
         } else {
           this.isEdit = false;
         }
+        console.log(this.form);
       },
       deep: true
     },
-    'form.deviceType': {
-      handler (val, oldVal) {
-        if (val) {
-          this.getParamsField(this.form.deviceType)
-          this.meterGetArray();
-        }
-      },
-      deep: true
-    }
+    // 'form.deviceType': {
+    //   handler (val, oldVal) {
+    //     if (val) {
+    //       console.log('val', val)
+    //       // this.getParamsField(this.form.deviceType)
+    //       this.meterGetArrayByType(this.form.deviceType)
+    //       this.form.meterId = ''; // 清楚对应支路
+    //     }
+    //   },
+    //   deep: true
+    // }
   }
 }
 </script>
@@ -593,6 +678,23 @@ export default {
 }
 /deep/ .el-input--prefix .el-input__inner {
   width: 193px;
+}
+/deep/ .el-input--mini .el-input__inner {
+  height: 30px;
+  line-height: 30px;
+}
+/deep/ .device-info {
+  .el-select {
+    .el-input__suffix {
+      display: none;
+    }
+    .el-input__inner {
+      border: none;
+      background: none;
+      color: #666;
+      cursor: auto;
+    }
+  }
 }
 </style>
 

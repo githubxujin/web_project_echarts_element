@@ -50,15 +50,17 @@ export default {
     meterImport: prefix + '/meter/import', // 导入-支路信息
     meterTrade: prefix + '/meter/tradeMeter', //换表-支路信息
     meterGetArray: prefix + '/meter/getArray/$', // 获取支路列表
+    meterGetArrayByType: prefix + '/meter/getArray', // 获取支路列表
     meterArray: prefix + '/meter/getArray', // 根据设备类型获取支路列表
     meterGetTreeArray: prefix + '/meter/getMeterTree/$', // 获取支路下拉树
 
     // 配置信息-分项管理
     subentryQuery: prefix + '/subentry/getList', // 分项列表查询
-    subentryAdd: prefix + '/subentry/add', // 新增分项
     subentryEdit: prefix + '/subentry/edit', // 编辑分项信息
+    subentryAdd: prefix + '/subentry/add', // 新增分项
+    subentryAddOne: prefix + '/subentry/addOne', // 新增分项
     subentryGetArray: prefix + '/subentry/getArray', // 获取分项列表
-    subentryGetTreeArray: prefix + '/subentry/getTreeArray', // 获取分项下拉树
+    subentryGetTreeArray: prefix + '/subentry/getTreeArray/$', // 获取分项下拉树
     subentryGetTemplateTreeArray: prefix + '/subentry/getSubentryTemplateTree', // 获取系统分项模板树
 
     // 配置信息-变压器管理

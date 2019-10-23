@@ -64,7 +64,7 @@ export default {
   },
   methods: {
     initData () {
-      getExecuteDepartList(this.shopNumber).then(res => {
+      getExecuteDepartList({ shopNumber: this.shopNumber, billNumber: '' }).then(res => {
         console.log('res', res)
         if (res.code == 200) {
           this.options = res.data.array;
@@ -74,23 +74,38 @@ export default {
     },
     //确定
     submitForm () {
-      console.log('提交', this.tableData)
-      this.$emit("submitForm", this.tableData)
+      console.log('提交', this.tableData);
+      let flag = true;
+      if (this.tableData && this.tableData.length > 0) {
+        this.tableData.forEach(n => {
+          if (n.users.length == 0) {
+            flag = false;
+          }
+        })
+      }
+      if (flag) {
+        this.$emit("submitForm", this.tableData)
+      } else {
+        this.$message({
+          message: '请选择指派人员！',
+          type: 'error'
+        });
+      }
     },
     //关闭
     isHide () {
       this.$emit("onHide")
     },
-    watchSelect (val, index) {
-      // 绑定watchselect事件的时候将index放进参数，scope.$index
+    // watchSelect (val, index) {
+    // 绑定watchselect事件的时候将index放进参数，scope.$index
 
-      // 根据option的pkid获取到它的ContentScore属性
-      // this.tableData.forEach(item => {
-      //   if (item.id == val) {
-      //     this.tableData[index].users = item.users;
-      //     }
-      // })
-    }
+    // 根据option的pkid获取到它的ContentScore属性
+    // this.tableData.forEach(item => {
+    //   if (item.id == val) {
+    //     this.tableData[index].users = item.users;
+    //     }
+    // })
+    // }
   }
 }
 </script>

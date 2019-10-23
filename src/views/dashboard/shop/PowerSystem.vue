@@ -6,7 +6,7 @@
     <span class="border right-bottom" />
     <card-head :num="powerData.warnNum" @goToPage="goToPage"></card-head>
     <div class="table-outer">
-      <table class="power-table" @click="goToPage">
+      <table class="power-table">
         <tr class="table-header">
           <th></th>
           <th>负载率</th>
@@ -14,17 +14,18 @@
           <th>功率因数</th>
           <th>绕组温度</th>
         </tr>
-        <tr v-for="(item, index) in powerData.list" :key="index">
+        <tr v-for="(item, index) in powerData.list" :key="index" @click="goToPage(item)">
           <td>{{item.name}}</td>
+          <!-- item.loadRateMark&&item.loadRate>item.loadRateMark -->
           <td
-            :class="{warning:item.loadRateMark&&item.loadRate>item.loadRateMark}"
+            :class="{warning:parseInt(item.loadRate)>80}"
             @mouseenter="showBox(index,0)"
             @mouseleave="hideBox(index,0)"
             ref="hoverTd"
           >
             {{item.loadRate}}
             <div class="float-box" ref="loadRate">
-              <p>{{item.name}}变压器</p>
+              <p>{{item.name.length>9?item.name.substring(0,9)+'...':item.name}}</p>
               <p>负载率超标</p>
               <p>当前值：{{item.loadRate}}</p>
               <p>参数标准：{{item.loadRateMark}}</p>
@@ -38,35 +39,35 @@
           >
             {{item.realTimePower}}
             <div class="float-box" ref="loadRate">
-              <p>{{item.name}}变压器</p>
+              <p>{{item.name.length>9?item.name.substring(0,9)+'...':item.name}}</p>
               <p>实时功率超标</p>
               <p>当前值：{{item.realTimePower}}</p>
               <p>参数标准：{{item.cs}}</p>
             </div>
           </td>
           <td
-            :class="{warning:item.powerFactorMark&&item.powerFactor>item.powerFactorMark}"
+            :class="{warning:item.powerFactor<0.9}"
             @mouseenter="showBox(index,2)"
             @mouseleave="hideBox(index,2)"
             ref="hoverTd"
           >
             {{item.powerFactor}}
             <div class="float-box" ref="loadRate">
-              <p>{{item.name}}变压器</p>
+              <p>{{item.name.length>9?item.name.substring(0,9)+'...':item.name}}</p>
               <p>功率因数超标</p>
               <p>当前值：{{item.powerFactor}}</p>
-              <p>参数标准：{{item.powerFactorMark}}</p>
+              <p>参数标准：0.90</p>
             </div>
           </td>
           <td
-            :class="{warning:item.windingTempMark&&item.windingTemp>item.windingTempMark}"
+            :class="{warning:parseInt(item.windingTemp)>70}"
             @mouseenter="showBox(index,3)"
             @mouseleave="hideBox(index,3)"
             ref="hoverTd"
           >
             {{item.windingTemp}}
             <div class="float-box" ref="loadRate">
-              <p>{{item.name}}变压器</p>
+              <p>{{item.name.length>9?item.name.substring(0,9)+'...':item.name}}</p>
               <p>绕组温度超标</p>
               <p>当前值：{{item.windingTemp}}</p>
               <p>参数标准：{{item.windingTempMark}}</p>
@@ -112,6 +113,7 @@ export default {
       handler: function (val, old) {
         if (val) {
           this.powerData = val.data;
+          //  console.log('powerData:'+JSON.stringify(this.powerData.list))
           if (this.powerData.list.length > 0) {
             this.handleList()
           }
@@ -139,7 +141,7 @@ export default {
         this.showWarnningBox[ind] = new Array()
         for (const key in item) {
           if (key == 'loadRate') {
-            if (parseInt(item.loadRate) > parseInt(item.loadRateMark)) {
+            if (parseInt(item.loadRate) > 80) {
               this.showWarnningBox[ind][0] = true
             } else {
               this.showWarnningBox[ind][0] = false
@@ -151,13 +153,14 @@ export default {
               this.showWarnningBox[ind][1] = false
             }
           } else if (key == 'powerFactor') {
-            if (item.powerFactorMark && item.powerFactor > item.powerFactorMark) {
+            // item.powerFactorMark && item.powerFactor > item.powerFactorMark
+            if (item.powerFactor < 0.9) {
               this.showWarnningBox[ind][2] = true
             } else {
               this.showWarnningBox[ind][2] = false
             }
           } else if (key == 'windingTemp') {
-            if (parseInt(item.windingTemp) > parseInt(item.windingTempMark)) {
+            if (parseInt(item.windingTemp) > 70) {
               this.showWarnningBox[ind][3] = true
             } else {
               this.showWarnningBox[ind][3] = false
@@ -180,8 +183,8 @@ export default {
       let n = ind * 4 + num
       this.$refs.loadRate[n].style.display = 'none';
     },
-    goToPage () {
-      this.$router.push({ path: '/safety/power-sys' })
+    goToPage (item) {
+      this.$router.push({ path: '/safety/power-sys', query: { id: item.transformerId } })
     }
   }
 }

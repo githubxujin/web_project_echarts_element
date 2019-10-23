@@ -8,7 +8,7 @@ export const workStateEnum = [
         label: '离职',
         value: 2
     }
-];
+]
 // 时段类型字典
 export const timeCategoryEnum = [
     {
@@ -20,14 +20,14 @@ export const timeCategoryEnum = [
         value: 2
     },
     {
-        label: '平时',
+        label: '平段',
         value: 3
     },
     {
         label: '低谷',
         value: 4
     }
-];
+]
 // 是否字典
 export const yesOrNoEnum = [
     {
@@ -38,7 +38,7 @@ export const yesOrNoEnum = [
         label: '否',
         value: 1
     }
-];
+]
 // 是否推送字典
 export const pushEnum = [
     {
@@ -49,7 +49,7 @@ export const pushEnum = [
         label: '不推送',
         value: 1
     }
-];
+]
 // 状态字典
 export const statusEnum = [
     {
@@ -60,7 +60,7 @@ export const statusEnum = [
         label: '禁用',
         value: 1
     }
-];
+]
 // 逻辑类型字典
 export const logicEnum = [
     {
@@ -75,7 +75,7 @@ export const logicEnum = [
         label: '非',
         value: '非'
     }
-];
+]
 // 运算逻辑符号
 export const symbolEnum = [
     {
@@ -102,7 +102,7 @@ export const symbolEnum = [
         label: '!=',
         value: '!='
     }
-];
+]
 // 能耗类型
 export const energyTypeEnum = [
     {
@@ -117,7 +117,7 @@ export const energyTypeEnum = [
         label: '气',
         value: '03'
     }
-];
+]
 
 // 使用状态
 export const usedState = [
@@ -133,7 +133,7 @@ export const usedState = [
         label: '已报废',
         value: 2
     }
-];
+]
 
 //  是否枚举类
 export const paramStateEnum = [
@@ -145,7 +145,7 @@ export const paramStateEnum = [
         label: '枚举',
         value: 1
     }
-];
+]
 
 //
 export const calculateTypeEnum = [
@@ -165,4 +165,4 @@ export const calculateTypeEnum = [
         label: '综合运算',
         value: 4
     }
-];
+]

@@ -46,6 +46,13 @@
     white-space: nowrap;
 }
 
+.two-text-ellipse {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+}
+
 // 对话框表头文本
 .dialog-header-text {
     display: block;

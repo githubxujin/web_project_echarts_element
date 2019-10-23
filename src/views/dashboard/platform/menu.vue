@@ -29,9 +29,9 @@
         :class="{'is-active' : defaultActive == item.index}"
       >
         <span :key="item.id" :index="item.index">
-          <i :class="item.icon"/>
+          <i :class="item.icon" />
           <span class="title">{{ item.title }}</span>
-          <div class="line"/>
+          <div class="line" />
         </span>
       </li>
     </ul>

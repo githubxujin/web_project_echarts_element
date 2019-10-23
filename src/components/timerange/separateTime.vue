@@ -9,6 +9,7 @@
       placeholder="选择日"
       @change="checkStartdate"
       :picker-options="pickerBeginYearBefore"
+      :editable="false"
     />
     <span>至</span>
     <el-date-picker
@@ -19,6 +20,7 @@
       :clearable="clearable"
       :picker-options="pickerBeginYearAfter"
       @change="checkEnddate"
+      :editable="false"
     />
   </div>
 </template>

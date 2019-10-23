@@ -5,7 +5,11 @@
         <el-tab-pane name="repair">
           <template slot="label">
             <span class="fl">电梯示意图</span>
-            <i class="u-tag iconfont icon-icon-life-alarm" @mouseenter="showHistoryAlarm"></i>
+            <i
+              class="u-tag iconfont icon-icon-life-alarm"
+              @mouseenter="showHistoryAlarm"
+              v-show="historyData.length>0"
+            ></i>
           </template>
           <elevator-view :eleData="eleData"></elevator-view>
           <el-dialog

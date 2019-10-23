@@ -2,28 +2,6 @@
   <div class="inspection">
     <div class="u-layout-search u-layout-dobule">
       <div class="u-layout-left-proviso">
-        <!--<div class="u-layout-left-item">-->
-        <!--<div class="title-input-group">-->
-        <!--<p class="text">-->
-        <!--明细指标：-->
-        <!--</p>-->
-        <!--<div class="input-container">-->
-
-        <!--<div style="border-radius: 2px;"-->
-        <!--class="item select-input">-->
-        <!--&lt;!&ndash;el-ui 根据需求增加配置&ndash;&gt;-->
-        <!--<el-select v-model="onlineType"-->
-        <!--placeholder="请选择">-->
-        <!--<el-option v-for="item in onlineTypeOptions"-->
-        <!--:key="item.value"-->
-        <!--:label="item.label"-->
-        <!--:value="item.value">-->
-        <!--</el-option>-->
-        <!--</el-select>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
         <div class="u-layout-left-item">
           <div class="title-input-group">
             <datePick v-model="checkTime"
@@ -82,9 +60,6 @@
       </el-table>
 
     </div>
-    <!--<pager :pager="pager"-->
-    <!--@query="query"-->
-    <!--@setPager="setPager"></pager>-->
   </div>
 </template>
 
@@ -130,14 +105,7 @@ export default {
     }
   }
   , created () {
-    // this.echartwidth = document.body.clientWidth * 0.85 + 'px';
-    //this.tablewidth = document.body.clientWidth * 0.8 + 'px';
   }, mounted () {
-    // getAlarmList(null).then((res) => {
-    //     this.list=res.data.list;
-    // }).catch((error) => {
-    //   console.log(error)
-    // })
     this.defaultStartTime = datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-');
     this.checkTime = { start: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-'), end: datetimeUtils.getSpecialDay(new Date(), '-') };
     this.query();
@@ -146,12 +114,19 @@ export default {
   methods: {
     query () {
       let topShopNumers = '', that = this;
-      this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumers += v;
-        if (that.checkedShopNumbers.length - 1 != i) {
-          topShopNumers += ','
+        if (this.checkedShopNumbers.length == 0) {
+            let storage = window.localStorage;
+            topShopNumers = storage.getItem("objTree");
+        } else {
+            this.checkedShopNumbers.forEach(function (v, i) {
+                topShopNumers += v;
+                if (that.checkedShopNumbers.length - 1 != i) {
+                    topShopNumers += ','
+                }
+            });
         }
-      });
+        this.checkTime.start = this.checkTime.start.toString().split(" ")[0];
+        this.checkTime.end = this.checkTime.end.toString().split(" ")[0];
       getOnlinedeviceList({ shopNumber: topShopNumers, start: this.checkTime.start, end: this.checkTime.end, timeType: this.timeType }).then((res) => {
 
         this.list = res.data;
@@ -175,16 +150,21 @@ export default {
       this.isdata = false;
     },
     exportData () {
-      let topShopNumers = '', that = this;
-      this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumers += v;
-        if (that.checkedShopNumbers.length - 1 != i) {
-          topShopNumers += ','
+        let topShopNumers = '', that = this;
+        if (this.checkedShopNumbers.length == 0) {
+            let storage = window.localStorage;
+            topShopNumers = storage.getItem("objTree");
+        } else {
+            this.checkedShopNumbers.forEach(function (v, i) {
+                topShopNumers += v;
+                if (that.checkedShopNumbers.length - 1 != i) {
+                    topShopNumers += ','
+                }
+            });
         }
-      });
       exportOnlinedeviceList(`?token=${localStorage.getItem('$token_info')}&start=${
         this.checkTime.start
-        }&end=${this.checkTime.end}&shopNumber=${topShopNumers}$timeType=${this.timeType}`);
+        }&end=${this.checkTime.end}&shopNumber=${topShopNumers}&timeType=${this.timeType}`);
     }
   }, watch: {
     //门店编码

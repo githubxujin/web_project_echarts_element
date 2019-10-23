@@ -53,6 +53,8 @@ export const BillStatusEnum = {
     waitingOver: 1,
     //已撤单
     canceled: 2,
+    //挂单中
+    hanging: 3,
     //待评价
     waitAppraise: 4,
     //已关闭
@@ -171,7 +173,7 @@ export const BillSource = {
 };
 //是否紧急
 export const isUrgency = {
-    0: '正常',
+    0: '通常',
     1: '紧急'
 };
 //是否超限

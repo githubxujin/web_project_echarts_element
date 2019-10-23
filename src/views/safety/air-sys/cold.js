@@ -380,38 +380,42 @@ export default class Cold {
 
     static setNameVal (obj) {
         let pz = 'CHL1_START';
-        let CHWP_VFD_PWR = 0, CWP_VFD_PWR = 0, CT_VFD_PWR = 0, ZFH = 0, CHW_TD = 0, CHW_FLOW = 0, LFH = 0, CHL_PWR = 0, ZGL = 0, CHW_ST = 0, CHW_RT = 0;;
-        // console.log("length："+ obj.length);
+        let CHWP_VFD_PWR = 0, CWP_VFD_PWR = 0, CT_VFD_PWR = 0, ZFH = 0, CHW_TD = 0, CHW_FLOW = 0, LFH = 0, CHL_PWR = 0, ZGL = 0, CHW_ST = 0, CHW_RT = 0;
         let address, v;
         for (var i = 0; i < obj.length; i++) {
-            address = obj[i].Address;
+            address = obj[i].Address.replace("/","_");
+            // console.log("测试："+address)
+            // if (address=="CHL1_PWR"){
+            //     debugger
+            // }
             if(!address){continue;}
             v = obj[i].val;
             let unit = $("text[name=" + address + "]").attr("unit");
-           console.log("Address："+ address +";unit："+unit);
+           // console.log("Address："+ address +";unit："+unit);
             if (typeof ($("text[name=" + address + "]").attr("unit")) != "undefined") {
                 $("text[name='" + address + "']").html(v + unit);
             }
-            if (address.indexOf('PWR') > -1 || address.indexOf('COP') > -1) {
-                continue;
-            }
+            // if ((address.indexOf('PWR') > -1 || address.indexOf('COP') > -1)&&address) {
+            //     continue;
+            // }
             if (address.substring(0, 3).indexOf('CHL') > -1) {
                 if (address.indexOf('_ALM') > -1 && v != 0) {
                     $('text[name=CHL' + address.substring(3, 4) + '_ALM]').show();
                     $('rect[name=CHL' + address.substring(3, 4) + '_ALM]').show();
                 }
+                if(address.indexOf('_PWR') > -1 && v > 0 && address.length >= 8){
                 $("image[name='" + address.substring(3, 4) + "#制冷机']").attr('href', filePath + 'Chl1.png');
-                Cold.runers(address.substring(3, 4) + "#制冷机");
+                Cold.runers(address.substring(3, 4) + "#制冷机");}
             }
-            if (address.substring(0, 4).indexOf('CHWP') > -1 && v != 0) {
+            if (address.substring(0, 4).indexOf('CHWP') > -1&&address.indexOf('_PWR') > -1 && v > 0 && address.length >= 9) {
                 $("image[name='" + address.substring(4, 5) + "#冷冻泵']").attr('href', filePath + 'Cwp1.png');
                 Cold.runers(address.substring(4, 5) + "#冷冻泵");
             }
-            else if (address.substring(0, 3).indexOf('CWP') > -1 && v != 0) {
+            else if (address.substring(0, 3).indexOf('CWP') > -1 && address.indexOf('_PWR') > -1 && v > 0 && address.length >= 8) {
                 $("image[name='" + address.substring(3, 4) + "#冷却泵']").attr('href', filePath + 'Cwp1.png');
                 Cold.runers(address.substring(3, 4) + "#冷却泵");
             }
-            else if (address.substring(0, 2).indexOf('CT') > -1 && v != 0) {
+            else if (address.substring(0, 2).indexOf('CT') > -1&& address.indexOf('_PWR') > -1 && v > 0 && address.length >= 7) {
                 $("image[name='" + address.substring(2, 3) + "#冷却塔']").attr('href', filePath + 'Ct1.png');
                 $("image[name='" + address.substring(2, 3) + "#冷却塔fs']").show();
                 Cold.runers(address.substring(2, 3) + "#冷却塔");

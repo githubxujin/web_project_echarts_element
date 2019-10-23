@@ -451,6 +451,19 @@ export default {
           result = false;
           break;
         }
+        if (item.timeStart != 1 || item.timeEnd != 7) {
+          if (!item.timeStartIdle || !item.timeEndIdle) {
+            this.$message.error('请把日期填充完整，周一到周日全部覆盖')
+            result = false;
+            break;
+          }
+        }
+        if (!item.timeStart || !item.timeEnd) {
+          this.$message.error('请把日期填充完整，周一到周日全部覆盖')
+          result = false;
+          break;
+        }
+
       }
       return result
     },

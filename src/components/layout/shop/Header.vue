@@ -4,7 +4,7 @@
     <div class="layout-tree" v-if="roleType==1">
       <Projecttree v-model="treeData" :isMultiple="false" @change="treeCheckChange"></Projecttree>
     </div>
-    <span v-else class="shop-title" v-text="shopTitle" />
+    <span v-else class="shop-title text-ellipse" v-text="shopTitle" :title="shopTitle" />
     <top-user />
     <top-nav />
   </div>

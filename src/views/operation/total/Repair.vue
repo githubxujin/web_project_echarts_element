@@ -107,7 +107,7 @@ export default {
         if (res.data) {
           let optons = Object.assign({}, this.repiarBarOption)
           optons.legend.data = res.data.legendData;
-          let colors = ['#EE6E6D', '#FEC069', '#5CBDF0', '#67CC80', '#EE6E6D', '#FEC069', '#5CBDF0', '#67CC80'];
+          let colors = ['#EE6E6D', '#FEC069', '#5CBDF0', '#67CC80', '#E8BF5E', '#FEC069', '#5CBDF0', '#67CC80'];
           optons.color = colors;
           optons.xAxis[0].data = res.data.xAxisData;
           optons.series = getStackBarSeriesData(res.data.columnar_seriesData, '维修');

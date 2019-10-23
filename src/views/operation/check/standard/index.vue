@@ -19,7 +19,7 @@
               :clearable="true"
               :data="treeData"
               :defaultProps="defaultProps"
-              :onlyLeafSelect="true"
+              :onlyLeafSelect="false"
             ></tree-select>
           </div>
           <div class="title-input-group u-title-input-group">

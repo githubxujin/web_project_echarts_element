@@ -62,5 +62,8 @@ export default {
     margin: 0 auto;
   }
 }
+/deep/.dialog-footer{
+    margin-top: 20px;
+}
 </style>
 

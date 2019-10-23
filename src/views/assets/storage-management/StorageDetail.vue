@@ -18,7 +18,7 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="12">
+        <el-col :span="24">
           <el-form-item label="备注：">{{detailData.desc}}</el-form-item>
         </el-col>
       </el-row>

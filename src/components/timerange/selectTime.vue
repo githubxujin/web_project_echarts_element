@@ -2,16 +2,17 @@
   <!-- 4个时间粒度共用一套时间日期组件在切换时会有bug,故分开写 -->
   <div>
     <div v-show="dateType=='datetime'">
+      <!-- @blur="getTimeInterval" -->
       <el-date-picker
         v-model="startTime"
         style="width:130px;"
         type="datetime"
         :clearable="false"
         :format="format"
-        placeholder="选择年"
-        :picker-options="pickerBeginYearBefore"
+        placeholder="选择时间"
+        :picker-options="pickerBeginHourBefore"
         @change="checkStartdate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
       <span>至</span>
       <el-date-picker
@@ -19,11 +20,11 @@
         type="datetime"
         style="width:130px;"
         :format="format"
-        placeholder="选择年"
+        placeholder="选择时间"
         :clearable="false"
-        :picker-options="pickerBeginYearAfter"
+        :picker-options="pickerBeginHourAfter"
         @change="checkEnddate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
     </div>
     <div v-show="dateType=='date'">
@@ -33,10 +34,10 @@
         type="date"
         :clearable="false"
         :format="format"
-        placeholder="选择年"
-        :picker-options="pickerBeginYearBefore"
+        placeholder="选择日期"
+        :picker-options="pickerBeginDayBefore"
         @change="checkStartdate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
       <span>至</span>
       <el-date-picker
@@ -44,11 +45,11 @@
         type="date"
         style="width:130px;"
         :format="format"
-        placeholder="选择年"
+        placeholder="选择日期"
         :clearable="false"
-        :picker-options="pickerBeginYearAfter"
+        :picker-options="pickerBeginDayAfter"
         @change="checkEnddate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
     </div>
     <div v-show="dateType=='month'">
@@ -58,10 +59,10 @@
         type="month"
         :clearable="false"
         :format="format"
-        placeholder="选择年"
-        :picker-options="pickerBeginYearBefore"
+        placeholder="选择月份"
+        :picker-options="pickerBeginMonthBefore"
         @change="checkStartdate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
       <span>至</span>
       <el-date-picker
@@ -69,11 +70,11 @@
         type="month"
         style="width:130px;"
         :format="format"
-        placeholder="选择年"
+        placeholder="选择月份"
         :clearable="false"
-        :picker-options="pickerBeginYearAfter"
+        :picker-options="pickerBeginMonthAfter"
         @change="checkEnddate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
     </div>
     <div v-show="dateType=='year'">
@@ -83,10 +84,10 @@
         type="year"
         :clearable="false"
         :format="format"
-        placeholder="选择年"
+        placeholder="选择年份"
         :picker-options="pickerBeginYearBefore"
         @change="checkStartdate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
       <span>至</span>
       <el-date-picker
@@ -94,11 +95,11 @@
         type="year"
         style="width:130px;"
         :format="format"
-        placeholder="选择年"
+        placeholder="选择年份"
         :clearable="false"
         :picker-options="pickerBeginYearAfter"
         @change="checkEnddate"
-        @blur="getTimeInterval"
+        :editable="false"
       />
     </div>
   </div>
@@ -133,35 +134,96 @@ export default {
         start: '',
         end: ''
       },
+      lastStartTime: this.defaultStartTime,
+      lastEndTime: this.defaultEndTime,
       message: '',
+      pickerBeginHourBefore: {// 开始时间小于结束时间，且小于当前时间，开始时间不能小于当天前7天
+        disabledDate: time => {
+          const beginDateVal = this.endTime;
+          let end = datetimeUtils.getEndTime(this.endTime);
+          const currentTime = end.getTime() - 86400 * 1000 * 7
+          if (beginDateVal) {
+            return time.getTime() > beginDateVal.getTime(); //time.getTime() < currentTime ||
+          } else {
+            return time.getTime() > Date.now()
+          }
+        }
+      },
+      pickerBeginHourAfter: {// 结束时间不能大于今天
+        disabledDate: time => {
+          const beginDateVal = this.startTime;
+          const currentTime = this.endTime.getTime() + 86400 * 1000 * 7
+          if (beginDateVal) {
+            return time.getTime() > currentTime || time.getTime() > Date.now() || time.getTime() < beginDateVal.getTime();
+          } else {
+            return time.getTime() > Date.now()
+          }
+        }
+      },
+      pickerBeginDayBefore: {// 开始时间小于结束时间，且小于当前时间，开始时间不能小于当天前90天
+        disabledDate: time => {
+          const beginDateVal = this.endTime
+          const currentTime = this.endTime.getTime() - 86400 * 1000 * 90
+          if (beginDateVal) {
+            return time.getTime() > beginDateVal.getTime(); //time.getTime() < currentTime ||
+          } else {
+            return time.getTime() > Date.now()
+          }
+        }
+      },
+      pickerBeginDayAfter: {// 结束时间不能大于今天
+        disabledDate: time => {
+          const beginDateVal = this.startTime;
+          const currentTime = this.endTime.getTime() + 86400 * 1000 * 90;
+          if (beginDateVal) {
+            return time.getTime() > currentTime || time.getTime() > Date.now() || time.getTime() < beginDateVal.getTime() - 1000 * 3600 * 24;
+          } else {
+            return time.getTime() > Date.now()
+          }
+        }
+      },
+      pickerBeginMonthBefore: {// 开始时间小于结束时间，且小于当前时间，开始时间不能小于当天前90天
+        disabledDate: time => {
+          var beginDateVal = this.endTime;
+          var threeMonthago = beginDateVal.setMonth(beginDateVal.getMonth() - 36);
+          beginDateVal.setMonth(beginDateVal.getMonth() + 36);
+          if (beginDateVal) {
+            return time.getTime() > beginDateVal.getTime(); //time.getTime() < threeMonthago ||
+          }
+        }
+      },
+      pickerBeginMonthAfter: {// 结束时间不能大于本月
+        disabledDate: time => {
+          var beginDateVal = this.startTime;
+          var threeMonths = beginDateVal.setMonth(beginDateVal.getMonth() + 36);
+          beginDateVal.setMonth(beginDateVal.getMonth() - 36)
+          if (beginDateVal) {
+            return time.getTime() > threeMonths || time.getTime() > Date.now() || time.getTime() < beginDateVal.getTime();
+          } else {
+            return time.getTime() > Date.now()
+          }
+        }
+      },
       pickerBeginYearBefore: {// 开始时间小于结束时间，且小于当前时间，开始时间不能小于当天前7天
         disabledDate: time => {
           const beginDateVal = this.endTime
-          // const currentTime = this.endTime.getTime() - 86400 * 1000 * 7
-          // if (beginDateVal) {
-          return time.getTime() > Date.now() || time.getTime() > beginDateVal.getTime();
-          // } else {
-          //   return time.getTime() > Date.now()
-          // }
+          if (beginDateVal) {
+            return time.getTime() > beginDateVal.getTime() || time.getTime() > Date.now();
+          } else {
+            return time.getTime() > Date.now()
+          }
         }
       },
-      pickerBeginYearAfter: {// 结束时间不能大于今天,小于开始时间
+      pickerBeginYearAfter: {// 结束时间不能大于今年
         disabledDate: time => {
-          let beginDateVal = this.startTime;
-          return time.getTime() > Date.now() || time.getTime() < beginDateVal.getTime();
+          const beginDateVal = this.startTime;
+          if (beginDateVal) {
+            return time.getTime() > Date.now() || time.getTime() < beginDateVal
+          } else {
+            return time.getTime() > Date.now()
+          }
         }
       }
-      // pickerBeginYearAfter: {// 结束时间不能大于今天
-      //   disabledDate: time => {
-      //     const beginDateVal = this.startTime;
-      //     const currentTime = datetimeUtils.getNextDate(7);
-      //     if (beginDateVal) {
-      //       return time.getTime() > currentTime || time.getTime() > Date.now() || time.getTime() < beginDateVal.getTime();
-      //     } else {
-      //       return time.getTime() > Date.now()
-      //     }
-      //   }
-      // }
     }
   },
   created () {
@@ -196,14 +258,22 @@ export default {
       this.$emit('checkedTime', this.time)
     },
     checkStartdate (val) {
-      this.time.start = val ? datetimeUtils.getformatDateTime(val, '-') : '';
-      // this.$emit('checkedTime', this.time)
+      if (val) {
+        this.lastStartTime = val;
+      }
+      this.startTime = val ? val : this.lastStartTime;
+      this.time.start = val ? datetimeUtils.getformatDateTime(val, '-') : datetimeUtils.getformatDateTime(this.defaultStartTime, '-');
+      this.$emit('checkedTime', this.time)
     },
     checkEnddate (val) {
-      console.log(this.endTime)
+      if (val) {
+        this.lastEndTime = val;
+      }
+      this.endTime = val ? val : this.lastEndTime;
       if (val) {
         this.handleDate(val)
       }
+      this.$emit('checkedTime', this.time)
     },
     handleDate (val) {
       if (this.dateType === 'date') {
@@ -318,37 +388,6 @@ export default {
           }
       }
     },
-    getTimeInterval () {
-      if (this.dateType == 'date') {
-        let gap = this.endTime.getTime() - this.startTime.getTime();
-        let time = 86400 * 1000 * 90
-        if (gap > time) {
-          this.$message.error('最多可查询90天');
-        }
-        this.message = gap > time ? '最多可查询90天' : ''
-        this.$emit('checkedTime', this.time, this.message)
-      } else if (this.dateType == 'month') {
-        let gap = this.endTime.getFullYear() - this.startTime.getFullYear();
-        let preMonth = this.startTime.getMonth() < this.endTime.getMonth();
-        if (gap > 3 || gap == 3 && preMonth) {
-          this.$message.error('最多可查询36个月')
-          this.message = '最多可查询36个月'
-        } else {
-          this.message = ''
-        }
-        this.$emit('checkedTime', this.time, this.message)
-      } else if (this.dateType == 'year') {
-        this.$emit('checkedTime', this.time, this.message)
-      } else {
-        let gap = this.endTime.getTime() - this.startTime.getTime();
-        let time = 86400 * 1000 * 7
-        if (gap > time) {
-          this.$message.error('最多可查询7天')
-        }
-        this.message = gap > time ? '最多可查询7天' : ''
-        this.$emit('checkedTime', this.time, this.message)
-      }
-    }
   }
 }
 </script>

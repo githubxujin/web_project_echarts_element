@@ -79,6 +79,7 @@
       @onHide="hideAddWin"
       @submitForm="submitAddForm"
       :curMonth="curMonth"
+      :nextMonthNums="nextMonthNums"
       :classOptions="classOptions"
     ></add-item>
     <!--编辑排班-->
@@ -86,7 +87,7 @@
       v-if="showEditWin"
       @onHide="hideEditWin"
       @submitForm="submitEditForm"
-      :curMonth="curMonth"
+      :curMonth="month"
     ></edit-item>
   </div>
 </template>
@@ -127,6 +128,7 @@ export default {
       tableHeight: 400,
       curMonth: new Date(),
       isFF: false,//是否是火狐浏览器
+      nextMonthNums: 1
     }
   },
   computed: {
@@ -138,7 +140,7 @@ export default {
     },
   },
   created () {
-    // console.log(this.days);
+    console.log('created', this.days);
     this.initData();
   },
   mounted: function () {
@@ -175,14 +177,16 @@ export default {
     },
     //新增
     onAdd () {
+      this.nextMonthNums = this.classOptions.length > 0 ? 1 : 0;
       this.curMonth = this.getCurMaxMonthDate();
+      console.log('this.curMonth :', this.curMonth);
       this.showAddWin = true;
       this.showPage = false;
     },
     //编辑
     onEdit () {
       this.curMonth = this.getCurMonth();
-      // console.log('curMonth :', this.curMonth);
+      console.log('curMonth :', this.curMonth);
       this.showEditWin = true;
       this.showPage = false;
     },
@@ -191,6 +195,7 @@ export default {
     },
     //当前班次列表中最大的一项
     getCurMaxMonthDate () {
+      console.log(' this.classOptions.length :', this.classOptions.length);
       return this.classOptions.length > 0 ? dateUtils.stringToDate(this.classOptions[0].value) : new Date();
     },
     //获取排班记录
@@ -207,11 +212,15 @@ export default {
     },
     //切换月份
     monthChange (val) {
+      this.curMonth = this.getCurMonth();
+      console.log('val :', val, this.month, this.curMonth);
+      // this.curMonth = val;
+      //获取排班记录
       this.getItemList();
     },
     //新增-提交表单-回调
     submitAddForm (classesTime, data) {
-      // console.log('submitAddForm :', classesTime, data);
+      console.log('submitAddForm :', classesTime, data);
       this.submitClassForm(classesTime, data, '新增');
       this.showAddWin = false;
       this.showPage = true;
@@ -257,6 +266,7 @@ export default {
       this.showPage = true;
       this.showEditWin = false;
       this.month = dateUtils.getCurYearMonth();
+      this.curMonth = new Date();
       this.initData();
     },
     //隐藏新增弹窗
@@ -264,6 +274,7 @@ export default {
       this.showPage = true;
       this.showAddWin = false;
       this.month = dateUtils.getCurYearMonth();
+      this.curMonth = new Date();
       this.initData();
     }
   }

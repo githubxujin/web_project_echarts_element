@@ -15,33 +15,22 @@
             ></datePick>
           </div>
           <div class="title-input-group">
-            <p class="text">比对时间：</p>
-            <!--<dPicker-->
-            <!--:default-start-time="startTime"-->
-            <!--:default-end-time="endTime"-->
-            <!--:date-type="tabIndex"-->
-            <!--@checkedTime="checkedTime"-->
-            <!--&gt;</dPicker>-->
-            <el-date-picker
-              style="width: 117px"
-              v-model="startTime"
-              :type="tabIndex"
-              :clearable="false"
-              placeholder="选择日期"
-            ></el-date-picker>
-            <el-date-picker
-              style="width: 117px"
-              v-model="endTime"
-              :type="tabIndex"
-              :clearable="false"
-              placeholder="选择日期"
-            ></el-date-picker>
+              <datePick
+                  timeName="对比时间"
+                  v-model="checkTimeTo"
+                  type="daterange"
+                  :compareTime="true"
+                  :clearable="false"
+                  :tab_Index="tabIndex"
+                  :defaultStartTime="defaultStartTime"
+                  @checkedTime="checkedTimeTo"
+              ></datePick>
           </div>
         </div>
 
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">比对参数：</p>
+            <p class="text">对比参数：</p>
             <div class="input-container">
               <div style="border-radius: 2px;" class="item select-input">
                 <!--el-ui 根据需求增加配置-->
@@ -84,11 +73,6 @@
           >查询</el-button>
         </div>
       </div>
-      <!--<div class="u-layout-right-item">-->
-      <!--<el-button class="el-button el-button&#45;&#45;primary el-button&#45;&#45;small"-->
-      <!--@click="exportData"-->
-      <!--v-if="pageBtns.some(val=>val=='export')">导出</el-button>-->
-      <!--</div>-->
       <div class="u-layout-left-item">
         <el-button @click="getCharts" class="el-button el-button--primary el-button--small">图形</el-button>
         <el-button @click="get_Data" class="el-button el-button--primary el-button--small">数据</el-button>
@@ -134,9 +118,7 @@ export default {
   data () {
     return {
       datetimeUtils: datetimeUtils,
-      tabIndex: 'date',
-      startTime: null,
-      endTime: null,
+      tabIndex: 1,
       isdata: false,
       granularityData: [
         { name: '日', id: 'date' },
@@ -144,7 +126,7 @@ export default {
       ],
       timeType: 1,
       defaultStartTime: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-'),
-      checkTime: {},
+      checkTime: {},  checkTimeTo: {},
       tableData: {
         tHead: [
           { text: '时间', prop: 'time', sortable: true },
@@ -160,30 +142,7 @@ export default {
         paging: false
       },
       isdata: false,
-      objectoptions: [{
-        value: '全部',
-        label: '全部'
-      }, {
-        value: 1,
-        label: '红星美凯龙龙华店'
-      }, {
-        value: '红星美凯龙南山店',
-        label: '红星美凯龙南山店'
-      }
-        , {
-        value: '红星美凯龙福田店',
-        label: '红星美凯龙福田店'
-      }
-        , {
-        value: '红星美凯龙坂田店',
-        label: '红星美凯龙坂田店'
-      }, {
-        value: '红星美凯龙五和店',
-        label: '红星美凯龙五和店'
-      }, {
-        value: '红星美凯龙西里店',
-        label: '红星美凯龙西里店'
-      }
+      objectoptions: [
       ], parameteroptions: [{
         label: '报警级别',
         value: 1
@@ -231,56 +190,12 @@ export default {
         { label: '五级', value: 5 }
       ],
       chartOption: {
-        // toolbox: {
-        //   show: true,
-        //   feature: {
-        //     dataView: {
-        //       buttonColor: '#1EA9FB',
-        //       show: true,
-        //       readOnly: true,
-        //       optionToContent: function (opt) {
-        //         console.log('opt:', opt);
-        //         let axisData = opt.xAxis[0].data; //坐标数据
-        //         let series = opt.series; //折线图数据
-        //         let table = `<table class="coustom-echarts-table">`;
-        //         // let tdHeads = `<thead><tr><td>${opt.xAxis[0].name}</td>`; //表头
-        //         let tdHeads = `<thead><tr><td>时间</td>`; //表头
-        //         //thead
-        //         series.forEach(function (item, index) {
-        //           tdHeads += `<td>${item.name}</td>`;
-        //         });
-        //         table += tdHeads + `</tr></thead>`;
-        //
-        //         //tbody
-        //         let tdBodys = "<tbody>";
-        //         for (
-        //           let i = 0, l = axisData.length;
-        //           i < l;
-        //           i++
-        //         ) {
-        //           let evenTrClass = i % 2 === 0 ? "even" : "";
-        //           //行
-        //           tdBodys += `<tr class="${evenTrClass}"><td>${
-        //             axisData[i]
-        //             }</td>`;
-        //           for (let j = 0; j < series.length; j++) {
-        //             //列
-        //             tdBodys += `<td>${
-        //               series[j].data[i]
-        //               }</td>`;
-        //           }
-        //           tdBodys += "</tr>";
-        //         }
-        //         //表
-        //         table += `${tdBodys}</tbody></table>`;
-        //         return table;
-        //       }
-        //     },
-        //     magicType: { type: ['line', 'bar'] }
-        //   }
-        // },
+          color: ['#028CF7','#4852DD','#9D67FF','#0DD789','#F19F02','#11AA07','#F14D4D','#00FFFC','#FF8080','#6FD1FF','#A39823'],
         tooltip: {
-          trigger: 'axis'
+            trigger: "axis",
+            // axisPointer: {
+            //     type: 'cross'
+            // }
         },
         legend: {
           data: [],
@@ -288,16 +203,8 @@ export default {
         },
         grid: {
           left: '3%',
-          right: '4%',
-          // top: '7%'
-          // bottom: '7%'
-          // containLabel: true
+          right: '3%'
         },
-        // toolbox: {
-        //     feature: {
-        //         saveAsImage: {}
-        //     }
-        // },
         xAxis: [{
           name: "日期(天)",
           type: 'category',
@@ -355,31 +262,35 @@ export default {
             show: true
           }
         }],
-        yAxis: {
-          name: "处理时间(min)",
-          axisLine: {
-            symbol: ['none', 'arrow']          },
-          type: 'value',
-          nameTextStyle: {
-            color: '#838383'
-          },
-          splitLine: {
-            show: true,
-            lineStyle: {
-              // 网格颜色
-              color: ['#E5EFF5']
+        yAxis:   {
+            type: "value",
+            name: '',
+            nameTextStyle: {
+                color: "#3a3a3a"
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ["#E5EFF5"]
+                }
+            },
+            axisTick: {
+                show: false
+            },
+            axisLabel: {
+                show: true,
+                textStyle: {
+                    color: "#3A3A3A"
+                }
+            },
+            nameGap: '20',
+            // nameLocation: 'middle',
+            axisLine: {
+                lineStyle: {
+                    color: "#D6D6D6",
+                    width: 1
+                }
             }
-          },
-          axisLine: {
-            symbol: ['none', 'arrow'],
-            lineStyle: {
-              color: '#E5EFF5'
-            }
-          },
-          axisLabel: {
-            color: '#3A3A3A',
-            interval: 0
-          }
         },
         series: [
         ]
@@ -391,113 +302,98 @@ export default {
   },
   mounted () {
     this.checkTime = { start: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-'), end: datetimeUtils.getSpecialDay(new Date(), '-') };
-    this.startTime = datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-');
-    this.endTime = datetimeUtils.getSpecialDay(new Date(), '-');
+      this.checkTimeTo=this.checkTime;
     this.query();
-    // this.chartOption = utils.chartNewLine(this.chartOption, 4, 'xAxis');
   }, methods: {
     query () {
       let timeGap, compiGap;
-      this.startTime = datetimeUtils.GMTToStr(this.startTime);
-      this.endTime = datetimeUtils.GMTToStr(this.endTime);
-
       this.checkTime.start = datetimeUtils.GMTToStr(this.checkTime.start);
       this.checkTime.end = datetimeUtils.GMTToStr(this.checkTime.end);
-      // debugger
-      //         alert((new Date(this.checkTime.end)).getTime());
-      //         alert((new Date(this.checkTime.start)).getTime());
-
-      if ((new Date(this.endTime)).getTime() < (new Date(this.startTime)).getTime()) {
-        this.$message.error("比对时间开始时间不能大于结束时间");
+        this.checkTimeTo.start = datetimeUtils.GMTToStr(this.checkTimeTo.start);
+        this.checkTimeTo.end = datetimeUtils.GMTToStr(this.checkTimeTo.end);
+      if ((new Date(this.checkTime.end)).getTime() < (new Date(this.checkTime.start)).getTime()) {
+        this.$message.error("第一项的时间开始时间不能大于结束时间");
         return;
       }
+        if ((new Date(this.checkTimeTo.end)).getTime() < (new Date(this.checkTimeTo.start)).getTime()) {
+            this.$message.error("对比时间开始时间不能大于结束时间");
+            return;
+        }
       let topShopNumer = '', t = this;
-
       this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumer += v;
-        if (t.checkedShopNumbers.length - 1 != i) {
-          topShopNumer += ','
+        // topShopNumer += v;
+        if (t.checkedShopNumbers.length - 1 == i) {
+            topShopNumer += v;
         }
       });
 
       switch (this.timeType) {
         case 1:
-          this.startTime = this.startTime.split(" ")[0];
           this.checkTime.start = this.checkTime.start.split(" ")[0];
-          this.endTime = this.endTime.split(" ")[0];
+          this.checkTimeTo.start = this.checkTimeTo.start.split(" ")[0];
           this.checkTime.end = this.checkTime.end.split(" ")[0];
-
-          timeGap = new Date(this.endTime).getTime() - new Date(this.startTime).getTime();
+          this.checkTimeTo.end = this.checkTimeTo.end.split(" ")[0];
+          timeGap = new Date(this.checkTimeTo.end).getTime() - new Date(this.checkTimeTo.start).getTime();
           compiGap = new Date(this.checkTime.end).getTime() - new Date(this.checkTime.start).getTime();
           break;
         case 2:
-          //   if(this.startTime.split(" ")[0].length==9){
-          //       this.startTime = this.startTime + "-1 00:00:00";
-          //   }
-          //   this.startTime = this.startTime.split("-")[1] + "-1 00:00:00";
-          // this.checkTime.start = this.checkTime.start.split(" ")[1] + "-1 00:00:00";
-          // this.endTime = this.endTime.split("-")[1] + "-30 23:59:59";
-          // this.checkTime.end = this.checkTime.end.split("-")[1] + "-30 23:59:59";
-          let yearGap = new Date(this.endTime).getFullYear() - new Date(this.startTime).getFullYear();
-          // let monthGap = new Date(this.endDateValue).getMonth() - new Date(this.startDateValue).getMonth() + 1;
+          let yearGap = new Date(this.checkTimeTo.end).getFullYear() - new Date(this.checkTimeTo.start).getFullYear();
           if (yearGap == 0) {
-            timeGap = new Date(this.endTime).getMonth() - new Date(this.startTime).getMonth() + 1;
-            // console.log(this.timeGap, '同年月份间隔')
+            timeGap = new Date(this.checkTimeTo.end).getMonth() - new Date(this.checkTimeTo.start).getMonth() + 1;
+
           } else if (yearGap > 0) {
-            let gap1 = 12 - new Date(this.startTime).getMonth() //开始年份到12月之间有多少个月
-            let gap2 = new Date(this.endTime).getMonth() + 1
+            let gap1 = 12 - new Date(this.checkTimeTo.start).getMonth() //开始年份到12月之间有多少个月
+            let gap2 = new Date(this.checkTimeTo.end).getMonth() + 1
             timeGap = gap1 + gap2;
-            // console.log(this.timeGap, '跨年月份间隔')
           }
           let yearGap1 = new Date(this.checkTime.end).getFullYear() - new Date(this.checkTime.start).getFullYear();
           if (yearGap1 == 0) {
             compiGap = new Date(this.checkTime.end).getMonth() + 1 - new Date(this.checkTime.start).getMonth()
-            // console.log(this.compiGap, '对比同年月份间隔')
+
           } else if (yearGap1 > 0) {
             let gap1 = 12 - new Date(this.checkTime.start).getMonth()//开始年份到12月之间有多少个月
-            let gap2 = new Date(this.checkTime.end).getMonth() + 1
+            let gap2 = new Date(this.checkTime.end).getMonth() + 1;
             compiGap = gap1 + gap2;
-            // console.log(this.compiGap, '对比跨年月份间隔')
           }
           break;
         case 3:
-          // this.startTime = this.startTime.split("-")[0] + "-01-01 00:00:00";
-          // this.checkTime.start = this.checkTime.start.split("-")[0] + "-01-01 00:00:00";
-          // this.endTime = this.endTime.split("-")[1] + "-12-31 23:59:59";
-          // this.checkTime.end = this.checkTime.end.split("-")[1] + "-12-31 23:59:59";
-          timeGap = new Date(this.endTime).getFullYear() - new Date(this.startTime).getFullYear();
+          timeGap = new Date(this.checkTimeTo.end).getFullYear() - new Date(this.checkTimeTo.start).getFullYear();
           compiGap = new Date(this.checkTime.end).getFullYear() - new Date(this.checkTime.start).getFullYear();
           break;
       }
-
+        if (!topShopNumer) {
+            this.$message.error("请选择门店");
+            return;
+        }
       if (compiGap != timeGap) {
-        this.$message.error("时间比对的时间范围必须一致");
+        this.$message.error("时间对比的时间范围必须一致");
         return;
       }
 
       if (this.compareParam == 1) {
-        this.chartOption.yAxis.name = "单位(个)";
+        this.chartOption.yAxis.name = "数量(个)";
       }
       if (this.compareParam == 2) {
-        this.chartOption.yAxis.name = "单位(秒)";
+        this.chartOption.yAxis.name = "时间(min)";
       }
       if (this.compareParam == 3) {
-        this.chartOption.yAxis.name = "单位(%)";
+        this.chartOption.yAxis.name = "占比(%)";
       }
       if (this.compareParam == 4) {
-        this.chartOption.yAxis.name = "单位(kWh)";
+          this.chartOption.grid.left='3%';
+        this.chartOption.yAxis.name = "总能耗(kWh)";
         if (this.detailIndex == 2) {
-          this.chartOption.yAxis.name = "单位(kWh/m²)";
+            this.chartOption.grid.left='4%';
+          this.chartOption.yAxis.name = "单位面积能耗(kWh/m²)";
         }
       }
-      this.chartOption.xAxis[0].name = this.timeType == 1 ? this.chartOption.xAxis.name = '时间粒度(日)' : this.timeType == 2 ? this.chartOption.xAxis.name = '时间粒度(月)' : this.chartOption.xAxis.name = '时间粒度(年)';
-      this.chartOption.xAxis[1].name = this.timeType == 1 ? this.chartOption.xAxis.name = '时间粒度(日)' : this.timeType == 2 ? this.chartOption.xAxis.name = '时间粒度(月)' : this.chartOption.xAxis.name = '时间粒度(年)';
+      this.chartOption.xAxis[0].name = this.timeType == 1 ? this.chartOption.xAxis.name = '日' : this.timeType == 2 ? this.chartOption.xAxis.name = '月' : this.chartOption.xAxis.name = '年';
+      this.chartOption.xAxis[1].name = this.timeType == 1 ? this.chartOption.xAxis.name = '日' : this.timeType == 2 ? this.chartOption.xAxis.name = '月' : this.chartOption.xAxis.name = '年';
       let detailIndex = this.detailIndex == 0 ? '1,2,3,4,5' : this.detailIndex.toString();
       let obj = {        compareParam: this.compareParam, currentTarget: topShopNumer, detailIndex: detailIndex, timeType: this.timeType
-        , start: this.checkTime.start, end: this.checkTime.end, compareEnd: this.endTime, compareStart: this.startTime      };
-
+        , start: this.checkTime.start, end: this.checkTime.end, compareEnd:this.checkTimeTo.end, compareStart: this.checkTimeTo.start     };
+console.log(JSON.stringify(this.checkTimeTo))
       getTimeCompareListReverse(obj).then((res) => {
-        // console.log("getTimeCompareListReverse:"+JSON.stringify(res))
         if (res.data.length > 0) {
           this.tableData.tHead = [];
           let t_count = JSON.stringify(res.data[0]).toString().split('":"').length - 1;
@@ -511,23 +407,28 @@ export default {
         let obj = res.data.current; let cpobj = res.data.compare;
         this.chartOption.legend.data = [];
         this.chartOption.xAxis[0].data = res.data.current["时间"];
-        // this.chartOption.xAxis[1].data = res.data.compare["时间"];
+      this.chartOption.xAxis[1].data = res.data.compare["时间"];
         this.chartOption.series = [];
+        console.log('this.startTime:'+this.startTime)
         if (this.timeType == 2) {
           if (this.chartOption.xAxis[0].data.length == 0) {
-            this.chartOption.xAxis[0].data.push(this.checkTime.start.split("-1 ")[0]);
+                let t=new Date(this.checkTime.start);
+            this.chartOption.xAxis[0].data.push(t.getFullYear()+'-'+(t.getMonth() + 1));
           }
           if (this.chartOption.xAxis[1].data.length == 0) {
-            this.chartOption.xAxis[1].data.push(this.startTime.split("-1 ")[0]);
+              let t=new Date(this.checkTimeTo.start);
+            this.chartOption.xAxis[1].data.push(t.getFullYear()+'-'+(t.getMonth() + 1));
           }        }
         let count = JSON.stringify(obj).toString().split('[').length - 1;
         for (let i = 0; i < count; i++) {
           let iobj = JSON.stringify(cpobj).toString().split('],')[i];
           let pName = iobj.split(":[")[0].replace('{"', '').replace('"', '').replace('"', '') + "(比对)";
+          console.log(pName+'_'+pName.indexOf("时间(比对)"));
           if (pName.indexOf("时间(比对)") > -1 && pName.length == 6) {
             continue;
           }
           let param = {
+              xAxisIndex:0,
             name: pName,
             type: 'line',
             // stack: '总量',
@@ -552,6 +453,7 @@ export default {
             continue;
           }
           let param = {
+              xAxisIndex:1,
             name: pName,
             type: 'line',
             // stack: '总量',
@@ -575,37 +477,40 @@ export default {
         if (res.data.current['时间'].length == 0) {
           this.$message.warning("暂无数据");        }
         console.log('aaa:' + JSON.stringify(this.chartOption.series))
-        // this.chartOption.tooltip.formatter = function (params, ticket, callback) {
-        //   console.log(JSON.stringify(params))
-        //     // let htmlStr = '<div>' + params[0].name + '</br>';
-        //     // for (let i = 0; i < t_numberParam.length; i++) {
-        //     //     htmlStr += params[i].seriesName + ':' + params[i].value + 'kWh</br>';
-        //     // }
-        //     // return htmlStr;
-        // };
       }).catch((error) => {
         console.log(error)
       });
     },
     checkedTime (res) {
       this.checkTime = res;
-      console.log('getTime:' + JSON.stringify(res));
-    },
+      console.log('checkedTime:' + JSON.stringify(res));
+    },checkedTimeTo (res) {
+            console.log('checkedTimeTo:' + JSON.stringify(res));
+            this.checkTimeTo = res;
+        },
     switchTime (index) {
       if (index == "1") {
-        this.tabIndex = 'date';
-        this.checkTime.start = this.startTime = datetimeUtils.getPreDate(15);//.format('L');
-        this.checkTime.end = this.endTime = new Date();
+        this.tabIndex = 1;
+        this.checkTime.start = datetimeUtils.getPreDate(15);//.format('L');
+        this.checkTime.end = new Date();
+
+          this.checkTimeTo.start=datetimeUtils.getPreDate(30);
+          this.checkTimeTo.end =  new Date();
       }
       else if (index == "2") {
-        this.tabIndex = 'month';
-        this.checkTime.start = this.startTime = datetimeUtils.getBeforeMonth(1);
-        this.checkTime.end = this.endTime = new Date();
+        this.tabIndex = 2;
+        this.checkTime.start = datetimeUtils.getBeforeMonth(1);
+        this.checkTime.end = new Date();
+
+          this.checkTimeTo.start =  this.checkTime.start;
+          this.checkTimeTo.end = new Date();
       }
       else if (index == "3") {
-        this.tabIndex = 'year';
-        this.checkTime.start = this.startTime = new Date(new Date().getFullYear() - 12, '01', '01')
-        this.checkTime.end = this.endTime = new Date();
+        this.tabIndex =3;
+        this.checkTime.start =new Date(new Date().getFullYear(), '01', '01')
+        this.checkTime.end =  new Date();
+          this.checkTimeTo.start = new Date(new Date().getFullYear(), '01', '01')
+          this.checkTimeTo.end =  new Date();
       }
       this.timeType = index;
     },
@@ -630,7 +535,7 @@ export default {
       }
       else if (this.compareParam == 4) {
         this.detailIndexOptions = [{ label: '总能耗', value: 1 },
-        { label: '平均能耗', value: 2 }];
+        { label: '单位面积能耗', value: 2 }];
       }
     },
     get_Data () {
@@ -647,16 +552,12 @@ export default {
         }
       });
       let detailIndex = this.detailIndex == 0 ? '1,2,3,4,5' : this.detailIndex.toString();
-      /*this.startTime = datetimeUtils.GMTToStr(this.startTime).replace('8:0:0', '0:0:0');
-      this.endTime = datetimeUtils.GMTToStr(this.endTime).replace('0:0:0', '23:59:59').replace('8:0:0', '23:59:59');*/
-      this.startTime = datetimeUtils.getCurYmdTime(this.startTime);
-      this.endTime = datetimeUtils.getCurYmdTime(this.endTime);
       exportTimeCompareList(`?token=${localStorage.getItem('$token_info')}&compareParam=${this.compareParam}&start=${
-        this.checkTime.start
-        }&end=${this.checkTime.end}&compareStart=${
-        this.startTime
+          datetimeUtils.getSpecialDay(this.checkTime.start,"-")
+        }&end=${ datetimeUtils.getSpecialDay(this.checkTime.end,"-")}&compareStart=${
+          datetimeUtils.getSpecialDay(this.checkTimeTo.start,"-")
         }&compareEnd=${
-        this.endTime
+          datetimeUtils.getSpecialDay(this.checkTimeTo.end,"-")
         } &detailIndex=${detailIndex}&currentTarget=${topShopNumer}&timeType=` + this.timeType);
     }
   }, watch: {

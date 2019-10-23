@@ -24,7 +24,7 @@
           </div>
           <div class="title-input-group u-title-input-group">
             <p class="text">故障类型：</p>
-            <el-select v-model="faultType" placeholder="请选故障类型" clearable>
+            <el-select v-model="faultType" placeholder="请选择故障类型" clearable>
               <el-option
                 v-for="(item,index) in faultTypeOptions"
                 :label="item.name"
@@ -67,20 +67,29 @@
     <div class="datatable-box">
       <el-table :data="tableData" :height="tableHeight" border style="width: 100%" ref="table">
         <el-table-column type="index" label="序号" width="50" :index="indexMethod"></el-table-column>
-        <el-table-column prop="billNumber" label="工单号" align="center"></el-table-column>
-        <el-table-column prop="deviceName" label="设备名称"></el-table-column>
+        <el-table-column prop="billNumber" label="工单号" align="center" width="180"></el-table-column>
+        <el-table-column prop="deviceName" label="设备名称">
+          <template slot-scope="scope">
+            <span class="two-text-ellipse" :title="scope.row.deviceName">{{scope.row.deviceName}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="faultTypeStr" label="故障类型"></el-table-column>
         <el-table-column prop="sourceStr" label="报修来源" align="center"></el-table-column>
-        <el-table-column prop="faultDesc" label="故障描述"></el-table-column>
+        <el-table-column prop="faultDesc" label="故障描述">
+          <template slot-scope="scope">
+            <span class="two-text-ellipse" :title="scope.row.faultDesc">{{scope.row.faultDesc}}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="是否紧急" align="center">
           <template slot-scope="scope">{{isUrgency[scope.row.urgent]}}</template>
         </el-table-column>
         <el-table-column prop="repairTimeStr" label="报修时间" align="center"></el-table-column>
         <el-table-column prop="expectTimeStr" label="预期时间" align="center"></el-table-column>
+        <el-table-column prop="repairUserName" label="指派人" align="center"></el-table-column>
         <el-table-column label="处理状态" align="center">
           <template slot-scope="scope">{{ scope.row.statusStr }}</template>
         </el-table-column>
-        <el-table-column fixed="right" align="center" label="操作" width="180">
+        <el-table-column align="center" label="操作" width="180">
           <template slot-scope="scope">
             <div class="opration-btn">
               <el-button
@@ -165,6 +174,7 @@
     >
       <select-user
         :handleType="handleType"
+        :billNumber="curBillNumber"
         @onHide="hideDispatchinglWin"
         @submitForm="submitDispatching"
         :changeTag="changeTag"
@@ -214,6 +224,7 @@
       width="720px"
     >
       <select-user-audit
+        v-if="showTransferAuditWin"
         @onHide="showTransferAuditWin=false"
         @submitForm="submitTransferAudit"
         :changeTag="changeTag"
@@ -294,7 +305,7 @@ export default {
       showDetailDispatchingBtn: false,//显示详情页面的派工按钮
       faultType: '',//故障类型
       faultTypeOptions: [],
-      dispatchingTitle: ''
+      dispatchingTitle: '选择执行人员'
     }
   },
   created () {
@@ -313,6 +324,10 @@ export default {
     //是否有审核权限
     haveAudit () {
       return this.showBtn('audit');
+    },
+    //只有抓单才传工单号
+    curBillNumber () {
+      return this.handleType == 2 ? this.curBill.billNumber : '';
     }
   },
   watch: {
@@ -340,11 +355,11 @@ export default {
     },
     //是否显示撤单按钮
     showRevokeBtn (row) {
-      return this.showBtn('cancle') && (row.status == this.BillStatusEnum.waiting || row.status == this.BillStatusEnum.waitingOver);
+      return this.showBtn('cancle') && (row.status == this.BillStatusEnum.waiting || row.status == this.BillStatusEnum.waitingOver || row.status == this.BillStatusEnum.hanging);
     },
     //是否显示转单按钮
     showTransferBtn (row) {
-      return this.showBtn('transfer-bill') && row.status == this.BillStatusEnum.waitingOver;
+      return this.showBtn('transfer-bill') && (row.status == this.BillStatusEnum.waitingOver || row.status == this.BillStatusEnum.hanging);
     },
     //显示审核按钮
     showAuditBtn (row) {
@@ -451,7 +466,7 @@ export default {
       // console.log(row);
       this.curBill = row;
       this.showDispatchingWin = true;
-      this.dispatchingTitle = '派工';
+      // this.dispatchingTitle = '派工';
       this.changeTag = this.$common.guid();
       this.handleType = 1;
     },
@@ -469,7 +484,7 @@ export default {
     },
     //执行派工操作
     submitDispatching (data) {
-      let userId = data.user ? data.user.id : 0;
+      let userId = data.user ? data.user.userId : '';
       let item = { billNumber: this.curBill.billNumber, userId: userId };
       console.log('item', item);
       if (this.handleType == 1) {//派工
@@ -500,12 +515,13 @@ export default {
       this.changeTag = this.$common.guid();
       this.handleType = 2;
       this.showDispatchingWin = true;
-      this.dispatchingTitle = '转单';
+      // this.dispatchingTitle = '转单';
     },
     //***************审核****************** */
     //打开审核弹窗
     openAudit (row) {
       let isTransferAudit = false;//是否是转单审核
+      console.log('object :', row.status, BillStatusEnum.hangAudit);
       switch (row.status) {
         case BillStatusEnum.cancelAudit:
           this.msgLabel = '撤单原因';
@@ -516,8 +532,13 @@ export default {
           this.auditTitle = '完工审核';
           break;
         case BillStatusEnum.transferAudit:
+          this.msgLabel = '转单原因';
           this.auditTitle = '转单审核';
           isTransferAudit = true;
+          break;
+        case BillStatusEnum.hangAudit:
+          this.msgLabel = '挂单原因';
+          this.auditTitle = '挂单审核'
           break;
         default:
           break;
@@ -540,7 +561,11 @@ export default {
     },
     //提交审核
     submitAudit (data) {
-      let item = { userId: 0, billNumber: this.curBill.billNumber, checkResult: data.checkResult, rejectInfo: data.rejectInfo };
+      let item = { userId: '', billNumber: this.curBill.billNumber, checkResult: data.checkResult, rejectInfo: data.rejectInfo };
+      if (data.user) {
+        item.userId = data.user.userId;
+      }
+      console.log('object :', data, item);
       repairAudit(item).then(res => {
         // console.log('res', res);
         if (res.code == 200) {
@@ -550,9 +575,9 @@ export default {
     },
     //提交转单审核
     submitTransferAudit (data) {
-      let item = { userId: 0, billNumber: this.curBill.billNumber, checkResult: data.ruleForm.checkResult, rejectInfo: data.ruleForm.rejectInfo };
+      let item = { userId: '', billNumber: this.curBill.billNumber, checkResult: data.ruleForm.checkResult, rejectInfo: data.ruleForm.rejectInfo };
       if (data.user) {
-        item.userId = data.user.id;
+        item.userId = data.user.userId;
       }
       repairAudit(item).then(res => {
         if (res.code == 200) {

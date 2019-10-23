@@ -173,7 +173,7 @@
     right: 22.6%;
     top: 26%;
     width: 400px;
-    height: 460px;
+    height: 530px;
     // border-radius: 3px;
     background: rgba(255, 255, 255, 1);
 }
@@ -188,6 +188,10 @@
     margin-top: 120px;
     padding: 0 40px 38px 40px;
     display: none;
+}
+
+.login-main .user {
+    bottom: 80px;
 }
 
 .login-main .user.fade-in,
@@ -237,13 +241,13 @@
 }
 
 .login-main .qrcode .qrcode-box {
-    width: 64px;
-    height: 64px;
+    width: 120px;
+    height: 120px;
     margin: auto;
     padding: 6px;
     position: absolute;
-    left: 180px;
-    bottom: -5px;
+    left: 165px;
+    bottom: 5px;
 }
 
 .login-main .qrcode-box .qrcode-area {
@@ -253,8 +257,8 @@
 }
 
 .login-main .qrcode-box .appDownload img {
-    width: 60px;
-    height: 60px;
+    width: 115px;
+    height: 115px;
     border: 2px solid #96E3FF;
     box-sizing: border-box;
 }

@@ -5,7 +5,7 @@
         <el-tab-pane label="用户管理" name="default">
           <el-form :inline="true" :model="form" class="search-bar" label-position="right">
             <el-form-item label="关键字：" label-width="80px">
-              <el-input v-model.trim="form.userName" placeholder="帐号名/手机号/姓名" clearable></el-input>
+              <el-input v-model.trim="form.userName" placeholder="帐号/手机号/姓名" clearable></el-input>
             </el-form-item>
             <el-form-item label="状态：" label-width="60px">
               <div style="width:120px;">
@@ -70,8 +70,8 @@
                     v-show="item.protraitShow"
                     @load="showSelf($event, item)"
                     :src="item.picture"
-                    alt="加载中..."
                   />
+                  <!-- alt="加载中..." -->
                 </div>
               </section>
               <div
@@ -97,6 +97,7 @@
               </div>
             </div>
           </div>
+          <div class="empty" v-if="dataList.length === 10">暂无数据</div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -245,7 +246,7 @@ export default {
     }
   }
   .section {
-    height: calc(100% - 68px);
+    // height: calc(100% - 68px);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -373,6 +374,11 @@ export default {
   }
   .dialog-footer {
     text-align: center;
+  }
+  .empty {
+    text-align: center;
+    line-height: 400px;
+    color: #999;
   }
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="header">
     <Logo link-url="/plat-index" />
     <div class="layout-tree">
-      <Projecttree v-model="treeData" :isMultiple="isMultiple"></Projecttree>
+      <Projecttree v-model="treeData" v-show="isShow" :isMultiple="isMultiple"></Projecttree>
     </div>
     <top-user />
   </div>
@@ -22,13 +22,18 @@ export default {
     return {
       isMultiple: true,
       isMultiplePath: ['/data-compare/project-compare', '/data-compare/time-compare'],//添加后，TOP单选
+      isShow: true,//是否展示
+      noShowPath: ["/plat-manage/platform-overview"],//不展示路径
       treeData: []
     }
   },
   created () {
-    this.isMultiple = true;
+    this.isMultiple = true; this.isShow = true;
     if (this.isMultiplePath.includes(this.$route.fullPath)) {
       this.isMultiple = false;
+    }
+    if (this.noShowPath.includes(this.$route.fullPath)) {
+      this.isShow = false;
     }
     this.initTreeData(this.$route);
   },
@@ -41,9 +46,12 @@ export default {
     '$route': function (to, from) { // 路由改变时执行
       console.info('to:', to);
       this.initTreeData(to);
-      this.isMultiple = true;
+      this.isMultiple = true; this.isShow = true;
       if (this.isMultiplePath.includes(to.fullPath)) {
         this.isMultiple = false;
+      }
+      if (this.noShowPath.includes(this.$route.fullPath)) {
+        this.isShow = false;
       }
     },
     treeData: {
@@ -60,12 +68,13 @@ export default {
   methods: {
     initTreeData (item) {
       this.treeData = (item.meta.limits && item.meta.limits > 0) ?
-        this.checkedShopNumbers.filter((n, index) => { return index < item.meta.limits }) : this.checkedShopNumbers;
+        //   this.checkedShopNumbers.filter((n, index) => { return index < item.meta.limits }) : this.checkedShopNumbers;
+        this.checkedShopNumbers.filter((n, index) => { return index < item.meta.limits }) : JSON.parse(localStorage.getItem('allTreeNode')).map(item => item.number);
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-@import '../scss/head.scss';
+@import "../scss/head.scss";
 </style>

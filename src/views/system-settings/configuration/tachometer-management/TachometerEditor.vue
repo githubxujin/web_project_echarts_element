@@ -28,6 +28,7 @@
           </el-form-item>
         </el-col>
       </el-row>
+
       <el-row>
         <el-col :span="12">
           <el-form-item prop="deviceType" label="计量设备类型">
@@ -54,6 +55,18 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-row v-show="form.dataType !== 1">
+        <el-col :span="12">
+          <el-form-item prop="upperLimit" label="上限">
+            <el-input v-model.trim="form.upperLimit" placeholder="请输入" clearable :maxlength="10"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item prop="lowerLimit" label="下限">
+            <el-input v-model.trim="form.lowerLimit" placeholder="请输入" clearable :maxlength="10"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-row
         v-show="form.dataType === 1"
         v-for="(item, index) in form.tachometerMappingList"
@@ -72,14 +85,14 @@
                     }]"
           >
             <el-input v-model.trim="item.returnValue" placeholder="请输入" :maxlength="16">
-              <el-select v-model="item.operator" slot="prepend" class="select-with-input">
+              <!-- <el-select v-model="item.operator" slot="prepend" class="select-with-input">
                 <el-option
                   v-for="item in symbolEnum"
                   :label="item.label"
                   :value="item.value"
                   :key="item.value"
                 ></el-option>
-              </el-select>
+              </el-select>-->
             </el-input>
           </el-form-item>
         </el-col>
@@ -107,6 +120,32 @@
             @click="addFormParam"
             class="el-icon-circle-plus-outline add params-icon"
           ></i>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item prop="paramType" label="参数类型">
+            <el-select v-model="form.paramType" placeholder="请选择">
+              <el-option
+                v-for="item in energyList"
+                :label="item.configName"
+                :value="item.id"
+                :key="item.id"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item prop="energyUnit" label="单位">
+            <el-select v-model="form.energyUnit" placeholder="请选择">
+              <el-option
+                v-for="item in unitList"
+                :label="item.configName"
+                :value="item.id"
+                :key="item.id"
+              ></el-option>
+            </el-select>
+          </el-form-item>
         </el-col>
       </el-row>
       <el-row>
@@ -219,10 +258,12 @@
   </div>
 </template>
 <script>
-const paramObj = { copyId: new Date().getTime(), operator: '=', returnValue: '', returnValueDesc: '' }
+const paramObj = { copyId: new Date().getTime(), returnValue: '', returnValueDesc: '' }
 import { tachometerAdd, tachometerEdit, configTypeQuery, tachometerGetInfo } from '@/services/system-settings.js'
 import { yesOrNoEnum, statusEnum, paramStateEnum, symbolEnum, calculateTypeEnum } from '@/enum/dicts.js'
-import Regexps from '@/utils/regexp.js'
+import Regexps from '@/utils/regexp.js';
+let RegexpNumber = /^[+-]{0,1}(\d+)$|^[+-]{0,1}(\d+\.\d{0,2})$/;
+import { meterGetEnergyHTypeArray, dictGetArray } from '@/services/system-settings.js'
 export default {
   components: {},
   props: {
@@ -233,6 +274,9 @@ export default {
     }
   },
   data () {
+    const numberRule = {
+      pattern: Regexps.number, message: '仅支持数字', trigger: 'blur'
+    }
     return {
       yesOrNoEnum, // 是/否
       statusEnum, // 启用，禁用
@@ -252,6 +296,10 @@ export default {
         tachometerMappingList: [JSON.parse(JSON.stringify(this.paramObj))],
         calculateType: 1,
         decimalLength: '',
+        upperLimit: '',
+        lowerLimit: '',
+        paramType: '',
+        energyUnit: '',
         command1: '',
         command2: '',
         command3: '',
@@ -261,11 +309,20 @@ export default {
         readCommand: 0,
         shopNumber: ''
       },
+      energyList: [], // 能耗类型列表
+      unitList: [], // 单位列表
       formRules: { // 表单规则
         code: [{ required: true, message: '请输入参数编号', trigger: 'blur' }],
         name: [{ required: true, message: '请输入参数名称', trigger: 'blur' }],
+        paramType: [{ required: true, message: '请选择参数类型', trigger: 'change' }],
         deviceType: [{ required: true, message: '请选择计量设备类型', trigger: 'change' }],
         decimalLength: [{ validator: this.validateDecimalLength, trigger: 'blur' }],
+        upperLimit: [numberRule, {
+          validator: this.validateUpperLimit, trigger: 'blur'
+        }],
+        lowerLimit: [numberRule, {
+          validator: this.validateLowerLimit, trigger: 'blur'
+        }],
         consolidateData: [{ pattern: Regexps.number, message: '只能是数字', trigger: 'blur' }]
       }
     }
@@ -283,7 +340,7 @@ export default {
       const MappingValueList = this.form.tachometerMappingList.filter(item => {
         return Boolean(item.returnValue || item.returnValue === 0)
       }).map(item => {
-        return `${item.operator}${item.returnValue}`
+        return `${item.returnValue}`
       })
       return MappingValueList
     },
@@ -325,6 +382,11 @@ export default {
       }).catch(_ => {
         this.dialogLoading = false
         console.error('获取计量设备类型及数据类型列表失败(errorMessage)：', _);
+      })
+      // 单位列表接口
+      dictGetArray({ configType: '32,101' }).then(res => {
+        this.energyList = res.data['101'];
+        this.unitList = res.data['32']
       })
     },
     addFormParam () {
@@ -372,13 +434,40 @@ export default {
       if (!value && value !== 0) {
         return callback(new Error('请输入返回值'))
       }
-      let row = this.form.tachometerMappingList[index]
-      if (!this.Regexps.number.test(value) && !['=', '!='].includes(row.operator)) {
-        return callback(new Error('只能在\'=\'或\'!=\'情况下输入非数字'))
+      if (!/^[+-]{0,1}(\d+)$/.test(value)) {
+        return callback(new Error('请输入整数'))
       }
+      // let row = this.form.tachometerMappingList[index]
+      // if (!this.Regexps.number.test(value) && !['=', '!='].includes(row.operator)) {
+      //   return callback(new Error('只能在\'=\'或\'!=\'情况下输入非数字'))
+      // }
       let mappingValueList = this.mappingValueList.filter((item, itemIndex) => itemIndex !== index)
-      if (mappingValueList.some(val => val === row.operator + value)) {
+      if (mappingValueList.some(val => val === value)) {
         return callback(new Error('返回值重复'))
+      }
+      return callback()
+    },
+    validateUpperLimit (rule, value, callback) {
+      if (!RegexpNumber.test(this.form.upperLimit) || !RegexpNumber.test(this.form.lowerLimit)) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
+        }
+        return callback()
+      }
+      if ((value || value === 0) && (this.form.lowerLimit || this.form.lowerLimit === 0) && parseInt(value) < parseInt(this.form.lowerLimit)) {
+        return callback(new Error('上限不能低于下限'))
+      }
+      return callback()
+    },
+    validateLowerLimit (rule, value, callback) {
+      if (!RegexpNumber.test(this.form.upperLimit) || !RegexpNumber.test(this.form.lowerLimit)) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
+        }
+        return callback()
+      }
+      if ((value || value === 0) && (this.form.upperLimit || this.form.upperLimit === 0) && parseInt(value) > parseInt(this.form.upperLimit)) {
+        return callback(new Error('下限不能高于上限'))
       }
       return callback()
     },

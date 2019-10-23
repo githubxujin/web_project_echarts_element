@@ -22,7 +22,7 @@ export default class Storages {
         const val = window.localStorage.getItem(key);
         // 防止历史方法混入 value "undefined"
         try {
-            return val === null ? val : JSON.parse(val);
+            return val == undefined || val == null ? null : JSON.parse(val);
         } catch (e) {
             console.log(e);
         }
@@ -42,10 +42,11 @@ export default class Storages {
         Storages.removeLocalStorage('$platMenus'); //平台菜单权限
         Storages.removeLocalStorage('$shopAuthoritiesArr'); //门店菜单权限
         Storages.removeLocalStorage('$user_info'); //用户信息
-        localStorage.removeItem('$token_info'); //token
+        Storages.removeLocalStorage('$token_info'); //token
 
         Storages.removeLocalStorage('$topNavState');
         Storages.removeLocalStorage('$leftNavState');
+        Storages.removeLocalStorage('$curShopName');
         sessionStorage.clear();
     }
 }

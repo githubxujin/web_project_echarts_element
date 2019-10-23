@@ -17,7 +17,7 @@
               class="code"
               v-model="ruleForm.code"
               placeholder="验证码"
-              maxlength="6"
+              :maxlength="6"
               minlength="6"
             >
               <i slot="prefix" class="iconfont icon-yanzhengma"></i>
@@ -33,7 +33,7 @@
               v-model.trim="ruleForm.password"
               placeholder="新密码"
               :showPrefix="true"
-              maxlength="16"
+              :maxlength="16"
             ></pwd-btn>
           </el-form-item>
         </el-col>
@@ -45,7 +45,7 @@
               v-model.trim="ruleForm.checkPass"
               placeholder="新密码确认"
               :showPrefix="true"
-              maxlength="16"
+              :maxlength="16"
             ></pwd-btn>
           </el-form-item>
         </el-col>
@@ -124,7 +124,13 @@ export default {
             type: 'success',
             duration: this.$baseConfig.messageDuration
           });
+        } else {
+          console.log('停止 :');
+          this.$refs.btn.stop();
         }
+      }).catch(() => {
+        console.log('异常');
+        this.$refs.btn.stop();
       });
     },
     //修改密码

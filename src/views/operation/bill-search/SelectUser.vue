@@ -27,13 +27,13 @@
         <el-table-column prop="orgName" label="部门" width="120"></el-table-column>
         <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
         <el-table-column prop="billCount" label="当前工单数" width="120"></el-table-column>
-        <el-table-column prop="status" label="状态" width="120"></el-table-column>
-        <el-table-column prop="phone" label="联系方式"></el-table-column>
+        <el-table-column prop="status" label="状态" align="center"></el-table-column>
+        <el-table-column prop="phone" label="联系方式" width="120"></el-table-column>
       </el-table>
     </div>
     <div slot="footer" class="dialog-footer">
       <div style="display: inline-block">
-        <el-button type="primary" @click="submitForm()">确 定</el-button>
+        <el-button type="primary" @click="$common.throttle(submitForm)()" :loading="btnLoading">确 定</el-button>
         <el-button @click="isHide">取 消</el-button>
       </div>
     </div>
@@ -60,6 +60,15 @@ export default {
     haveAudit: {
       type: Boolean,
       default: false
+    },
+    billNumber: {
+      type: String,
+      default: ''
+    }
+  },
+  computed: {
+    btnLoading: function () {
+      return this.$store.getters.getBtnLoading;
     }
   },
   watch: {
@@ -98,7 +107,7 @@ export default {
     initData () {
       this.loading = true;
       this.ruleForm.msg = '';
-      executeList(this.shopNumber).then(res => {
+      executeList({ shopNumber: this.shopNumber, billNumber: this.billNumber }).then(res => {
         console.log('res', res);
         if (res.code == 200) {
           this.userTableData = res.data.array;
@@ -122,10 +131,12 @@ export default {
       let user = this.multipleSelection.length > 0 ? this.multipleSelection[0] : null;
       let item = { user: user, ruleForm: this.ruleForm };
       if (this.handleType == 1) { //派工
+        this.$store.commit('base/updateBtnLoading', true);
         this.$emit("submitForm", item);
       } else { //转单
         this.$refs['ruleForm'].validate((valid) => {
           if (valid) {
+            this.$store.commit('base/updateBtnLoading', true);
             this.$emit("submitForm", item);
             // 点击关闭 数据重置
             if (this.handleType == 2) {

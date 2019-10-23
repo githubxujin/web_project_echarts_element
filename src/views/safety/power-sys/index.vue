@@ -23,13 +23,17 @@
           </template>
           <div class="power_content">
             <span
+              v-if="this.videoMonitorList.length>0"
               class="video iconfont icon-shipin"
               @click="videoModelVisible = true"
               title="查看视频监控"
             ></span>
             <!-- <div class="u-left-top"></div> -->
             <template v-if="!isEmptyData">
-              <div class="t-explain">{{distributionBranch.powerDescription}}</div>
+              <div
+                class="t-explain"
+                :title="distributionBranch.powerDescription"
+              >{{distributionBranch.powerDescription}}</div>
               <div class="u-capacitor">
                 <div>
                   <span>状态：</span>
@@ -68,7 +72,7 @@
                   <li>相对湿度：{{distributionBranch.humidity}}</li>
                   <li>
                     水浸状态：
-                    <span v-if="distributionBranch.waterStatus=='-'">-</span>
+                    <span v-if="distributionBranch.waterStatus=='--'">--</span>
                     <i
                       v-else
                       class="water-out-status iconfont icon-jinggao"
@@ -137,7 +141,7 @@
                     </div>
                   </div>
                   <div class="block">
-                    <p class="block-title">三相温度(℃)</p>
+                    <p class="block-title">绕组温度(℃)</p>
                     <div class="block-content">
                       <dd
                         class="dd3 data"
@@ -183,7 +187,11 @@
                           v-if="distributionBranch.fan.status==1"
                           src="../../../assets/images/circuit/fengshan.gif"
                         />
-                        <span v-else>-</span>
+                        <img
+                          class="img-fan"
+                          v-else
+                          src="../../../assets/images/circuit/fengshan.png"
+                        />
                       </el-col>
                     </el-row>
                   </div>
@@ -210,8 +218,15 @@
                       :label="item.name"
                       :key="'tableHeader'+index"
                       :class-name="curAnchor=='isExe'+'_'+index?'highlight':''"
-                      v-bind:width="getColWidth(index,item.isMiddle)"
+                      v-bind:width="getColWidth(index,item)"
                     >
+                      <template slot="header" slot-scope="scope">
+                        <span
+                          class="th-title"
+                          :class="getStrLength(scope.column.label)>6?'two-text-ellipse':'text-ellipse'"
+                          :title="scope.column.label"
+                        >{{scope.column.label}}</span>
+                      </template>
                       <template slot-scope="scope">
                         <el-popover
                           v-if="scope.$index==6"
@@ -232,7 +247,7 @@
                             </el-col>
                             <el-col
                               :span="10"
-                              class="pl20"
+                              class="pl20 time"
                             >{{alarm.alarmTime|timeFormat('YYYY-MM-DD HH:mm:ss')}}</el-col>
                           </el-row>
                           <span
@@ -312,7 +327,8 @@ export default {
       pageWidth: '100%',//页面宽度
       videoMonitorList: [],
       videoModelVisible: false,
-      active: '' //当前选中的变压器Id
+      active: '', //当前选中的变压器Id
+      branchList: [], //新构造的
     }
   },
   created () {
@@ -371,6 +387,10 @@ export default {
     }
   },
   methods: {
+    getStrLength (val) {
+      // console.log('val.length :', val.length);
+      return val.length;
+    },
     //创建socket对象
     createdSocket () {
       let that = this;
@@ -406,7 +426,8 @@ export default {
           this.powerNameList = res.data.array;
           this.powerNameList[0].active = true;
           //根据变压器ID获取支路列表
-          this.curTransformerId = this.powerNameList[0].id;
+          console.log('565656', this.$route.query.id)
+          this.curTransformerId = this.$route.query.id || this.powerNameList[0].id;
           this.active = this.curTransformerId;
           this.distribution = this.powerNameList[0].name;
           this.getDistributionBranch();
@@ -423,7 +444,7 @@ export default {
       // console.log('item :', item);
       // item.id = 57226;
       getRecentAlarmListByMeter({ meterId: item.id }).then(res => {
-        if (res.code == 200 && res.data.length > 0) {
+        if (res.code == 200) {
           this.curAlarmList = res.data;
         }
       })
@@ -442,7 +463,7 @@ export default {
       let totalWidthVal = 540 + this.tableHeader.length * 72;
       var domWidth = totalWidthVal + "px";//130 + 200
       this.pageWidth = totalWidthVal < 1024 ? '100%' : domWidth;
-      var domWidth2 = 240 + this.tableHeader.length * 73 + "px";
+      var domWidth2 = 240 + this.tableHeader.length * 72 + "px";
       domWidth2 = this.isEmptyData ? '100%' : domWidth2;
 
       console.log('domWidth:', domWidth, domWidth2);
@@ -469,18 +490,32 @@ export default {
       }, 100);
     },
     //设置支路参数列宽
-    getColWidth (index, isMiddle) {
-      var res = 0;
-      var increments = isMiddle == true ? 0 : 6;
+    getColWidth (index, item) {
+      console.log('this.distributionBranch.branchList :', this.distributionBranch.branchList, index);
+      let branch = this.branchList[index];
+      if (!branch) return;
+      // console.log('branch :', branch);
+      let isMiddle = item.isMiddle;
+      var res = 74;
+      var increments = 0;
       switch (index) {
         case 0:
-          res = 78;
-          increments = 0;
+          increments = 5
           break;
         default:
-          res = 73;
+          if (branch.type == 1) {
+            increments = 10;
+          } else if (branch.type == 2) {
+            increments = 5;
+          } else {
+            increments = -2;
+          }
+          if (index == this.branchList.length - 1) {
+            increments = 0;
+          }
           break;
       }
+
       return res + increments;
     },
     //获取图片
@@ -505,6 +540,16 @@ export default {
     /*切换变压器*/
     getPowerBranch (item, index) {
       console.log('getPowerBranch', item);
+
+      var url = window.location.href;
+      let hash = this.$route.hash;
+      console.log('this.$route1 :', this.$route, url);
+      if (url.indexOf(hash) != -1) {
+        url = url.replace(hash, '');
+        console.log('url :', url);
+        history.pushState("", "Title", url);
+        this.curAnchor = '';
+      }
       this.active = item.id;
       this.distributionBranch.powerDescription = item.remark;
       this.distribution = item.name;
@@ -519,7 +564,7 @@ export default {
           if (res.code === 200 && JSON.stringify(res.data) != "{}") {
             console.log('支路信息', res.data)
             this.distributionBranch = res.data;
-            console.log('distributionBranch:', this.distributionBranch);
+            this.getBranchList();
             this.tableHeader = res.data.tableHeader;
             if (res.data.tableHeader.length == 0) {
               this.tableData = [];
@@ -534,6 +579,31 @@ export default {
           }
         });
     },
+    //重新构造支路列表
+    getBranchList () {
+      let list = this.distributionBranch.branchList;
+      let branchList = [];
+      if (list && list.length > 0) {
+        list.forEach(n => {
+          if (n.branchInfos.length == 1) {
+            branchList.push({ type: 1 });
+          } else if (n.branchInfos.length == 2) {
+            n.branchInfos.forEach(m => {
+              branchList.push({ type: 2 });
+            })
+          } else {
+            for (let i = 0; i < n.branchInfos.length; i++) {
+              if (i == 0 || i == n.branchInfos.length - 1) {
+                branchList.push({ type: 2 });
+              } else {
+                branchList.push({ type: 3 });
+              }
+            }
+          }
+        })
+      }
+      this.branchList = branchList;
+    }
   },
   //页面销毁时关闭长连接
   destroyed () {
@@ -599,6 +669,18 @@ export default {
       }
     }
   }
+}
+.th-title {
+  // height:42px;
+  width: 70px;
+  display: block;
+}
+/deep/ .el-table .cell {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.time {
+  line-height: 28px;
 }
 </style>
 

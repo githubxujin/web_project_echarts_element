@@ -18,7 +18,7 @@
                 @click="addExpression(item,index2,index1)"
               >
                 <span>
-                  {{tab.label == 'branch'?`[${item.number}]`:`<${item.number}>`}}
+                  {{tab.label == 'branch'?`[${item.electricAddr}]`:`<${item.number}>`}}
                   {{item.name}}
                 </span>
               </li>
@@ -54,7 +54,7 @@
               >
                 <span
                   v-if="item.type==='branch'||item.type==='region'||item.type==='org'||item.type==='sub'"
-                >{{item.type == 'branch'?`[${item.number}]`:`<${item.number}>`}}{{item.name}}</span>
+                >{{item.type == 'branch'?`[${item.electricAddr}]`:`<${item.number}>`}}{{item.name}}</span>
                 <span v-else-if="item.type==='number'">{{item.value}}</span>
                 <el-input-number
                   v-else-if="item.type==='inputNumber'"
@@ -166,9 +166,9 @@ export default {
       const obj = {
         type: this.tabsLabel,
         name: item.name,
-        value: item.id,
-        number: item.number
+        value: item.id
       };
+      this.tabsLabel === 'branch' ? obj.electricAddr = item.electricAddr : obj.number = item.number
       if (this.replaceIndex >= 0) {
         this.expressions.splice(this.replaceIndex, 1, obj);
       } else {
@@ -178,8 +178,10 @@ export default {
     },
     operatorClick (type) { // 新增或替换表达式元素
       const obj = { type: type };
+
       if (type == 'inputNumber') {
-        obj.value = !this.expressions[this.replaceIndex] ? 0 : this.expressions[this.replaceIndex].value;
+        // obj.value = !this.expressions[this.replaceIndex] ? 0 : this.expressions[this.replaceIndex].value;
+        obj.value = 0;
       }
       if (this.replaceIndex >= 0) {
         this.expressions.splice(this.replaceIndex, 1, obj);
@@ -228,7 +230,7 @@ export default {
         eval(expressionsText)
         // 运算符连续
         if (/[\+\-\*\/]{2,}/.test(expressionsText)) {
-            isInvalid = false
+          isInvalid = false
         }
       }
       catch (_) {

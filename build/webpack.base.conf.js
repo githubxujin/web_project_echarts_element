@@ -4,7 +4,7 @@ const utils = require('./utils');
 const config = require('../config');
 const vueLoaderConfig = require('./vue-loader.conf');
 const webpack = require('webpack');
-function resolve (dir) {
+function resolve(dir) {
     return path.join(__dirname, '..', dir);
 }
 
@@ -43,11 +43,29 @@ module.exports = {
             },
             {
                 test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000,
-                    name: utils.assetsPath('img/[name].[hash:7].[ext]')
-                }
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            limit: 10000,
+                            name: utils.assetsPath('img/[name].[hash:7].[ext]')
+                        }
+                    },
+                    {
+                        loader: 'image-webpack-loader',
+                        options: {
+                            optipng: {
+                                // 使用 imagemin-optipng 压缩 png，enable: false 为关闭
+                                enabled: true
+                            }
+                            // pngquant: {
+                            //     // 使用 imagemin-pngquant 压缩 png
+                            //     quality: [65],
+                            //     speed: 4
+                            // }
+                        }
+                    }
+                ]
             },
             {
                 test: /\.swf$/,

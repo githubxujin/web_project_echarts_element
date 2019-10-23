@@ -160,11 +160,20 @@ export default {
     },
     //时间查询
     onTimeSearch () {
-      console.log('checkTime', this.checkTime)
-      this.ctrlTimeLoading(true);
+      console.log('checkTime', this.checkTime);
       if (this.checkTime.end && this.checkTime.end.length == 10) {
         this.checkTime.end = this.checkTime.end + ' ' + datetimeUtils.getCurShortTime();
       }
+      let msg = utils.validDate(this.timeType, this.checkTime.start, this.checkTime.end);
+      if (msg) {
+        this.$messageTip({
+          message: msg,
+          type: 'error',
+          duration: this.$baseConfig.messageDuration
+        });
+        return;
+      }
+      this.ctrlTimeLoading(true);
       getAlarmStatisticListByTime({
         timeType: this.timeType, start: this.checkTime.start, end: this.checkTime.end, shopNumber: this.shopNumber
       }).then((res) => {
@@ -193,21 +202,30 @@ export default {
     },
     //类型查询
     onTypeSearch () {
-      this.ctrlTypeLoading(true);
       if (this.checkTimeSys.end && this.checkTimeSys.end.length == 10) {
         this.checkTimeSys.end = this.checkTimeSys.end + ' ' + datetimeUtils.getCurShortTime();
       }
+      let msg = utils.validDate(this.sysTimeType, this.checkTimeSys.start, this.checkTimeSys.end);
+      if (msg) {
+        this.$messageTip({
+          message: msg,
+          type: 'error',
+          duration: this.$baseConfig.messageDuration
+        });
+        return;
+      }
+      this.ctrlTypeLoading(true);
       getAlarmStatisticListBySystem({
         timeType: this.sysTimeType, start: this.checkTimeSys.start, end: this.checkTimeSys.end, shopNumber: this.shopNumber
       }).then(res => {
         if (res.data) {
           let optons = Object.assign({}, this.typeBarOption)
           optons.legend.data = res.data.titles;
-          console.log('optons :', optons);
-          // optons.color = getColorsByLevels(res.data.title);
+          optons.color = getColorsByLevels(res.data.titles);
           optons.xAxis[0].data = res.data.xpoint;
           optons.series = getBarSeriesData(res.data.xpointvalue);
           this.typeBarOption = optons;
+          console.log('optons :', JSON.stringify(optons));
 
           let pieOption = Object.assign({}, this.typePieOption);
           pieOption.color = optons.color;

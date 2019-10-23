@@ -12,8 +12,8 @@
     >
       <el-row>
         <el-col :span="6">
-          <el-form-item prop="number" label="电表地址">
-            <el-input v-model.trim="form.number" placeholder="请输入" clearable :maxlength="32"></el-input>
+          <el-form-item prop="electricAddr" label="电表地址">
+            <el-input v-model.trim="form.electricAddr" placeholder="请输入" clearable :maxlength="32"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -49,7 +49,12 @@
         <el-col :span="6">
           <el-form-item prop="transformer" label="所属变压器">
             <!-- 目前测试环境变压器的id为8，但是这是主键，随环境的变化可能会有所变化 -->
-            <el-select v-model="form.transformer" placeholder="请选择" clearable :disabled="form.deviceType===8?false:true">
+            <el-select
+              v-model="form.transformer"
+              placeholder="请选择"
+              clearable
+              :disabled="form.deviceType===8?false:true"
+            >
               <el-option
                 v-for="item in transformerList"
                 :label="item.name"
@@ -60,8 +65,14 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item prop="accountNo" label="户号" >
-            <el-input v-model.trim="form.accountNo" placeholder="请输入" clearable :maxlength="36" :disabled="form.deviceType===8?false:true"></el-input>
+          <el-form-item prop="accountNo" label="户号">
+            <el-input
+              v-model.trim="form.accountNo"
+              placeholder="请输入"
+              clearable
+              :maxlength="36"
+              :disabled="form.deviceType===8?false:true"
+            ></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -91,7 +102,12 @@
       <el-row>
         <el-col :span="6">
           <el-form-item prop="collector" label="所属采集器">
-            <el-select v-model="form.collector" placeholder="请选择" clearable>
+            <el-select
+              v-model="form.collector"
+              @change="changeCollector"
+              placeholder="请选择"
+              clearable
+            >
               <el-option
                 v-for="item in collectorList"
                 :label="item.name"
@@ -229,7 +245,7 @@ import { yesOrNoEnum, statusEnum } from '@/enum/dicts.js'
 import axios from '@/axios/axios.js'
 const baseFrom = {
   id: '',
-  number: '', // 电表地址
+  electricAddr: '', // 电表地址
   name: '', // 支路名称
   parentId: '', // 所属支路
   deviceType: '', // 所属设备类型
@@ -249,7 +265,7 @@ const baseFrom = {
   reserve: 1, // 是否备用
   status: 0, // 默认启用，支路状态
   gathers: [], // 指令集合
-  shopNumber: ''  
+  buildId: ''
 }
 export default {
   name: 'branch-editor',
@@ -276,9 +292,10 @@ export default {
       deviceTypeList: [], // 设备类型下拉树
       form: JSON.parse(JSON.stringify(baseFrom)),
       formRules: {
-        number: [{ required: true, message: '请输入电表地址', trigger: 'blur' },],
+        electricAddr: [{ required: true, message: '请输入电表地址', trigger: 'blur' },],
         name: [{ required: true, message: '请输入支路名称', trigger: 'blur' }],
-        measureType: [{ required: true, message: '请选择计量设备类型', trigger: 'change' }]
+        measureType: [{ required: true, message: '请选择计量设备类型', trigger: 'change' }],
+        parentId: [{ validator: this.validatorParentId, trigger: 'blur' }]
       },
       orderListTip: '', // 指令列表校验提示语
       isInit1: true, // 初始化标志位，用于采集所属端口
@@ -312,7 +329,7 @@ export default {
         params.gathers = this.$refs.branchTable.form.tableDataList || []
       }
       // 如果是新增则用当前登陆者的shopNumber
-      params.shopNumber = params.shopNumber || this.$store.getters.getUserInfo.shopNumber
+      params.buildId = params.buildId || this.$store.getters.getUserInfo.shopNumber
       return params
     }
   },
@@ -329,14 +346,15 @@ export default {
     meterGetEnergyHTypeArray, // 能耗类型列表
     deviceTypeQuery, // 获取设备类型
     initData () { // 初始化（除采集器端口下拉列表外）
+      let shopNumber, buildId;
       this.dialogLoading = true
       const configType = [14, 15, 16, 17, 18, 32] // 14 设备类型， 15计量设备类型，16配电元件类型，17通信方式，18数值类型，32单位
-      const shopNumber = this.params.shopNumber
+      shopNumber = buildId = this.params.buildId
       // 请求列表,如果dicts不为null，说明已经初始化过字典和各个下拉列表了
-      
+
       let requestList = this.dicts ? [] : [this.configTypeQuery({ configType }), this.meterGetArray({ shopNumber }), this.transformerGetArray({ shopNumber }), this.collectorGetArray({ shopNumber }), this.meterGetEnergyHTypeArray(), this.deviceTypeQuery({ deviceType: 6, flat: 0 })]
       this.isEdit && requestList.push(this.meterGetInfo(this.branchItem))// 编辑状态，需要初始化支路详情
-      requestList[1]=this.meterGetArray({ shopNumber });//需要初始化支路下拉列表
+      requestList[1] = this.meterGetArray({ shopNumber });//需要初始化支路下拉列表
       // 发起请求
       axios.all(requestList).then(axios.spread((...args) => {
         this.dialogLoading = false
@@ -355,11 +373,12 @@ export default {
           // this.meterList = args[1].data.array || [] // 支路下拉列表
           this.transformerList = args[2].data.array || [] // 变压器下拉列表
           this.collectorList = args[3].data.array || [] // 采集器下拉列表
+          console.log('this.collectorList', this.collectorList)
           this.energyTypeList = args[4].data.array || [] // 能耗类型下拉列表
           this.deviceTypeList = args[5].data || [] // 设备类型下拉树
           console.log('所属设备类型下拉树树deviceTypeList:', this.deviceTypeList);
         }
-         this.meterList = args[1].data.array || [] // 支路下拉列表
+        this.meterList = args[1].data.array || [] // 支路下拉列表
         // 初始化采集器端口
         this.initCollectorComs(this.form.collector)
         // 初始化命令列表（放最后面 因为要用到字典）
@@ -369,11 +388,11 @@ export default {
         console.error('支路初始化信息失败(errorMessage)：', _);
       })
     },
-    changeDeviceType(id){
-      console.log("切换设备类型：",id)
-      if(id && id!==8){//设备类型不为变压器,所属变压器/户号置空
-           this.form.transformer='';
-          this.form.accountNo='';
+    changeDeviceType (id) {
+      console.log("切换设备类型：", id)
+      if (id && id !== 8) {//设备类型不为变压器,所属变压器/户号置空
+        this.form.transformer = '';
+        this.form.accountNo = '';
       }
     },
     submit () {
@@ -451,7 +470,8 @@ export default {
     },
     initTachoList (val = this.form.measureType) { // 初始化采集命令列表
       if (val || val === 0) {
-        const shopNumber = this.params.shopNumber
+        console.log('params', this.params)
+        const shopNumber = this.params.buildId
         this.tachometerGetArray({ shopNumber, deviceType: val }).then(res => {
           this.isInit2 = false
           this.tachoList = (res.data || {}).array || []
@@ -462,6 +482,22 @@ export default {
       } else {
         this.isInit2 = false
       }
+    },
+    validatorParentId (rule, value, callback) {
+      if (!value) return callback();
+      if (this.meterList.find(item => item.id === value).name === this.form.name) {
+        return callback(new Error('所属支路不能为本身，请重新选择'))
+      }
+      return callback();
+    },
+    changeCollector (val) {
+      // if (this.isInit1) return // 初始化状态不做处理
+      this.form.com = ''
+      if (!val && val !== 0) {
+        this.comList = []
+        return
+      }
+      this.initCollectorComs(val)
     }
   },
   watch: {
@@ -471,6 +507,7 @@ export default {
       handler: function (visible) {
         if (!visible) return
         this.isInit2 = this.isInit1 = true // 重置初始化标志位
+        this.orderListTip = '';
         this.initData()
       }
     },
@@ -480,18 +517,19 @@ export default {
         if (~~val !== 8) this.form.transformer = ''
       }
     },
-    'form.collector': { // 更新采集器端口
-      immediate: true,
-      handler: function (val) {
-        if (this.isInit1) return // 初始化状态不做处理
-        this.form.com = ''
-        if (!val && val !== 0) {
-          this.comList = []
-          return
-        }
-        this.initCollectorComs(val)
-      }
-    },
+    // 'form.collector': { // 更新采集器端口
+    //   immediate: true,
+    //   handler: function (val) {
+    //     console.log('val', val)
+    //     if (this.isInit1) return // 初始化状态不做处理
+    //     this.form.com = ''
+    //     if (!val && val !== 0) {
+    //       this.comList = []
+    //       return
+    //     }
+    //     this.initCollectorComs(val)
+    //   }
+    // },
     'form.oneDevice': { // 联动设备编号
       immediate: true,
       handler: function (val) {
@@ -509,7 +547,19 @@ export default {
         }
         this.initTachoList(val)
       }
-    }
+    },
+    // 'form.parentId': {
+    //   immediate: true,
+    //   handler: function (val) {
+    //     if (!val) return // 初始化状态不做处理
+    //     if (this.meterList.some(item => item.name === this.form.name)) {
+    //       this.$message.error('所属支路不能为本身，请重新选择');
+    //       setTimeout(() => {
+    //         this.form.parentId = '';
+    //       }, 20);
+    //     }
+    //   }
+    // }
   }
 }
 </script>

@@ -106,17 +106,19 @@ export default {
       logoutFun().then((res) => {
         console.log('退出登录：', res);
         this.clearLoginInfo();
-      }).catch(function (error) {
+      }).catch((error) => {
         console.log(error);
         this.clearLoginInfo();
       });
-      this.$router.push('/login');
+
     },
     //清空登录信息
     clearLoginInfo () {
       console.log('清除token')
       Storages.removeAllLocalStorage();
+      this.$store.commit('base/updateCurShopName', '')
       console.log('是否清空token', localStorage.getItem('$token_info'))
+      this.$router.push('/login');
     },
     // 取消退出登录
     cancleLoginOut () {

@@ -6,7 +6,7 @@
       class="input-item"
       :class="{'has-value': valList[index].value}"
     >
-      <el-input v-model.trim="valList[index].value" :disabled="valList[index].disabled">
+      <el-input v-model.trim="valList[index].value" :disabled="valList[index].disabled"  :maxlength="8">
         <i
           v-if="!valList[index].disabled"
           class="el-icon-close el-input__icon"

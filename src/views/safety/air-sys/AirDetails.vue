@@ -1,14 +1,14 @@
 <template>
-  <div style="height:500px">
+  <div style="height:420px">
     <el-tabs type="border-card"
              v-model="activeName"
              @tab-click="handleClick"
-             style="height:450px">
+             style="">
       <el-tab-pane :label="item.name"
                    :name="item.name"
                    v-for="item in equipment"
                    :key="item.name">
-        <div style=" height:  450px; padding-left:30px">
+        <div style=" padding-left:30px">
 
           <el-form v-loading="dialogLoading"
                    ref="item"
@@ -21,7 +21,7 @@
               <el-col :span="12">
                 <el-form-item prop="templateId"
                               label="运行状态">
-                  变频运行
+                    {{item.WP_PWR!=0?'运行':'停止'}}
 
                 </el-form-item>
               </el-col>
@@ -36,7 +36,8 @@
               <el-col :span="12">
                 <el-form-item prop="templateId"
                               label="远程/就地">
-                  {{item.WP_REM_LOC==0?'远程':'就地'}}
+                    就地
+                  <!--{{item.WP_REM_LOC==0?'远程':'就地'}}-->
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -46,35 +47,42 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-row>
-              <el-col :span="12">
-                <el-form-item prop="templateId"
-                              label="是否启用">
-                  <el-checkbox v-model="checked">启用</el-checkbox>
+            <!--<el-row>-->
+              <!--<el-col :span="12">-->
+                <!--<el-form-item prop="templateId"-->
+                              <!--label="是否启用">-->
+                  <!--<el-checkbox v-model="checked">启用</el-checkbox>-->
 
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item prop="title"
-                              label=" ">
-                  <el-checkbox v-model="checked"> 启用频率自动跟踪</el-checkbox>
-                </el-form-item>
-              </el-col>
-            </el-row>
+                <!--</el-form-item>-->
+              <!--</el-col>-->
+              <!--<el-col :span="12">-->
+                <!--<el-form-item prop="title"-->
+                              <!--label=" ">-->
+                  <!--<el-checkbox v-model="checked"> 启用频率自动跟踪</el-checkbox>-->
+                <!--</el-form-item>-->
+              <!--</el-col>-->
+            <!--</el-row>-->
             <el-row>
               <el-col :span="12">
                 <el-form-item prop="templateId"
                               label="报警与否">
-                  否
+                    {{item.WP_ALM?item.WP_ALM:'否'}}
 
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
-                <el-form-item prop="title"
-                              label=" ">
-                  <el-checkbox v-model="checked"> 工频运行</el-checkbox>
-                </el-form-item>
-              </el-col>
+                <el-col :span="12">
+                    <el-form-item prop="templateId"
+                                  label="是否启用">
+                        {{item.WP_PWR!=0?'是':'否'}}
+
+                    </el-form-item>
+                </el-col>
+              <!--<el-col :span="12">-->
+                <!--<el-form-item prop="title"-->
+                              <!--label=" ">-->
+                  <!--<el-checkbox v-model="checked"> 工频运行</el-checkbox>-->
+                <!--</el-form-item>-->
+              <!--</el-col>-->
             </el-row>
             <div class="middle">
               <div style="width: 310px; clear: both;float: left">
@@ -153,22 +161,26 @@
 
 <script>
 import cold from './cold.js';
+import { initWebSocket } from "@/utils/websocket";
+import baseOptions from '@/utils/baseOptions';
 export default {
+    extends: baseOptions,
   props: {
     airDetailsDialog: Boolean, dialogObj: { "baseInfo": { "name": '' }, "objval": [] }
   },
   data () {
     return {
-      dialogLoading: false, equipment: [{ WP_PWR: 0, WP_FRQ: 0, WP_HRS: 0, WP_DISP: 0, WP_REM_LOC: 0, WP_FRQ_SET: 0 }],
-      form: {}, runNOs: [],
+        websocketInstance: null, //websocket对象
+      dialogLoading: false, equipment: [{WP_ALM:'否',START:'停止', WP_PWR: 0, WP_FRQ: 0, WP_HRS: 0, WP_DISP: 0, WP_REM_LOC: 0, WP_FRQ_SET: 0 }],
+      form: {},NO: null, runNOs: [],
       activeName: '',
       checked: false,
       tableData: [{
         equipment: '设置状态',
-        name: '运行状态'
+        name: '运行状态',NO1:'停止',NO2:'停止',NO3:'停止'
       }, {
         equipment: '设置状态',
-        name: '远程/就地'
+        name: '远程/就地',NO1:'就地',NO2:'就地',NO3:'就地'
       }, {
         equipment: '设置状态',
         name: '是否启用'
@@ -191,11 +203,12 @@ export default {
     };
   },
   created () {
-
+      this.websocketInstance = this.createdSocket();
   },
   mounted () {
     this.runNOs = [];
     let NO = parseInt(this.dialogObj.baseInfo.name.substring(0, 1));
+    this.NO=NO;
     let name = this.dialogObj.baseInfo.name.substring(2, 5);
     this.activeName = this.dialogObj.baseInfo.name;
     this.dialogObj.objval = JSON.parse(JSON.stringify(this.dialogObj.objval));
@@ -217,27 +230,39 @@ export default {
     this.getSketchMap(NO);
   },
   methods: {
+      //创建socket对象
+      createdSocket () {
+          let that = this;
+          return initWebSocket({ shopNumber: that.shopNumber },
+              function (result) {
+                  //  console.log('收到监测的消息', result);
+                  that.dialogObj.objval=result.data.list;
+                  that.getSketchMap(that.NO);
+              },
+              '/ws/safeManage/air/websocket'
+          );
+      },
     getSketchMap (NO) {
       let address, val = 0;
       for (let i = 0; i < this.dialogObj.objval.length; i++) {
         let obji = this.dialogObj.objval[i];
         address = obji.Address; val = obji.val;
           if(!address){continue;}
-        this.queryTable(address, val);
+
         if (this.dialogObj.baseInfo.name.indexOf('冷却泵') > -1) {
           if (address.indexOf('CWP' + NO + '_PWR') > -1) {
             this.equipment[NO - 1].WP_PWR = val;
           }
-          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1) {
+          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1&&address.length==12) {
             this.equipment[NO - 1].WP_FRQ_SET = val;
           }
-          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1) {
+          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1&&address.length==12) {
             this.equipment[NO - 1].WP_FRQ_SET = val;
           }
-          else if (address.indexOf('CWP' + NO + '_FRQ_HAND_AUTO') > -1) {
+          else if (address.indexOf('CWP' + NO + '_FRQ_HAND_AUTO') > -1&&address.length==18) {
             this.equipment[NO - 1].WP_FRQ_HAND_AUTO = val;
           }
-          else if (address.indexOf('CWP' + NO + '_FRQ') > -1) {
+          else if (address.indexOf('CWP' + NO + '_FRQ') > -1&&address.length==8) {
             this.equipment[NO - 1].WP_FRQ = val;
           }
           else if (address.indexOf('CWP' + NO + '_HRS') > -1) {
@@ -246,7 +271,7 @@ export default {
           else if (address.indexOf('CWP' + NO + '_DISP') > -1) {
             this.equipment[NO - 1].WP_DISP = val;
           }
-          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1) {
+          else if (address.indexOf('CWP' + NO + '_FRQ_SET') > -1&&address.length==12) {
             this.equipment[NO - 1].WP_FRQ_SET = val;
           }
           else if (address.indexOf('CWP' + NO + '_REM_LOC') > -1) {
@@ -254,19 +279,25 @@ export default {
               this.equipment[NO - 1].WP_REM_LOC = '就地';
             }
           }
+          else if (address.indexOf('CWP' + NO + '_ALM') > -1&&address.length<10) {
+                this.equipment[NO - 1].WP_ALM = val != 0 ? '是' : '否';
+            }
+          if(address.substring(0, 3).indexOf('CWP') > -1){
+              this.queryTable(address, val);
+          }
         }
         else if (this.dialogObj.baseInfo.name.indexOf('冷冻泵') > -1) {
 
           if (address.indexOf('CHWP' + NO + '_PWR') > -1) {
             this.equipment[NO - 1].WP_PWR = val;
           }
-          else if (address.indexOf('CHWP' + NO + '_FRQ_SET') > -1) {
+          else if (address.indexOf('CHWP' + NO + '_FRQ_SET') > -1&&address.length==13) {
             this.equipment[NO - 1].WP_FRQ_SET = val;
           }
-          else if (address.indexOf('CHWP' + NO + '_FRQ_HAND_AUTO') > -1) {
+          else if (address.indexOf('CHWP' + NO + '_FRQ_HAND_AUTO') > -1&&address.length==19) {
             this.equipment[NO - 1].WP_FRQ_HAND_AUTO = val;
           }
-          else if (address.indexOf('CHWP' + NO + '_FRQ') > -1) {
+          else if (address.indexOf('CHWP' + NO + '_FRQ') > -1&&address.length==9) {
             this.equipment[NO - 1].WP_FRQ = val;
           }
           else if (address.indexOf('CHWP' + NO + '_HRS') > -1) {
@@ -280,10 +311,17 @@ export default {
               this.equipment[NO - 1].WP_REM_LOC = '就地';
             }
           }
+          else if (address.indexOf('CHWP' + NO + '_ALM') > -1&&address.length<10) {
+              this.equipment[NO - 1].WP_ALM = val != 0 ? '是' : '否';
+          }
+            if(address.substring(0, 4).indexOf('CHWP') > -1){
+                this.queryTable(address, val);
+            }
         }
       }
     },
     queryTable (address, val) {
+
       let NO, NOdata;
       if (address.substring(0, 3) == "CWP") {
         NO = address.substring(3, 4);
@@ -298,13 +336,13 @@ export default {
         else if (address.indexOf('CWP' + NO + '_START') > -1) {
           this.tableData[2][NOdata] = val != 0 ? '是' : '否';
         }
-        else if (address.indexOf('CWP' + NO + '_ALM') > -1) {
+        else if (address.indexOf('CWP' + NO + '_ALM') > -1&&address.length<10) {
           this.tableData[3][NOdata] = val != 0 ? '是' : '否';
         }
-        else if (address.indexOf('CWP' + NO + '_PWR') > -1) {
+        else if (address.indexOf('CWP' + NO + '_PWR') > -1&&address.length==8) {
           this.tableData[4][NOdata] = val;
         }
-        else if (address.indexOf('CWP' + NO + '_FRQ') > -1) {
+        else if (address.indexOf('CWP' + NO + '_FRQ') > -1&&address.length==8) {
           this.tableData[5][NOdata] = val;
         }
         else if (address.indexOf('CWP' + NO + '_HRS') > -1) {
@@ -314,8 +352,8 @@ export default {
           this.tableData[7][NOdata] = val;
         }
       }
-      else if (address.substring(0, 5) == "CHWP") {
-        NO = address.substring(5, 6);
+      else if (address.substring(0,4) == "CHWP") {
+        NO = address.substring(4,5);
         NOdata = 'NO' + NO;
         // console.log(address + ";" + NO + ";" + NOdata);
         if (address.indexOf('CHWP' + NO + '_ON_OFF') > -1) {
@@ -327,13 +365,13 @@ export default {
         else if (address.indexOf('CHWP' + NO + '_START') > -1) {
           this.tableData[2][NOdata] = val != 0 ? '是' : '否';
         }
-        else if (address.indexOf('CHWP' + NO + '_ALM') > -1) {
+        else if (address.indexOf('CHWP' + NO + '_ALM') > -1&&address.length<10) {
           this.tableData[3][NOdata] = val != 0 ? '是' : '否';
         }
-        else if (address.indexOf('CHWP' + NO + '_PWR') > -1) {
+        else if (address.indexOf('CHWP' + NO + '_PWR') > -1&&address.length==9) {
           this.tableData[4][NOdata] = val;
         }
-        else if (address.indexOf('CHWP' + NO + '_FRQ') > -1) {
+        else if (address.indexOf('CHWP' + NO + '_FRQ') > -1&&address.length==9) {
           this.tableData[5][NOdata] = val;
         }
         else if (address.indexOf('CHWP' + NO + '_HRS') > -1) {
@@ -347,6 +385,7 @@ export default {
     },
     handleClick (tab, event) {
       let tindex = parseInt(tab.index) + 1;
+      this.NO=tindex;
       this.getSketchMap(tindex);
     }
     , objectSpanMethod ({ row, column, rowIndex, columnIndex }) {
@@ -367,7 +406,20 @@ export default {
 
       this.$emit('update:airDetailsDialog', false);
     }
-  }
+  },  watch: {
+        shopNumber (val) {
+            // console.log('shopNumber', val, this.websocketInstance);
+            if (this.websocketInstance) {
+                this.websocketInstance.close()
+            }
+            this.websocketInstance = this.createdSocket();
+        }
+    },
+    destroyed () {
+        if (this.websocketInstance) {
+            this.websocketInstance.close()
+        }
+    }
 };
 </script>
 
@@ -407,7 +459,7 @@ export default {
 }
 .middle {
   border-radius: 5px;
-  width: 720px;
+
   height: 200px;
   background-color: #ffffff;
   margin-top: 20px;

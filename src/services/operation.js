@@ -73,8 +73,8 @@ export function repairSuspend(params) {
  * 获取执行人员列表
  * @param {*} shopNumber ：门店编码
  */
-export function executeList(shopNumber) {
-    return request.get(url.operation.executeList + '/' + shopNumber);
+export function executeList(params) {
+    return request.get(url.operation.executeList, params);
 }
 /**
  * 维修派工
@@ -210,6 +210,13 @@ export function checkAudit(params) {
  */
 export function getCheckAuditMsg(billNumber) {
     return request.get(url.operation.getCheckAuditMsg + '/' + billNumber);
+}
+/**
+ * 获取审核原因
+ * @param {*} billNumber
+ */
+export function getLikeBill(params) {
+    return request.get(url.operation.getLikeBill, params);
 }
 //-------------------------------------保养标准---------------------------
 /**

@@ -7,7 +7,7 @@
     </el-form>
     <div slot="footer" class="dialog-footer">
       <div style="display: inline-block">
-        <el-button type="primary" @click="submitForm()">确 定</el-button>
+        <el-button type="primary" @click="$common.throttle(submitForm)()" :loading="btnLoading">确 定</el-button>
         <el-button @click="isHide">取 消</el-button>
       </div>
     </div>
@@ -33,11 +33,17 @@ export default {
       },
     }
   },
+  computed: {
+    btnLoading: function () {
+      return this.$store.getters.getBtnLoading;
+    }
+  },
   methods: {
     //提交
     submitForm () {
       this.$refs['ruleForm'].validate((valid) => {
         if (valid) {
+          this.$store.commit('base/updateBtnLoading', true);
           this.$emit("submitForm", this.ruleForm);
         } else {
           console.log('error submit!!');

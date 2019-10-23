@@ -50,11 +50,11 @@
           style="width: 100%;margin-bottom: 10px"
           empty-text=" "
         >
-          <el-table-column prop="sparePartId" label="配件" header-align="center">
+          <el-table-column prop="sparePartId" label="入库配件" header-align="center">
             <template slot-scope="scope">
               <el-form-item
                 :prop="`inStorageSparePartList[${scope.$index}].sparePartId`"
-                :rules="[selectRule]"
+                :rules="selectRule"
               >
                 <TreeSelect
                   v-model="form.inStorageSparePartList[scope.$index].sparePartId"
@@ -84,7 +84,8 @@
               >
                 <el-input
                   v-model.trim="form.inStorageSparePartList[scope.$index].unitPrice"
-                  @change="calAmount(scope.row,scope.$index)"
+                  maxlength="6"
+                  @change="getUnitPrice(scope.row,scope.$index)"
                 ></el-input>
               </el-form-item>
             </template>
@@ -97,7 +98,7 @@
               >
                 <el-input
                   v-model.trim="form.inStorageSparePartList[scope.$index].num"
-                  maxlength="10"
+                  maxlength="6"
                   @change="calAmount(scope.row,scope.$index)"
                 ></el-input>
               </el-form-item>
@@ -107,6 +108,7 @@
             <template slot-scope="scope">
               <el-form-item :prop="`inStorageSparePartList[${scope.$index}].amount`">
                 <span>{{form.inStorageSparePartList[scope.$index].amount}}</span>
+                <span class="fr">元</span>
               </el-form-item>
             </template>
           </el-table-column>
@@ -162,7 +164,15 @@ export default {
         inTime: moment().format('YYYY-MM-DD HH:mm:ss'),
         desc: '',
         shopNumber: this.shopNumber,
-        inStorageSparePartList: []
+        inStorageSparePartList: [{
+          billId: '',
+          amount: '',
+          specification: '',
+          num: '',
+          unitPrice: '',
+          sparePartId: '',
+          id: '',
+        }]
       },
       operatorId: '',
       formRules: {},
@@ -175,11 +185,11 @@ export default {
         key: 'id',
         disabled: 'disabled'
       },
-      selectRule: {
+      selectRule: [{
         required: true,
         message: '必选',
-        trigger: 'change'
-      },
+        trigger: 'blur'
+      }],
       inputRule: [{
         required: true,
         message: '必填',
@@ -207,16 +217,30 @@ export default {
     inAmount () {
       let total = 0;
       this.form.inStorageSparePartList.forEach(item => {
-        total += item.amount;
+        total += Number(item.amount);
       })
       return total
     }
   },
   methods: {
+    getUnitPrice (item, index) {
+      var length = 0;
+      if (item.unitPrice.indexOf('.') != -1) {
+        if (item.unitPrice.split('.')[1].length >= 4) {
+          item.unitPrice = item.unitPrice.split('.')[0] + '.' + item.unitPrice.split('.')[1].slice(0, 4)
+        }
+        length = item.unitPrice.split('.')[1].length
+      } else if ((item.unitPrice.indexOf('.') == -1)) {
+        item.unitPrice = item.unitPrice ? parseInt(item.unitPrice) : ''
+      }
+      this.calAmount(item, index)
+    },
     // 计算金额
     calAmount (item, index) {
       if (item.num && item.unitPrice) {
-        this.form.inStorageSparePartList[index].amount = item.num * item.unitPrice;
+        var total = parseInt(item.num) * parseFloat(item.unitPrice);
+        // this.form.inStorageSparePartList[index].amount = length ? total.toFixed(length) : total.toFixed(0)
+        this.form.inStorageSparePartList[index].amount = total.toFixed(2)
       }
     },
     addTableData () {  // 新增一条数据
@@ -244,6 +268,10 @@ export default {
       }
     },
     submit () {
+      if (!this.form.inTime) {
+        this.$message.error("入库时间不能为空");
+        return
+      }
       let result = false;
       this.$refs.form.validate(res => {
         result = res
@@ -278,7 +306,7 @@ export default {
               this.form.inStorageSparePartList = [];
             }, this);
             this.$emit('success');
-            this.$message.success("编辑成功");
+            this.$message.success("新增成功");
             this.dialogLoading = false;
             this.$emit('update:editdialogVisible', false);
           } else {
@@ -317,7 +345,7 @@ export default {
     detailData: {
       handler: function () {
         this.form = JSON.parse(JSON.stringify(this.detailData));
-        this.form.inTime = moment().format('YYYY-MM-DD HH:mm:ss')
+        // this.form.inTime = moment().format('YYYY-MM-DD HH:mm:ss')
         console.log(this.form)
         if (this.form && this.form.hasOwnProperty("id")) {
           this.isEdit = true;
@@ -336,14 +364,25 @@ export default {
   /deep/ .el-form-item {
     margin-bottom: auto;
     margin-right: auto;
+    width: 100%;
     &.is-error {
       margin-bottom: 20px;
     }
+  }
+  /deep/ .el-form-item--mini .el-form-item__content {
+    width: 100%;
   }
   /deep/ .el-form-item--small {
     min-height: auto;
     line-height: normal;
   }
+}
+/deep/ .el-form-item--mini .el-form-item__content {
+  line-height: 31px !important;
+}
+/deep/ .el-input.is-disabled .el-input__inner {
+  height: 30px !important;
+  line-height: 30px !important;
 }
 </style>
 

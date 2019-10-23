@@ -1,5 +1,11 @@
 <template>
-  <div class="energySystem">
+  <div
+    class="energySystem"
+    v-loading="loading"
+    :element-loading-text="$baseConfig.loading.text"
+    :element-loading-spinner="$baseConfig.loading.spinner"
+    :element-loading-background="$baseConfig.loading.background"
+  >
     <span class="border left-top" />
     <span class="border right-top" />
     <span class="border left-bottom" />
@@ -7,20 +13,22 @@
     <card-head :showError="false" :title="title" @goToPage="goToPage"></card-head>
     <div class="today-energy">
       <div class="title">
-        <span :class="{active:tabInd===1}" @click="onTab(1)">今日能耗</span>
+        <span :class="{active:todayTabInd===1}" @click="onTab(1)">今日能耗</span>
         <span class="separate">|</span>
-        <span :class="{active:tabInd===2}" @click="onTab(2)">今日费用</span>
+        <span :class="{active:todayTabInd===2}" @click="onTab(2)">今日费用</span>
       </div>
-      <div class="chart" @click="goToPage">
+      <div class="chart" @click="goToPage('day')">
         <v-chart :option="todayOption" id="todayEnergy" />
       </div>
       <p>{{todayEnergyTitle}}</p>
     </div>
     <div class="month-energy">
       <div class="title">
-        <span class="active">本月能耗</span>
+        <span :class="{active:monthTabInd===1}" @click="changeTab(1)">本月能耗</span>
+        <!-- <span class="separate">|</span>
+        <span :class="{active:monthTabInd===2}" @click="changeTab(2)">本月费用</span>-->
       </div>
-      <div class="chart" @click="goToPage">
+      <div class="chart" @click="goToPage('month')">
         <v-chart :option="monthOption" id="monthEnergy" />
       </div>
       <p>{{monthEnergyTitle}}</p>
@@ -32,111 +40,135 @@ import cardHead from './ShopCartHead';
 import vChart from '@/components/echarts/index';
 import { option } from './EnergySystem';
 import utils from '@/utils/utils.js';
-import { getEnergyAlarmList } from '@/services/dashboard.js'
+import { getEnergyConsumeAndCost } from '@/services/dashboard'
 export default {
   components: { cardHead, vChart },
   props: {
     shopNumber: {
       type: String
     },
-    // itemData: {
-    //   type: Object
-    // }
+    itemData: {
+      type: Object
+    }
   },
   data () {
     return {
       title: '能管系统',
-      tabInd: 2,
-      todayOption: utils.deepCopy(option),
-      monthOption: utils.deepCopy(option),
-      monthEnergyTitle: '与定额相比节约800kWh',
-      todayEnergyTitle: '与昨日相比增加2%',
-      shopCode: this.shopNumber
+      todayTabInd: 2,
+      monthTabInd: 1,
+      todayOption: JSON.parse(JSON.stringify(option)),
+      monthOption: JSON.parse(JSON.stringify(option)),
+      monthEnergyTitle: '',
+      todayEnergyTitle: '',
+      shopCode: this.shopNumber,
+      energyDataBase: null,
+      loading: true,
     }
   },
   created () {
-    console.log(222, this.shopNumber)
-    this.initOption()
+    this.getEnergyConsumeAndCost();
   },
   watch: {
     shopNumber (val) {
       if (val) {
         this.shopCode = val;
-        this.getEnergyAlarmList();
+        this.getEnergyConsumeAndCost();
       }
     },
+    tabInd (newValue, oldValue) {
+      this.getTodayEnergy()
+    },
     itemData: {
-      handler: function (val) {
-        if (val) {
-
+      handler: function (newVal) {
+        if (newVal) {
+          this.energyDataBase = newVal.data;
+          this.getTodayEnergy();
+          this.getMonthEnergy();
         }
       },
       deep: true
-    }
+    },
   },
   methods: {
-    onTab (num) {
-      this.tabInd = num
+    onTab (type) {
+      this.todayTabInd = type;
+      this.getTodayEnergy();
+    },
+    changeTab (type) {
+      this.monthTabInd = type
+      this.getMonthEnergy();
     },
     initOption () {
-      this.getTodayEnergy()
-      this.getMonthEnergy()
-      this.getEnergyAlarmList();
+      this.getEnergyConsumeAndCost();
     },
-    // 获取能耗信息
-    getEnergyAlarmList () {
-      getEnergyAlarmList({ shopNumber: this.shopCode }).then(res => {
-
+    getEnergyConsumeAndCost () {
+      getEnergyConsumeAndCost({ shopNumber: this.shopCode }).then(res => {
+        this.energyDataBase = res.data || {};
+        this.loading = false;
+      }).then(res => {
+        this.getTodayEnergy();
+        this.getMonthEnergy();
       })
     },
-    //   请求今日能耗数据
+    //  请求今日能耗数据 (1:能耗；2:费用)
     getTodayEnergy () {
-      this.todayOption.series[0].name = this.tabInd == 2 ? '今日费用' : '今日能耗';
+      console.log('数据变化', this.todayTabInd)
+      let todayData = this.energyDataBase.today;
+      this.todayOption.series[0].name = this.todayTabInd == 2 ? '今日费用' : '今日能耗';
       // this.todayOption.title.text = '与昨日相比增加2%';
       this.todayOption.color = ['#b3d363', '#73c353', '#d18366'];
-      if (this.tabInd === 1) {
+      if (this.todayTabInd === 1) {
         this.todayOption.series[0].data = [
-          { value: 435, name: '低谷' },
-          { value: 700, name: '平段' },
-          { value: 1350, name: '高峰' }
+          { value: todayData.lowUse, name: '低谷' },
+          { value: todayData.flatUse, name: '平段' },
+          { value: todayData.highUse, name: '高峰' }
         ]
       } else {
         this.todayOption.series[0].data = [
-          { value: 535, name: '低谷' },
-          { value: 679, name: '平段' },
-          { value: 1548, name: '高峰' }
+          { value: todayData.lowCost, name: '低谷' },
+          { value: todayData.flatCost, name: '平段' },
+          { value: todayData.highCost, name: '高峰' }
         ]
       }
-      let total = 0;
-      this.todayOption.series[0].data.forEach(item => {
-        total += item.value;
-      });
-      this.todayOption.graphic.style.text = this.tabInd == 2 ? total + '元' : total + 'kWh';
+      this.todayEnergyTitle = '与昨日相比增加' + (this.todayTabInd === 1 ? todayData.useLinkRatio : todayData.costLinkRatio);
+      let total = this.todayTabInd === 1 ? todayData.totalUse : todayData.totalCost;
+
+      this.todayOption.graphic.style.text = this.todayTabInd == 2 ? total + '元' : total + 'kWh';
+
     },
     getMonthEnergy () {
-      this.monthOption.series[0].name = '本月能耗';
+      let monthData = this.energyDataBase.month;
+      this.monthOption.series[0].name = this.monthTabInd == 2 ? '本月费用' : '本月能耗';
       // this.monthOption.title.text = '与定额相比节约800kWh';
       this.monthOption.color = ['#c3c325', '#30b14c', '#01b7ed'];
-      this.monthOption.series[0].data = [
-        { value: 10000, name: '低谷' },
-        { value: 20000, name: '平段' },
-        { value: 35000, name: '高峰' }
-      ]
-      let total = 0;
-      this.monthOption.series[0].data.forEach(item => {
-        total += item.value;
-      });
-      this.monthOption.graphic.style.text = total / 10000 + '万kWh';
+      if (this.monthTabInd === 1) {
+        this.monthOption.series[0].data = [
+          { value: monthData.lowUse, name: '低谷' },
+          { value: monthData.flatUse, name: '平段' },
+          { value: monthData.highUse, name: '高峰' }
+        ]
+      } else {
+        this.monthOption.series[0].data = [
+          { value: monthData.lowCost, name: '低谷' },
+          { value: monthData.flatCost, name: '平段' },
+          { value: monthData.highCost, name: '高峰' }
+        ]
+      }
+
+      let total = this.monthTabInd === 1 ? monthData.totalUse : monthData.totalCost;
+      this.monthEnergyTitle = `与定额相比节约${this.monthTabInd === 1 ? monthData.saveEnergy + '元' : monthData.saveCost + 'kWh'}`;
+
+      this.monthOption.graphic.style.text = (total / 10000).toFixed(2) + (this.monthTabInd == 2 ? '万元' : '万kWh');
     },
-    goToPage () {
-      this.$router.push({ path: '/energy/energy-search' })
+    goToPage (type) {
+      this.$router.push({ path: '/energy/energy-search', name: 'energy-search', params: { referer: type } })
     }
   },
-  watch: {
-    tabInd (newValue, oldValue) {
-      this.getTodayEnergy()
-    }
-  }
+  // watch: {
+  //   tabInd (newValue, oldValue) {
+  //     this.getTodayEnergy()
+  //   }
+  // }
 }
 </script>
 <style lang="scss" scoped>

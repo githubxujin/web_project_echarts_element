@@ -31,7 +31,7 @@
         @node-contextmenu="rightClick"
       >
         <span class="custom-tree-node" slot-scope="{ node }">
-          <span :title="node.label.length>15?node.label:''">{{ node.label }}</span>
+          <span :title="node.label.length>9?node.label:''">{{ node.label }}</span>
         </span>
       </el-tree>
     </div>
@@ -106,9 +106,10 @@ export default {
     getData () {
       this.defaultKey = this.activeTab + this.btnType;
       this.treeData = this.data[this.defaultKey];
+      console.log(this.defaultKey, this.treeData)
       // 处理电分项默认为四大分项以外，其他均选中第一个
       if (this.defaultKey === 'elecSub') {
-        this.defalutChecked = ['01000'];
+        this.defalutChecked = [this.treeData[0].number];
       } else {
         let initChecked = this.treeData[0].number;
         this.defalutChecked = [initChecked];
@@ -118,6 +119,7 @@ export default {
     treeChange (node, checked) {
       let arr = utils.deepCopy(this.$refs.tree.getCheckedKeys());
       if (arr.length > 10) {
+        this.$message.closeAll();
         this.$message.error('最多选中10条数据');
       } else {
         if (!this.defalutChecked.includes(node.number)) {
@@ -154,12 +156,14 @@ export default {
         }
       } else {
         if (node.childNodes.length + this.defalutChecked.length > 10) {
+          this.$message.closeAll();
           this.$message.error('最多选中10条数据');
         } else {
           if (!this.defalutChecked.includes(node.key)) {
             if (this.defalutChecked.length < 10) {
               this.defalutChecked.push(node.key);
             } else {
+              this.$message.closeAll();
               this.$message.error('最多选中10条数据');
             }
           }
@@ -169,6 +173,7 @@ export default {
                 if (this.defalutChecked.length < 10) {
                   this.defalutChecked.push(node.childNodes[i].key);
                 } else {
+                  this.$message.closeAll();
                   this.$message.error('最多选中10条数据');
                 }
               }
@@ -182,12 +187,12 @@ export default {
       }
     },
     outData () {
+      console.log(454545)
       let data = {//电水，支路/分项，选中的id
         type: this.type,
         subType: this.btnKey,
         number: this.defalutChecked.join(',')
       }
-      console.log(data)
       this.$emit('leftTreeData', data);
     }
   }

@@ -116,14 +116,14 @@
                     }]"
           >
             <el-input v-model.trim="item.returnValue" placeholder="请输入" :maxlength="16">
-              <el-select v-model="item.operator" slot="prepend" class="select-with-input">
+              <!-- <el-select v-model="item.operator" slot="prepend" class="select-with-input">
                 <el-option
                   v-for="item in symbolEnum"
                   :label="item.label"
                   :value="item.value"
                   :key="item.value"
                 ></el-option>
-              </el-select>
+              </el-select>-->
             </el-input>
           </el-form-item>
         </el-col>
@@ -208,6 +208,7 @@ import { pointTableGetInfo, pointTableAdd, pointTableEdit, configTypeQuery, cool
 import axios from '@/axios/axios.js'
 import { statusEnum, paramStateEnum, symbolEnum } from '@/enum/dicts.js'
 import Regexps from '@/utils/regexp.js'
+let RegexpNumber = /^[+-]{0,1}(\d+)$|^[+-]{0,1}(\d+\.\d{0,2})$/;
 export default {
   components: {},
   props: {
@@ -267,7 +268,7 @@ export default {
       const MappingValueList = this.form.pointTableMappingList.filter(item => {
         return Boolean(item.returnValue || item.returnValue === 0)
       }).map(item => {
-        return `${item.operator}${item.returnValue}`
+        return `${item.returnValue}`
       })
       return MappingValueList
     },
@@ -283,7 +284,7 @@ export default {
         const copyId = new Date().getTime()
         return {
           copyId,
-          operator: '=',
+          // operator: '=',
           returnValue: '',
           returnValueDesc: ''
         }
@@ -339,6 +340,7 @@ export default {
       this.form.pointTableMappingList.splice(index, 1)
     },
     submit () { // 提交编辑或新增
+
       let result = false
       this.$refs.form.validate(res => {
         result = res
@@ -348,6 +350,7 @@ export default {
       if (!this.isEdit) {
         funName = 'pointTableAdd'
       }
+      debugger
       this.dialogLoading = true
       this[funName](this.params).then(res => {
         this.dialogLoading = false
@@ -376,10 +379,13 @@ export default {
       if (!value && value !== 0) {
         return callback(new Error('请输入返回值'))
       }
-      let row = this.form.pointTableMappingList[index]
-      if (!this.Regexps.number.test(value) && !['=', '!='].includes(row.operator)) {
-        return callback(new Error('只能在\'=\'或\'!=\'情况下输入非数字'))
+      if (!/^[+-]{0,1}(\d+)$/.test(value)) {
+        return callback(new Error('请输入整数'))
       }
+      let row = this.form.pointTableMappingList[index]
+      // if (!this.Regexps.number.test(value) && !['=', '!='].includes(row.operator)) {
+      //   return callback(new Error('只能在\'=\'或\'!=\'情况下输入非数字'))
+      // }
       let mappingValueList = this.mappingValueList.filter((item, itemIndex) => itemIndex !== index)
       if (mappingValueList.some(val => val === row.operator + value)) {
         return callback(new Error('返回值重复'))
@@ -398,26 +404,33 @@ export default {
       return callback()
     },
     validateUpperLimit (rule, value, callback) { // 校验方法
-      if (!Regexps.positiveNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit)) {
-        if (value && !Regexps.positiveNumber.test(value)) {
-          return callback(new Error('仅输入正数'))
+      //温度允许有负数
+      if (this.form.unit != 73 && (!RegexpNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit))) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
         }
         return callback()
       }
       if ((value || value === 0) && (this.form.lowerLimit || this.form.lowerLimit === 0) && parseFloat(value) < parseFloat(this.form.lowerLimit)) {
         return callback(new Error('上限不能低于下限'))
       }
+      if (this.form.unit === 73 && (!Regexps.twoDecimal.test(value))) {
+        return callback(new Error('最多保留2位小数'))
+      }
       return callback()
     },
     validateLowerLimit (rule, value, callback) { // 校验方法
-      if (!Regexps.positiveNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit)) {
-        if (value && !Regexps.positiveNumber.test(value)) {
-          return callback(new Error('仅输入正数'))
+      if (this.form.unit != 73 && (!RegexpNumber.test(this.form.upperLimit) || !Regexps.positiveNumber.test(this.form.lowerLimit))) {
+        if (value && !RegexpNumber.test(value)) {
+          return callback(new Error('仅输入数字且保留两位小数'))
         }
         return callback()
       }
       if ((value || value === 0) && (this.form.upperLimit || this.form.upperLimit === 0) && parseFloat(value) > parseFloat(this.form.upperLimit)) {
         return callback(new Error('下限不能高于上限'))
+      }
+      if (this.form.unit === 73 && (!Regexps.twoDecimal.test(value))) {
+        return callback(new Error('最多保留2位小数'))
       }
       return callback()
     }

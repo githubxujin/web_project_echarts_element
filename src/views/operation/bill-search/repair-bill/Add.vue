@@ -27,14 +27,14 @@
         <el-col :span="12" style="padding-left:20px;">
           <el-form-item label="是否紧急">
             <el-radio-group v-model="ruleForm.urgent">
-              <el-radio :label="0">正常</el-radio>
+              <el-radio :label="0">通常</el-radio>
               <el-radio :label="1">紧急</el-radio>
             </el-radio-group>
           </el-form-item>
         </el-col>
       </el-row>
       <el-form-item label="故障描述" class="form-item-textarea" prop="faultDesc">
-        <el-input type="textarea" v-model="ruleForm.faultDesc"></el-input>
+        <el-input type="textarea" v-model="ruleForm.faultDesc" placeholder="故障说明..."></el-input>
       </el-form-item>
       <el-form-item label="报修人" prop="reportName">
         <el-input v-model="ruleForm.reportName" placeholder="报修人"></el-input>
@@ -48,13 +48,13 @@
       </el-form-item>
       <el-row>
         <el-col :span="4">
-          <el-form-item label="预约时间" prop="expectTime"></el-form-item>
+          <el-form-item label="预期时间" prop="expectTime"></el-form-item>
         </el-col>
         <el-col :span="20">
           <el-date-picker
             v-model="ruleForm.expectTime"
             type="datetime"
-            placeholder="请选择预约时间"
+            placeholder="请选择预期时间"
             :picker-options="pickerDisabled"
             format="yyyy-MM-dd HH:mm"
           ></el-date-picker>
@@ -148,14 +148,14 @@ export default {
         phone: '', //联系电话
         address: '',//位置
         faultDesc: '',//故障描述
-        expectTime: '',//预约时间
+        expectTime: '',//预期时间
         memo: '',//备注
         repairBillImages: [],
         urgent: 0,//是否紧急
       },
       rules: {
         deviceIdAndTypeId: [
-          { required: true, message: '请输入设备名称', trigger: 'blur' },
+          { required: true, message: '请选择设备名称', trigger: 'blur' },
         ],
         faultType: [
           { required: true, message: '请选择故障类型', trigger: 'blur' },
@@ -170,6 +170,7 @@ export default {
           { max: 20, message: '长度不能超过 20 个字符', trigger: 'blur' }
         ],
         faultDesc: [
+          { required: true, message: '故障描述不能为空', trigger: 'blur' },
           { max: 50, message: '长度不能超过 50 个字符', trigger: 'blur' }
         ],
         phone: [{ validator: validateTel, trigger: 'blur' }],

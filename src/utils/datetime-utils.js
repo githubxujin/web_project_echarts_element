@@ -18,10 +18,16 @@ export default class datetimeUtils {
      * @param days 时间间隔天数
      * @returns {string}
      */
-    static getPreDate(days) {
-        return moment()
-            .subtract(days, 'days')
-            .toDate();
+    static getPreDate(days, d) {
+        if (d) {
+            return moment(d)
+                .subtract(days, 'days')
+                .toDate();
+        } else {
+            return moment()
+                .subtract(days, 'days')
+                .toDate();
+        }
     }
     /**
      * 获取当前时间后N天的日期
@@ -42,6 +48,26 @@ export default class datetimeUtils {
         return moment(d)
             .add(days, 'days')
             .toDate();
+    }
+    /**
+     * 获取特定日期后N秒的日期时间
+     * @param second
+     * @returns {Date}
+     */
+    static getDateTimeNextSecond(d, second) {
+        return moment(d)
+            .add(second, 's')
+            .toDate();
+    }
+    /**
+     * 获取指定日期后m分钟
+     * @param {*} d
+     * @param {*} m
+     */
+    static getTimeNextTime(d, m) {
+        return moment(d)
+            .add(m, 'm')
+            .format('HH:mm:ss');
     }
     /**
      * 获取当前日期前n个月
@@ -68,6 +94,7 @@ export default class datetimeUtils {
      * @param {*} val
      */
     static getAfterMonthByDate(d, val) {
+        console.log('d :', d);
         return moment(d)
             .add(val, 'M')
             .toDate();
@@ -83,7 +110,6 @@ export default class datetimeUtils {
         let d = moment(date).format(
             'YYYY' + seperator + 'MM' + seperator + 'DD'
         );
-        console.log('date :', date, d);
         return moment(date).format(
             'YYYY' + seperator + 'MM' + seperator + 'DD'
         );
@@ -110,6 +136,14 @@ export default class datetimeUtils {
      */
     static getCurYmdTime() {
         return moment().format('YYYY-MM-DD');
+    }
+    //获取指定日期的截止时间
+    static getStartTime(d) {
+        return moment(moment(d).format('YYYY-MM-DD') + ' 00:00:00').toDate();
+    }
+    //获取指定日期的截止时间
+    static getEndTime(d) {
+        return moment(moment(d).format('YYYY-MM-DD') + ' 23:59:59').toDate();
     }
     /**
      * 获取几天前，拼接 yyyy-mm-dd hh:mm:ss
@@ -236,6 +270,10 @@ export default class datetimeUtils {
     //获取当前年月日
     static getCurYearMonthDay() {
         return moment().format('YYYY-MM-DD');
+    }
+    //获取指定日期所在月份第一天日期
+    static getCurYearMonthFirstDay(d) {
+        return moment(d).format('YYYY-MM') + '-01' + ' 00:00:00';
     }
     /**
      * 获取指定日期年月

@@ -3,8 +3,19 @@
     <div class="datatable-box">
       <el-table ref="Table" border :data="tableData" style="width: 100%" height="320px">
         <el-table-column type="index" width="50" label="序号"></el-table-column>
-        <el-table-column prop="alarmName" label="报警名称"></el-table-column>
-        <el-table-column prop="alarmLocation" label="报警位置"></el-table-column>
+        <el-table-column prop="alarmName" label="报警名称">
+          <template slot-scope="scope">
+            <span class="two-text-ellipse" :title="scope.row.alarmName">{{scope.row.alarmName}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="alarmLocation" label="报警位置">
+          <template slot-scope="scope">
+            <span
+              class="two-text-ellipse"
+              :title="scope.row.alarmLocation"
+            >{{scope.row.alarmLocation}}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="报警时间" align="center" width="140">
           <template slot-scope="scope">{{scope.row.alarmTime|timeFormat('YYYY-MM-DD HH:mm:ss')}}</template>
         </el-table-column>
@@ -14,13 +25,18 @@
           </template>
         </el-table-column>
         <el-table-column prop="suggestion" label="处理建议"></el-table-column>
-        <el-table-column prop="deviceName" label="状态" align="center">
+        <el-table-column prop="deviceName" label="报警状态" align="center">
           <template slot-scope="scope">
             <div slot="reference" class="name-wrapper">
               <span
                 :class="{'red':scope.row.status==alarmStatusEnum.noSure}"
               >{{alarmStatus[scope.row.status] }}</span>
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="工单号">
+          <template slot-scope="scope">
+            <span>{{scope.row.billNumber||''}}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -46,7 +62,11 @@ export default {
     deviceId: {
       type: Number,
       default: 0
-    }
+    },
+      alarmType: {
+        type: Number,
+          default: 1
+      }
   },
   data () {
     return {
@@ -73,7 +93,7 @@ export default {
   methods: {
     // 查询请求
     getItemList () {
-      getHistryAlarmListByDeviceId({ shopNumber: this.shopNumber, deviceId: this.deviceId, pageNum: this.pager.pageNum, pageSize: this.pager.pageSize }).then(res => {
+      getHistryAlarmListByDeviceId({ shopNumber: this.shopNumber, deviceId: this.deviceId, alarmType: this.alarmType,pageNum: this.pager.pageNum, pageSize: this.pager.pageSize }).then(res => {
         if (res.data) {
           this.pager.total = res.data.total;
           this.tableData = res.data.list;

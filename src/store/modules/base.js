@@ -10,7 +10,8 @@ const state = {
     curShop: null, //当前选中的门店
     checkedShopNumbers: [], //当前选中的门店编号数组
     curShopName: '', //当前门店名称
-    refreshShopTreeFlag: false //是否刷新门店树
+    refreshShopTreeFlag: false, //是否刷新门店树,
+    btnLoading: false //按钮是否加载中
 };
 
 const mutations = {
@@ -19,6 +20,9 @@ const mutations = {
     },
     updatePageLoadingStatus(state, status) {
         state.openPageLoading = status;
+    },
+    updateBtnLoading(state, data) {
+        state.btnLoading = data;
     },
     updateTopNavStatus(state, status) {
         state.topNavState = status;

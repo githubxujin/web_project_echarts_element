@@ -57,6 +57,7 @@
                 type="index"
                 :index="indexMethod"
                 label="序号"
+                :width="80"
               ></el-table-column>
               <el-table-column
                 header-align="center"

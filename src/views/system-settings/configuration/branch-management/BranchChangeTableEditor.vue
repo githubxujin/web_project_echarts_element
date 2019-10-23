@@ -13,7 +13,7 @@
         <el-col :span="12">
           <el-form-item label="原电表地址">
             <el-input
-              v-model.trim="history.old.number"
+              v-model.trim="history.old.electricAddr"
               placeholder="原电表地址"
               :disabled="true"
               :maxlength="36"
@@ -33,8 +33,13 @@
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="number" label="新电表地址">
-            <el-input v-model.trim="form.number" placeholder="请输入新电表地址" clearable :maxlength="32"></el-input>
+          <el-form-item prop="electricAddr" label="新电表地址">
+            <el-input
+              v-model.trim="form.electricAddr"
+              placeholder="请输入新电表地址"
+              clearable
+              :maxlength="32"
+            ></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -87,12 +92,12 @@ export default {
       dialogLoading: false,
       form: {
         id: '',
-        number: '',
+        electricAddr: '',
         electricData: '',
 
       },
       formRules: {
-        number: [{ required: true, message: '请输入新电表地址' }],
+        electricAddr: [{ required: true, message: '请输入新电表地址' }],
         electricData: [
           { required: true, message: '请输入初始读数' },
           { pattern: Regexps.positiveNumber, message: '只能是正数', trigger: 'blur' }
@@ -107,7 +112,7 @@ export default {
   computed: {
     params () {
       let params = JSON.parse(JSON.stringify(this.form))
-      params.shopNumber = params.shopNumber || this.$store.getters.getUserInfo.shopNumber
+      params.buildId = params.buildId || this.$store.getters.getUserInfo.shopNumber
       params.electricDataOld = this.history.old.electricData || '';
       return params
     }
@@ -136,6 +141,7 @@ export default {
       this.meterTrade(this.params).then(res => {
         this.dialogLoading = false
         this.$message.success('换表成功！')
+        this.$emit('success')
         this.cancle()
       }).catch(_ => {
         console.error('换表失败:', _);

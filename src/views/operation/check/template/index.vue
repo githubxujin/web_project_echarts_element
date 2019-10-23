@@ -14,12 +14,12 @@
           <div class="title-input-group u-title-input-group">
             <p class="text">设备类型：</p>
             <tree-select
-              v-model="deviceIdAndTypeId"
+              v-model="deviceType"
               placeholder="请选择"
               :clearable="true"
               :data="treeData"
               :defaultProps="defaultProps"
-              :onlyLeafSelect="true"
+              :onlyLeafSelect="false"
             ></tree-select>
           </div>
           <div class="title-input-group u-title-input-group">
@@ -148,7 +148,7 @@ export default {
         pageSize: 15,
       },
       templateNumber: '', //模板编号
-      deviceIdAndTypeId: '', //设备ID
+      deviceType: '', //设备ID
       cycleTime: '',//巡检周期
       treeData: [],
       defaultProps: {
@@ -182,6 +182,9 @@ export default {
           this.treeData = res.data.array;
         }
       });
+      this.refreshCheckCycle();
+    },
+    refreshCheckCycle () {
       //获取巡检周期下拉框数据
       getCheckCycleSelected(this.shopNumber).then(res => {
         if (res.code == 200) {
@@ -194,11 +197,12 @@ export default {
       console.log('查询')
       this.$common.updateLoadingStatus(true);
       this.btnLoading = true;
+      let type = this.deviceType ? this.deviceType.split(',')[0] : '';
       checkTemplateList({
         shopNumber: this.shopNumber, templateNumber: this.templateNumber,
         pageNum: this.pager.pageNum, pageSize: this.pager.pageSize,
         cycleTime: this.cycleTime,
-        deviceType: this.getDeviceId(this.deviceIdAndTypeId)
+        deviceType: type
       }).then(res => {
         this.tableData = res.data.list;
         this.pager.total = res.data.total;
@@ -207,10 +211,6 @@ export default {
       }).catch(() => {
         this.btnLoading = false;
       })
-    },
-    //获取真实的设备ID
-    getDeviceId (val) {
-      return val.includes(',') ? parseInt(val.split(',')[0]) : '';
     },
     //添加
     addClick () {
@@ -248,6 +248,7 @@ export default {
         closeWin();
       }
       this.getItemList();
+      this.refreshCheckCycle();
     },
     //添加模板
     submitAdd (data) {

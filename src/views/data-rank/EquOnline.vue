@@ -171,6 +171,7 @@ export default {
         ],
         yAxis: [
           {
+              minInterval:1,
             type: 'value',
             name: '(%)',
             nameTextStyle: {
@@ -253,12 +254,17 @@ export default {
   methods: {
     query () {
         let topShopNumers = '',that = this;
-        this.checkedShopNumbers.forEach(function (v, i) {
-            topShopNumers += v;
-            if (that.checkedShopNumbers.length - 1 != i) {
-                topShopNumers += ','
-            }
-        });
+        if (this.checkedShopNumbers.length == 0) {
+            let storage = window.localStorage;
+            topShopNumers = storage.getItem("objTree");
+        } else {
+            this.checkedShopNumbers.forEach(function (v, i) {
+                topShopNumers += v;
+                if (that.checkedShopNumbers.length - 1 != i) {
+                    topShopNumers += ','
+                }
+            });
+        }
       this.xName = this.onlineType_options[this.onlineType].label;
       this.chartOption.yAxis[0].name = this.xName + "(%)";
       this.tableData.tHead[1].text = this.xName + "(%)";
@@ -314,14 +320,18 @@ export default {
       this.start = start;
       this.end = end;
     }, exportData () {
-          let topShopNumers = '',that = this;
-          this.checkedShopNumbers.forEach(function (v, i) {
-              topShopNumers += v;
-              if (that.checkedShopNumbers.length - 1 != i) {
-                  topShopNumers += ','
-              }
-          });
-//{shopNumber:topShopNumers, onlineType: this.onlineType, start: this.checkTime.start + ' 0:0:0', end: this.checkTime.end + ' 23:59:59' }
+          let topShopNumers = '', that = this;
+          if (this.checkedShopNumbers.length == 0) {
+              let storage = window.localStorage;
+              topShopNumers = storage.getItem("objTree");
+          } else {
+              this.checkedShopNumbers.forEach(function (v, i) {
+                  topShopNumers += v;
+                  if (that.checkedShopNumbers.length - 1 != i) {
+                      topShopNumers += ','
+                  }
+              });
+          }
           exportDeviceOnlineList(`?token=${localStorage.getItem('$token_info')}&shopNumber=${topShopNumers}&start=${this.checkTime.start }&end=${
               this.checkTime.end
               }&onlineType=${this.onlineType}`);

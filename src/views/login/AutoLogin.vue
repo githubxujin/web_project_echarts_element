@@ -46,7 +46,10 @@ export default {
         // 存储用户信息
         if (res.data.info) {
           // console.log('res.data.info :', res.data.info);
-          this.$store.commit('user/setUserInfo', res.data.info)
+          this.$store.commit('user/setUserInfo', res.data.info);
+          if (res.data.info.shopname) {
+            this.$store.commit('base/updateCurShopName', res.data.info.shopname);
+          }
         }
         // success
         if (res.data.token) {

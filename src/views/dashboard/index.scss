@@ -37,3 +37,36 @@ $oneLevelColor:#a62617;
     border-right: 2px solid $borderColor;
     border-bottom: 2px solid $borderColor;
 }
+
+/*-----------------------------定义滚动条样式------------------*/
+$scrollbarColor:#135786;
+
+/*webkit内核*/
+::-webkit-scrollbar {
+    width: 12px;
+    /*滚动条宽度*/
+    height: 12px;
+    /*滚动条高度*/
+}
+
+/*定义滚动条轨道 内阴影+圆角*/
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(19, 87, 134, 0.1);
+    border-radius: 6px;
+    /*滚动条的背景颜色*/
+}
+
+/*定义滑块 内阴影+圆角*/
+::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background: $scrollbarColor;
+    -webkit-box-shadow: inset 0 0 6px rgba(19, 87, 134, 0.5);
+
+    &:hover {
+        background: $scrollbarColor;
+    }
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background: $scrollbarColor;
+}

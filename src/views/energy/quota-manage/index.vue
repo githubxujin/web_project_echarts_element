@@ -60,14 +60,14 @@
                   icon="el-icon-upload2"
                   @click="exportQuotaDetail"
                   v-if="showExportBtn"
-                >导出报表</el-button>
+                >导出</el-button>
               </div>
               <div class="energy-detial-table">
                 <div class="datatable-box">
                   <el-table :data="tableData.tData" style="width: 100%" ref="table">
                     <el-table-column
-                      v-for="item in tableData.tHead"
-                      :key="item.text"
+                      v-for="(item,index) in tableData.tHead"
+                      :key="index"
                       :prop="item.prop"
                       :label="item.text"
                     >
@@ -75,32 +75,55 @@
                         <span v-if="scope.row.itemName==='去年同比'">
                           <span v-if="item.prop==='itemName'">{{scope.row[item.prop]}}</span>
                           <span
-                            v-else-if="item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)-1]==='--'||item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)-1]===0"
+                            v-else-if="item.prop!=='itemName'&&scope.row[item.prop]==='--'"
+                          >{{scope.row[item.prop]}}</span>
+                          <!-- <span
+                            v-else-if="item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)]==='--'||item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)]===0"
                           >{{scope.row[item.prop]}}</span>
                           <span
-                            v-else-if="item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)-1]>0"
+                            v-else-if="item.prop!=='itemName'&&yearOverYear[parseInt(item.prop)]>0"
                           >
                             <i class="el-icon-sort-up" style="color:#ff5a5d"></i>
+                            <i class="iconfont icon-up-arrow" style="color:#ff5a5d"></i>
+                            {{scope.row[item.prop]}}
+                          </span>-->
+                          <span
+                            v-else-if="item.prop!=='itemName'&&yearOverYear[index]==1&&scope.row[item.prop]!='--'"
+                          >
+                            <!-- <i class="el-icon-sort-up" style="color:#ff5a5d"></i> -->
+                            <i class="iconfont icon-up-arrow" style="color:#ff5a5d"></i>
                             {{scope.row[item.prop]}}
                           </span>
-                          <span v-else>
+                          <span
+                            v-else-if="item.prop!=='itemName'&&yearOverYear[index]==0&&scope.row[item.prop]!='--'"
+                          >
+                            <!-- <i class="el-icon-sort-down" style="color:#81b776"></i> -->
+                            <i class="iconfont icon-up-arrow1" style="color:#81b776"></i>
+                            {{scope.row[item.prop]}}
+                          </span>
+                          <!-- <span v-else>
                             <i class="el-icon-sort-down" style="color:#81b776"></i>
+                            <i class="iconfont icon-up-arrow1" style="color:#81b776"></i>
                             {{scope.row[item.prop]}}
-                          </span>
+                          </span>-->
                         </span>
                         <span v-else-if="scope.row.itemName==='环比'">
                           <span v-if="item.prop==='itemName'">{{scope.row[item.prop]}}</span>
                           <span
-                            v-else-if="item.prop!=='itemName'&&linkRelativeRatio[parseInt(item.prop)-1]==='--'||item.prop!=='itemName'&&linkRelativeRatio[parseInt(item.prop)-1]===0"
+                            v-else-if="item.prop!=='itemName'&&scope.row[item.prop]==='--'"
                           >{{scope.row[item.prop]}}</span>
                           <span
-                            v-else-if="item.prop!=='itemName'&&linkRelativeRatio[parseInt(item.prop)-1]>0"
+                            v-else-if="item.prop!=='itemName'&&linkRelativeRatio[index]==1&&scope.row[item.prop]!='--'"
                           >
-                            <i class="el-icon-sort-up" style="color:#ff5a5d"></i>
+                            <!-- <i class="el-icon-sort-up" style="color:#ff5a5d"></i> -->
+                            <i class="iconfont icon-up-arrow" style="color:#ff5a5d"></i>
                             {{scope.row[item.prop]}}
                           </span>
-                          <span v-else>
-                            <i class="el-icon-sort-down" style="color:#81b776"></i>
+                          <span
+                            v-else-if="item.prop!=='itemName'&&linkRelativeRatio[index]==0&&scope.row[item.prop]!='--'"
+                          >
+                            <!-- <i class="el-icon-sort-down" style="color:#81b776"></i> -->
+                            <i class="iconfont icon-up-arrow1" style="color:#81b776"></i>
                             {{scope.row[item.prop]}}
                           </span>
                         </span>
@@ -174,7 +197,7 @@ export default {
           }
         },
         legend: {
-          data: ['实际能耗', '超定额', { name: "定额", height: '2' }],
+          data: ['实际能耗', '超定额', { name: "定额", height: '1' }],
           itemWidth: 32,
           itemHeight: 8,
           right: 50
@@ -303,7 +326,16 @@ export default {
     },
     shopNumbers: function () {
       return this.$store.getters.shopNumber;
-    }
+    },
+    // -----------------按钮权限---------------------
+    //显示转单按钮
+    showExportBtn () {
+      return this.pageBtns.some(val => val == 'export');
+    },
+    showSettingBtn () {
+      return this.pageBtns.some(val => val == 'setting-quota');
+    },
+    // -----------------按钮权限结束---------------------
   },
   watch: {
     searchFile: {
@@ -329,15 +361,7 @@ export default {
     }
   },
   methods: {
-    // -----------------按钮权限---------------------
-    //显示转单按钮
-    showExportBtn () {
-      return this.pageBtns.some(val => val == 'export');
-    },
-    showSettingBtn () {
-      return this.pageBtns.some(val => val == 'setting-quota');
-    },
-    // -----------------按钮权限结束---------------------
+
     // 获取日期
     getDate () {
       console.log(this.$store.getters.getUserInfo, this.curShop)
@@ -375,13 +399,14 @@ export default {
         } else {
           this.option.series = [];//显示数据为空
         }
+        console.log('this.option', this.option)
       } else {
         console.log(res.msg)
       }
     },
     //处理定额及用能数据
     quotaDataProcessing (usd, defd) {
-      // console.log("柱形图1数据处理usd=", usd, ";defd=", defd)
+      console.log("柱形图1数据处理实际能耗usd=", usd, ";定额数据defd=", defd)
       var data = {};
       var maxHight = 0
       for (let i = 0; i < usd.length; i++) {
@@ -392,6 +417,7 @@ export default {
           maxHight = defd[i];
         }
       }
+      console.log('最大值', maxHight)
       // console.log("maxHight", maxHight);
       var used = [];//定额用能与实际用能的集合
       var vldefd = [];
@@ -413,20 +439,31 @@ export default {
         }
         //定额遮挡数据计算
         let hide = maxHight * 0.01;
-        if (v == 0 || v == "--" || v === undefined || v === null) {
+        if (v == 0 || v === undefined || v === null) {
           vldefd.push(0)
+          hidedef.push(0);
+        } else if (v == "--") {
+          vldefd.push('--')
           hidedef.push(0);
         } else {
           vldefd.push(hide)
-          hidedef.push(Math.abs(parseInt(v - hide)));
+
+          if (usd[i] == 0 || usd[i] == "--") {
+            hidedef.push(v);
+          } else {
+            hidedef.push(Math.abs(parseInt(v - hide)));
+          }
         }
         //超额数据计算
-        if (v == 0 || v == "--" || v === undefined || v === null) {//定额为0，超定额也为0
+        if ((v == 0 || v === undefined || v === null) && (usd[i] !== "--" || usd[i] == 0)) {//定额和实际能耗都为0，超定额也为0
           overhight.push(0)
+        } else if (v == '--' || usd[i] == "--") {
+          overhight.push('--')
         } else {
           overhight.push(usd[i] > v ? usd[i] - v : "0")
         }
       });
+      console.log('used：', used)
       data['used'] = used;
       data['def'] = vldefd;
       data['hidedef'] = hidedef;
@@ -436,7 +473,7 @@ export default {
         let usdParam = ((usd[index] !== undefined && usd[index] !== null && usd[index] !== "--" && usd[index] != "") ? parseInt(usd[index]) : "--");//实际能耗
         let defParam = (defd[index] !== undefined && defd[index] !== null && defd[index] !== "--" && defd[index] != "") ? parseInt(defd[index]) : "--";//定额
         // console.log("实际能耗及定额分别为",usd[index],defd[index])
-        // console.log("params=",params)
+        // console.log("params=", params)
         let sty = '<span style=\"margin-right:5px;border-radius:50%;display: inline-block;width: 10px;height: 10px;background: '
         let param_0 = params[0] !== undefined ? params[0] : "";
         let param_1 = params[1] !== undefined ? params[1] : "";
@@ -450,19 +487,20 @@ export default {
         //实际能耗/定额2/定额/超定额
         if (params) {
           let len = params.length;//数组长度
+          // console.log(params)
           for (let i = 0; i < len; i++) {
             let arr = params[i];
             let name = arr.seriesName;
             if (name === "超定额") {
-              if (arr.value == 0) {
-                tip += sty + arr.color.colorStops[0].color + '"></span>' + arr.seriesName + ' : ' + '--' + '<br/> ';
-              } else {
-                tip += sty + arr.color.colorStops[0].color + '"></span>' + arr.seriesName + ' : ' + arr.value + '<br/> ';
-                // tip += (param_3 != "" ? params[3].value + '<br/> ' : "");//超能耗
-              }
+              // if (arr.value == 0) {
+              //   tip += sty + arr.color.colorStops[0].color + '"></span>' + arr.seriesName + ' : ' + '--' + '<br/> ';
+              // } else {
+              tip += sty + arr.color.colorStops[0].color + '"></span>' + arr.seriesName + ' : ' + arr.value + '<br/> ';
+              // tip += (param_3 != "" ? params[3].value + '<br/> ' : "");//超能耗
+              // }
             } else if (name === "定额") {
               if (arr.value == 0) {
-                tip += sty + arr.color + '"></span>' + arr.seriesName + ' : ' + '--' + '<br/> ';//定额
+                tip += sty + arr.color + '"></span>' + arr.seriesName + ' : ' + arr.value + '<br/> ';//定额
               } else {
                 tip += sty + arr.color + '"></span>' + arr.seriesName + ' : ' + defParam + '<br/> ';//定额
               }
@@ -484,7 +522,7 @@ export default {
     //渲染页面定额及用能图表
     getQuotaTabledata (resultData) {
       // console.log("柱形图1查询", resultData)
-      this.option.yAxis[0].name = this.energyUnit[this.energyType];
+      this.option.yAxis[0].name = this.energyUnit[parseInt(this.energyType)];
       this.option.series = [{
         name: '实际能耗',
         type: 'bar',
@@ -533,9 +571,9 @@ export default {
             z: 2,
             color: new this.$echarts.graphic.LinearGradient(
               0, 0, 0, 1, [
-                { offset: 0, color: '#D94040' },
-                { offset: 1, color: this.defTypeColor[parseInt(this.energyType)] }
-              ]
+              { offset: 0, color: '#D94040' },
+              { offset: 1, color: this.defTypeColor[parseInt(this.energyType)] }
+            ]
             )
           }
         }

@@ -13,12 +13,29 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="relateBill" label="关联工单号">
-            <el-input v-model.trim="form.relateBill" placeholder="请输入关联工单号"></el-input>
+            <!-- <el-input v-model.trim="form.relateBill" placeholder="请输入关联工单号"></el-input> -->
+            <el-autocomplete
+              class="inline-input"
+              v-model="form.relateBill"
+              value-key="billNumber"
+              :fetch-suggestions="querySearch"
+              placeholder="请输入搜索内容"
+              :trigger-on-focus="false"
+              @select="handleSelect"
+              @input="getRelateBill"
+            ></el-autocomplete>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item prop="receiveId" label="领用人">
-            <el-input v-model.trim="form.receiveId" placeholder="请输入领用人姓名"></el-input>
+            <el-select v-model="form.receiveId" placeholder="请选择" clearable>
+              <el-option
+                v-for="item in receiverList"
+                :key="item.userId"
+                :label="item.realName"
+                :value="item.userId"
+              ></el-option>
+            </el-select>
           </el-form-item>
         </el-col>
       </el-row>
@@ -29,7 +46,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item prop="outTime" label="入库时间">
+          <el-form-item prop="outTime" label="出库时间">
             <el-date-picker
               v-model="form.outTime"
               type="date"
@@ -62,9 +79,12 @@
           border
           style="width: 100%;margin-bottom: 10px"
         >
-          <el-table-column prop="sparePartId" label="配件" header-align="center">
+          <el-table-column prop="sparePartId" label="出库配件" header-align="center">
             <template slot-scope="scope">
-              <el-form-item :prop="`outStorageSparePartList[${scope.$index}].sparePartId`">
+              <el-form-item
+                :prop="`outStorageSparePartList[${scope.$index}].sparePartId`"
+                :rules="selectRule"
+              >
                 <TreeSelect
                   v-model="form.outStorageSparePartList[scope.$index].sparePartId"
                   placeholder="请选择"
@@ -93,7 +113,8 @@
               >
                 <el-input
                   v-model.trim="form.outStorageSparePartList[scope.$index].unitPrice"
-                  @change="calAmount(scope.row,scope.$index)"
+                  @change="getUnitPrice(scope.row,scope.$index)"
+                  maxlength="6"
                 ></el-input>
               </el-form-item>
             </template>
@@ -107,7 +128,7 @@
                 <el-input
                   v-model.trim="form.outStorageSparePartList[scope.$index].num"
                   @change="calAmount(scope.row,scope.$index)"
-                  maxlength="10"
+                  maxlength="6"
                 ></el-input>
               </el-form-item>
             </template>
@@ -116,6 +137,7 @@
             <template slot-scope="scope">
               <el-form-item :prop="`outStorageSparePartList[${scope.$index}].amount`">
                 <span>{{form.outStorageSparePartList[scope.$index].amount}}</span>
+                <span class="fr">元</span>
               </el-form-item>
             </template>
           </el-table-column>
@@ -144,7 +166,8 @@
 </template>
 <script>
 import TreeSelect from '@/components/treeSelect'
-import { getDetail, addOutStoraData, editOutStoraData } from '@/services/assets.js'
+import { getDetail, addOutStoraData, editOutStoraData, getUserListByShopNumber } from '@/services/assets.js'
+import { getLikeBill } from '@/services/operation.js'
 import Regexps from '@/utils/regexp.js'
 import moment from 'moment';
 //设定moment区域为中国
@@ -166,21 +189,31 @@ export default {
   },
   data () {
     return {
+      billNumber: '',
       form: {
         outAmount: '',
-        outStorageSparePartList: [],
+        outStorageSparePartList: [{
+          billId: '',
+          amount: '',
+          specification: '',
+          num: '',
+          unitPrice: '',
+          sparePartId: '',
+          id: ''
+        }],
         receiveId: '',
         relateBill: '',
         outTime: moment().format('YYYY-MM-DD HH:mm:ss'),
         desc: '',
         shopNumber: this.shopNumber
       },
+
       formRules: {
         relateBill: [
           { required: true, message: '请输入关联的维修巡检保养单号', trigger: 'blur' }
         ],
         receiveId: [
-          { required: true, message: '请输入领用人姓名', trigger: 'blur' }
+          { required: true, message: '请选择领用人姓名', trigger: 'change' }
         ],
       },
       dialogLoading: false,
@@ -213,23 +246,62 @@ export default {
         {
           pattern: Regexps.positiveNumber, message: '仅支持正数', trigger: 'blur'
         }
-      ]
+      ],
+      receiverList: []
     }
+  },
+  created () {
+    this.getUserListByShopNumber()
   },
   computed: {
     outAmount () {
       let total = 0;
       this.form.outStorageSparePartList.forEach(item => {
-        total += item.amount;
+        total += Number(item.amount);
       })
       return total
     }
   },
   methods: {
+    getRelateBill (val) {
+      this.form.relateBill = this.form.relateBill.slice(0, 16)
+    },
+    querySearch (queryString, cb) {
+      let list = [{}]
+      getLikeBill({ keyword: this.form.relateBill, shopNumber: this.shopNumber }).then(res => {
+        console.log(res);
+        if (res.code == 200) {
+          list = res.data.array;
+          cb(list)
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+    handleSelect (val) {
+      console.log(val, this.form.relateBill)
+      this.billNumber = val;
+    },
+    getUnitPrice (item, index) {
+      var length = 0;
+      if (item.unitPrice.indexOf('.') != -1) {
+        if (item.unitPrice.split('.')[1].length >= 4) {
+          item.unitPrice = item.unitPrice.split('.')[0] + '.' + item.unitPrice.split('.')[1].slice(0, 4)
+        }
+        length = item.unitPrice.split('.')[1].length
+      } else if ((item.unitPrice.indexOf('.') == -1)) {
+        item.unitPrice = item.unitPrice ? parseInt(item.unitPrice) : ''
+      }
+      this.calAmount(item, index)
+    },
     // 计算金额
     calAmount (item, index) {
       if (item.num && item.unitPrice) {
-        this.form.outStorageSparePartList[index].amount = item.num * item.unitPrice;
+        var total = parseInt(item.num) * parseFloat(item.unitPrice);
+        console.log('zongshu', total)
+        // this.form.inStorageSparePartList[index].amount = length ? total.toFixed(length) : total.toFixed(0)
+        this.form.outStorageSparePartList[index].amount = total.toFixed(2);
+        console.log('zongshu', this.form.outStorageSparePartList[index].amount)
       }
     },
     addTableData () {  // 新增一条数据
@@ -247,8 +319,15 @@ export default {
     delTableData (index) { // 删除一条数据
       this.form.outStorageSparePartList.splice(index, 1)
     },
+    // 根据门店编号获取领用人
+    getUserListByShopNumber () {
+      getUserListByShopNumber({ shopNumber: this.shopNumber }).then(res => {
+        this.receiverList = res.data.array || []
+      })
+    },
     // 根据配件获取规格型号
     getSparePart (node, data, ind) {
+      console.log(node)
       if (node) {
         getDetail({ id: node.key }).then(res => {
           this.form.outStorageSparePartList[ind].specification = res.data.specification;
@@ -258,6 +337,7 @@ export default {
       }
     },
     submit () {
+
       let result = false;
       this.$refs.form.validate(res => {
         result = res
@@ -291,7 +371,7 @@ export default {
               this.form.outStorageSparePartList = [];
             }, this);
             this.$emit('success');
-            this.$message.success("添加成功");
+            this.$message.success("新增成功");
             this.dialogLoading = false;
             this.$emit('update:editdialogVisible', false);
           } else {
@@ -330,7 +410,8 @@ export default {
     detailData: {
       handler: function () {
         this.form = JSON.parse(JSON.stringify(this.detailData))
-        this.form.outTime = moment().format('YYYY-MM-DD HH:mm:ss')
+        // this.form.receiveId = parseInt(this.form.receiveId)
+        // this.form.outTime = moment().format('YYYY-MM-DD HH:mm:ss')
         if (this.form && this.form.hasOwnProperty("id")) {
           this.isEdit = true;
         } else {
@@ -343,22 +424,43 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-/deep/ .el-input--prefix .el-input__inner {
+/deep/ .el-input--prefix .el-input__inner,
+/deep/ .el-select .el-input__inner {
   width: 178px;
+}
+/deep/ .el-form-item--mini .el-form-item__content {
+  line-height: 31px !important;
+}
+/deep/ .el-input.is-disabled .el-input__inner {
+  height: 30px !important;
+  line-height: 30px !important;
+}
+/deep/ .el-autocomplete .el-input--mini .el-input__inner {
+  height: 30px;
+  line-height: 30px;
 }
 .storage-table {
   margin-bottom: 10px;
   /deep/ .el-form-item {
     margin-bottom: auto;
     margin-right: auto;
+    width: 100%;
     &.is-error {
       margin-bottom: 20px;
     }
+  }
+  /deep/ .el-form-item--mini .el-form-item__content {
+    width: 100%;
   }
   /deep/ .el-form-item--small {
     min-height: auto;
     line-height: normal;
   }
+}
+</style>
+<style >
+.el-autocomplete-suggestion li {
+  padding: 0px 8px !important;
 }
 </style>
 

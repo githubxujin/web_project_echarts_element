@@ -7,7 +7,7 @@
             <p class="text">门店名称：</p>
             <div class="input-container">
               <div style="border-radius: 2px;" class="item select-input">
-                <el-input v-model="shopName" :clearable="true" placeholder="请输入内容"></el-input>
+                <el-input v-model="name" :clearable="true" placeholder="请输入内容"></el-input>
               </div>
             </div>
           </div>
@@ -128,24 +128,18 @@
         class="el-table--border"
         style="width: 100%;"
       >
-        <!--<el-table-column :index="numerical"-->
-        <!--label="序号"-->
-        <!--width="180">-->
-        <!--</el-table-column>-->
 
-        <el-table-column type="index" label="序号" width="50"></el-table-column>
+        <el-table-column type="index" :index="indexMethod" label="序号" width="50"></el-table-column>
 
-        <el-table-column prop="shopNumber" label="门店编号" width="180"></el-table-column>
-        <el-table-column prop="shopName" label="门店名称"></el-table-column>
+        <el-table-column prop="number" label="门店编号" width="180"></el-table-column>
+        <el-table-column prop="name" label="门店名称"></el-table-column>
         <el-table-column prop="area" label="面积"></el-table-column>
         <el-table-column prop="shopTypeName" label="门店类型"></el-table-column>
-        <el-table-column prop="regionAName" label="所属区域"></el-table-column>
-        <!-- <el-table-column prop="leadingPerson"
-                                 label="负责人">
-                </el-table-column>
-                <el-table-column prop="regiona"
-                                 label="所属区域">
-        </el-table-column>-->
+        <el-table-column prop="regionAName" label="所属区域" width="280">
+          <template slot-scope="scope">
+            <span>{{scope.row.regionAName}} {{scope.row.regionPName}} {{scope.row.regionNName}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="leadingPerson" label="负责人"></el-table-column>
 
         <el-table-column prop="leadingPhone" label="联系电话"></el-table-column>
@@ -207,7 +201,7 @@ export default {
   data () {
     return {
       details: {},
-      shopName: '', shopTypeName: '', dialogVisible: false, editdialogVisible: false, regiona: '', regionp: '', regionn: '', dialogTitle: '',
+      name: '', shopTypeName: '', dialogVisible: false, editdialogVisible: false, regiona: '', regionp: '', regionn: '', dialogTitle: '',
       regionaList: [],
       regionpList: [],
       regionnList: [],
@@ -251,11 +245,8 @@ export default {
   , created () {
 
   }, mounted () {
-
     this.inputTimeStart = datetimeUtils.GMTToStr(datetimeUtils.getPreDate(12)).toString().split(" ")[0] + ' 0:0:0';
     this.inputTimeEnd = datetimeUtils.GMTToStr(new Date()).toString().split(" ")[0] + ' 23:59:59';
-    // this.echartwidth = document.body.clientWidth * 0.85 + 'px';
-    //this.tablewidth = document.body.clientWidth * 0.8 + 'px';
     this.getArea();
     this.query();
     this.$common.initTableHeight(this);
@@ -285,8 +276,8 @@ export default {
         }
       });
       getShopList({
-        shopNumber: topShopNumers,
-        "shopName": this.shopName,
+        number: "",
+        "name": this.name,
         "shopType": this.shopType,
         "regiona": this.regiona,
         "regionp": this.regionp,
@@ -349,6 +340,9 @@ export default {
       this.pager.pageNum = val.pageNum;
     }, test () {
       let a = this.regionn;
+    },
+    indexMethod (index) { // 序号
+      return (this.pager.pageNum - 1) * this.pager.pageSize + index + 1
     }
   },
   watch: {
@@ -358,8 +352,8 @@ export default {
           this.editdialogVisible = false;
           this.checkedShopNumbers.push(newval);
           this.query();
-        }else{
-            this.query();
+        } else {
+          this.query();
         }
       },
       checkedShopNumbers: {

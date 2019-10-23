@@ -22,7 +22,7 @@
             </el-form-item>
             <el-form-item label="能耗类型：">
               <div style="width:120px;">
-                <el-select v-model="form.energyType" placeholder="全部" :clearable="true">
+                <el-select v-model="form.subType" placeholder="全部" :clearable="true">
                   <el-option
                     v-for="(item,index) in energyTypeEnum"
                     :key="index"
@@ -52,9 +52,18 @@
                 icon="el-icon-search"
               >查询</el-button>
             </el-form-item>
+
             <el-form-item class="float-right" v-if="pageBtns.some(val => val === 'add')">
               <el-button
                 @click="$common.debounce(addNew)()"
+                type="primary"
+                size="mini"
+                icon="el-icon-plus"
+              >导入</el-button>
+            </el-form-item>
+            <el-form-item class="float-right" v-if="pageBtns.some(val => val === 'add')">
+              <el-button
+                @click="$common.debounce(editItem)()"
                 type="primary"
                 size="mini"
                 icon="el-icon-plus"
@@ -111,7 +120,7 @@
       :before-close="resetDialogForm"
       :close-on-click-modal="false"
     >
-      <span slot="title" class="dialog-header">编辑</span>
+      <span slot="title" class="dialog-header">{{subentryItem ? '编辑':'新增'}}</span>
       <subentry-editor
         ref="subentryEditor"
         :dialogVisible.sync="editDialogVisible"
@@ -156,7 +165,7 @@ export default {
         prop: 'parentName',
       }, {
         label: '能耗类型',
-        prop: 'energyType',
+        prop: 'subType',
         dict: energyTypeEnum
       }, {
         label: '状态',
@@ -166,9 +175,9 @@ export default {
       dataList: [], // 表格数据
       form: { // 表单内容
         number: '',
-        energyType: '', // 能耗类型
+        subType: '', // 能耗类型
         status: '',
-        shopNumber: (this.$store.getters.getUserInfo || {}).shopNumber
+        buildId: (this.$store.getters.getUserInfo || {}).shopNumber
       },
       pager: {
         total: 0,
@@ -222,7 +231,7 @@ export default {
       this.addDialogVisible = true
     },
     editItem (item) { // 编辑
-      this.subentryItem = item;
+      this.subentryItem = item || null;
       this.editDialogVisible = true
     },
     resetDialogForm () { // 重置弹窗表格内容

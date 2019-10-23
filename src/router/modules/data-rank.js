@@ -12,6 +12,7 @@ const dataRankRouter = {
             children: [
                 {
                     path: '/data-rank/alarm-level',
+                    name: 'alarm-level',
                     component: () => import('@/views/data-rank/AlarmLevel.vue'),
                     meta: {
                         title: '报警级别排名'
@@ -34,7 +35,8 @@ const dataRankRouter = {
                 },
                 {
                     path: '/data-rank/energy-ranking',
-                    component: () => import('@/views/data-rank/EnergyRanking.vue'),
+                    component: () =>
+                        import('@/views/data-rank/EnergyRanking.vue'),
                     meta: {
                         title: '能耗排名'
                     }

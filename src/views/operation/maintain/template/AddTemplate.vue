@@ -16,18 +16,18 @@
         ></tree-select>
       </el-form-item>
       <el-row>
-        <el-col :span="8">
+        <el-col style="width:220px">
           <el-form-item label="保养周期" prop="cycleTimeLength">
             <el-input
               :disabled="cycleTimeDisabled"
               v-model="ruleForm.cycleTimeLength"
-              style="width:123px;"
+              style="width:118px;"
             ></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="16">
-          <el-form-item prop="cycleTime" label-width="30px">
-            <el-select v-model="ruleForm.cycleTime">
+        <el-col style="width:380px">
+          <el-form-item prop="cycleTime" label-width="8px">
+            <el-select v-model="ruleForm.cycleTime" style="width:88px">
               <el-option
                 v-for="(item,index) in MaintainCycleOptions"
                 :label="item.label"
@@ -146,11 +146,12 @@ export default {
   },
   watch: {
     'ruleForm.cycleTime' (val, oldVal) {
-      this.cycleTimeDisabled = val == 'C'; //半月保
-      if (val == 'C') {
+      this.cycleTimeDisabled = val == 'C' || val == 'F' || val == 'B' || val == 'E';//半月或者半年、周、季
+      //半月或者半年则禁用
+      if (this.cycleTimeDisabled) {
         this.ruleForm.cycleTimeLength = 1;
       } else {
-        this.ruleForm.cycleTimeLength = oldVal == 'C' ? '' : this.ruleForm.cycleTimeLength;//如果是半月保，清空值
+        this.ruleForm.cycleTimeLength = (oldVal == 'C' || oldVal == 'F' || oldVal == 'B' || oldVal == 'E') ? '' : this.ruleForm.cycleTimeLength;//如果之前的值是半月保或者半年、周、季，清空值
       }
     }
   },

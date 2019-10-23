@@ -4,7 +4,7 @@
       <div class="u-layout-left-proviso">
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <datePick v-model="checkTime" title="录入时间" :defaultStartTime="defaultStartTime"></datePick>
+            <datePick v-model="checkTime" title="故障时间" :defaultStartTime="defaultStartTime"></datePick>
           </div>
         </div>
         <div class="u-layout-left-item">
@@ -12,7 +12,9 @@
             class="el-button el-button--primary el-button--small is-round"
             icon="el-icon-search"
             @click="query"
-          >查询</el-button>
+          >
+            <a title="查询故障时间整段（部分）在此段时间内的数据">查询</a>
+          </el-button>
         </div>
       </div>
       <div class="u-layout-left-item">
@@ -26,9 +28,14 @@
       </div>
     </div>
     <div v-if="!isdata">
-      <div id="container" style="height: 665px"></div>
+      <div id="container" v-show="showContainer" style="height: 665px"></div>
+      <div
+        v-show="!showContainer"
+        style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px"
+      >
+        <span>暂无数据</span>
+      </div>
     </div>
-
     <div class="datatable-box" v-if="isdata">
       <el-table :height="tableHeight" :data="list" class="el-table--border" style="width: 100%;">
         <!--<el-table-column type="index"-->
@@ -47,6 +54,10 @@
 </template>
 
 <script>
+import moment from 'moment';
+//设定moment区域为中国
+import 'moment/locale/zh-cn';
+moment.locale('zh-cn');
 import pager from "@/components/table/Pager";
 import datePick from "@/components/timerange/separateTime";
 import myEcharts from '@/components/echarts/index';
@@ -61,6 +72,7 @@ export default {
   components: { datePick, myEcharts, tableDataList, pager },
   data () {
     return {
+      showContainer: true,
       list: [],
       tableHeight: 650,
       datetimeUtils: datetimeUtils,
@@ -216,6 +228,7 @@ export default {
       }
     }
   }, created () {
+    this.$message.closeAll();
     echarts = this.$echarts;
     //this.echartwidth = document.body.clientWidth * 0.85 + 'px';
     // this.tablewidth = document.body.clientWidth * 0.8 + 'px';
@@ -224,17 +237,11 @@ export default {
     _rawData = {
       parkingApron: {
         data: [
-          ["6号集水井"],
-          ["5号集水井"],
-          ["4号集水井"],
-          ["3号集水井"],
-          ["2号集水井"],
-          ["1号集水井"]
+
         ]
       },
       flight: {
-        dimensions: ["设备故障时间", "开始时间", "结束时间", "D:"
-        ],
+        dimensions: ["设备故障时间", "开始时间", "结束时间", 'D:'],
         data: [
           [],
           // [1, new Date("2019/05/5 08:00:20"), new Date("2019/05/6 08:00:20"), "此阶段掉线", false],
@@ -260,7 +267,7 @@ export default {
   methods: {
     query () {
       if (!this.isdata) {
-
+        this.showContainer = true;
         _rawData.parkingApron.data = []; _rawData.flight.data = [];
         getElevatorFaultGraph({
           shopNumber: this.shopNumber,
@@ -270,15 +277,18 @@ export default {
           if (res.code == 200) {
             for (let i = 0; i < res.data.length; i++) {
               let obj = res.data[i];
+              //
               _rawData.parkingApron.data.push([obj.name]);
               //  _rawData.flight.data.push([i, new Date(this.checkTime.start), new Date(this.checkTime.end), "", true])
 
               for (let j = 0; j < obj.faultTime.length; j++) {
                 let objItem = obj.faultTime[j];
-                _rawData.flight.data.push([i, new Date(objItem.startTime), new Date(objItem.endTime), "此阶段故障", false])
+                // _rawData.flight.data.push([i, new Date(objItem.startTime), new Date(objItem.endTime), "此阶段故障", false])
+                _rawData.flight.data.push([i, new Date(objItem.startTime), new Date(objItem.endTime), objItem.alarmName, false])
               }
             }
-            if (_rawData.parkingApron.data.length == 0) {
+            if (_rawData.flight.data.length == 0) {
+              this.showContainer = false;
               this.$message({
                 message: '暂无数据！',
                 type: 'warning',
@@ -286,6 +296,7 @@ export default {
               });
             }
             myChart = echarts.init(document.getElementById("container"));
+            console.log('option', makeOption())
             myChart.setOption(option = makeOption());
             //myChart.reset();
             //  myChart.showLoading();
@@ -352,8 +363,15 @@ function makeOption () {
     tooltip: {},
     animation: false,
     title: {
-      text: '电梯设备运行记录',
+      text: '电梯设备故障记录',
       left: 'center'
+    },
+    tooltip: {
+      formatter: function (params) {
+        if (params.data.length > 3) {
+          return '报警名称：' + params.data[3] + '<br/>' + '开始时间：' + moment(params.data[1]).format('YYYY-MM-DD HH:mm:ss') + '<br/>' + '结束时间：' + moment(params.data[2]).format('YYYY-MM-DD HH:mm:ss');
+        }
+      }
     },
     dataZoom: [{
       type: 'slider',
@@ -418,12 +436,14 @@ function makeOption () {
       id: 'flightData',
       type: 'custom',
       renderItem: renderGanttItem,
-      dimensions: _rawData.flight.dimensions,
       encode: {
-        x: [DIM_TIME_ARRIVAL, DIM_TIME_DEPARTURE],
-        y: DIM_CATEGORY_INDEX,
-        tooltip: [DIM_CATEGORY_INDEX, DIM_TIME_ARRIVAL, DIM_TIME_DEPARTURE]
+        x: [0, 1, 2],
+        y: 0,
+        // 表示『维度2』和『维度3』和『维度4』要显示到 tooltip 中。
+        // tooltip: [1, 2, 3]
       },
+      // 表示给『维度2』和『维度3』和『维度4』分别取名为『开始时间』和『结束时间』和『报警名称』，显示到 tooltip 中。
+      dimensions: [null, '开始时间', '结束时间', '报警名称'],
       data: _rawData.flight.data
     }, {
       type: 'custom',

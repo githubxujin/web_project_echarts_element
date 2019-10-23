@@ -210,7 +210,8 @@ export default {
       },
       formRules: { // 表单规则
         number: [{ required: true, message: '请输入电梯编号', trigger: 'blur' }],
-        name: [{ required: true, message: '请输入电梯名称', trigger: 'blur' }],
+        name: [{ required: true, message: '请输入电梯名称', trigger: 'blur' },
+        { validator: this.validateName, trigger: 'blur' }],
         dataAddress: [{ required: true, message: '请输入数据地址', trigger: 'blur' }],
         volume: [{ pattern: Regexps.positiveNumber, message: '只能是正数', trigger: 'blur' }],
         payLoad: [{ pattern: Regexps.positiveNumber, message: '只能是正数', trigger: 'blur' }],
@@ -262,6 +263,7 @@ export default {
     cancle () { // 重置表单并关闭表单
       Object.keys(this.form).forEach(prop => {
         switch (prop) {
+          case 'status': this.form[prop] = 0; break;
           case 'meterIds': this.form[prop] = []; break;
           default: this.form[prop] = ''; break;
         }
@@ -271,6 +273,12 @@ export default {
       })
       this.$emit('update:elevatorItem', null)
       this.$emit('update:dialogVisible', false)
+    }, validateName (rule, value, callback) {
+      if (!rule) return callback()
+      if (Regexps.integerNumber.test(this.form.name)) {
+        return callback(new Error('不能为纯数字'));
+      }
+      return callback()
     },
     validateUpperFloor (rule, value, callback) {
       if (!Regexps.integerNumber.test(this.form.upperFloor) || !Regexps.integerNumber.test(this.form.lowerFloor)) return callback()
@@ -292,7 +300,10 @@ export default {
       immediate: true,
       deep: true,
       handler: function (val) {
-        if (!val && val !== 0) return
+        console.log('val', val)
+        console.log('this.form', this.form)
+        val = JSON.parse(JSON.stringify(val))
+        if (!val) return
         val.meterIds = val.meterIds || []
         Object.keys(this.form).forEach(prop => {
           this.form[prop] = val[prop]

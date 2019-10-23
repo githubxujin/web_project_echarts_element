@@ -1,17 +1,18 @@
-'use strict'
-const path = require('path')
-const utils = require('./utils')
-const webpack = require('webpack')
-const config = require('../config')
-const merge = require('webpack-merge')
-const baseWebpackConfig = require('./webpack.base.conf')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+'use strict';
+const path = require('path');
+const utils = require('./utils');
+const webpack = require('webpack');
+const config = require('../config');
+const merge = require('webpack-merge');
+const baseWebpackConfig = require('./webpack.base.conf');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
-const env = require('../config/env.js')
+const env = require('../config/env.js');
 
 const webpackConfig = merge(baseWebpackConfig, {
     module: {
@@ -34,10 +35,11 @@ const webpackConfig = merge(baseWebpackConfig, {
         }),
         new UglifyJsPlugin({
             uglifyOptions: {
+                // include: /\/src/,
                 compress: {
-                    warnings: false
-                    // drop_console: true,//console
-                    // pure_funcs: ['console.log']//移除console
+                    warnings: false,
+                    drop_debugger: true, //自动删除debugger
+                    drop_console: false //true:自动删除console.log
                 }
             },
             sourceMap: config.build.productionSourceMap,
@@ -59,6 +61,8 @@ const webpackConfig = merge(baseWebpackConfig, {
                 ? { safe: true, map: { inline: false } }
                 : { safe: true }
         }),
+        // 压缩单独的css 文件
+        new OptimizeCSSAssetsPlugin(),
         // generate dist index.html with correct asset hash for caching.
         // you can customize output by editing /index.html
         // see https://github.com/ampedandwired/html-webpack-plugin
@@ -66,10 +70,12 @@ const webpackConfig = merge(baseWebpackConfig, {
             filename: config.build.index,
             template: 'index.html',
             inject: true,
+            // 压缩 HTML 的配置
             minify: {
                 removeComments: true,
                 collapseWhitespace: true,
-                removeAttributeQuotes: true
+                removeAttributeQuotes: true,
+                useShortDoctype: true
                 // more options:
                 // https://github.com/kangax/html-minifier#options-quick-reference
             },
@@ -92,7 +98,7 @@ const webpackConfig = merge(baseWebpackConfig, {
                     module.resource.indexOf(
                         path.join(__dirname, '../node_modules')
                     ) === 0
-                )
+                );
             }
         }),
         // extract webpack runtime and module manifest to its own file in order to
@@ -120,10 +126,23 @@ const webpackConfig = merge(baseWebpackConfig, {
             }
         ])
     ]
-})
+    // 依赖库的分离
+    // optimization: {
+    //     splitChunks: {
+    //         cacheGroups: {
+    //             vendor: {
+    //                 chunks: 'initial',
+    //                 test: path.resolve(__dirname, '../node_modules'),
+    //                 name: 'vendor', // 使用 vendor 入口作为公共部分
+    //                 enforce: true
+    //             }
+    //         }
+    //     }
+    // }
+});
 
 if (config.build.productionGzip) {
-    const CompressionWebpackPlugin = require('compression-webpack-plugin')
+    const CompressionWebpackPlugin = require('compression-webpack-plugin');
 
     webpackConfig.plugins.push(
         new CompressionWebpackPlugin({
@@ -135,13 +154,13 @@ if (config.build.productionGzip) {
             threshold: 10240,
             minRatio: 0.8
         })
-    )
+    );
 }
 
 if (config.build.bundleAnalyzerReport) {
     const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-        .BundleAnalyzerPlugin
-    webpackConfig.plugins.push(new BundleAnalyzerPlugin())
+        .BundleAnalyzerPlugin;
+    webpackConfig.plugins.push(new BundleAnalyzerPlugin());
 }
 
-module.exports = webpackConfig
+module.exports = webpackConfig;

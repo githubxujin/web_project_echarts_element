@@ -101,7 +101,7 @@ export default {
   }
 }
 .i-datetime {
-  width: 136px;
+  width: 132px;
   text-align: center;
 }
 .i-icon {

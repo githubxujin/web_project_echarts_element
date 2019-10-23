@@ -2,28 +2,6 @@
   <div class="inspection">
     <div class="u-layout-search u-layout-dobule">
       <div class="u-layout-left-proviso">
-        <!--<div class="u-layout-left-item">-->
-          <!--<div class="title-input-group">-->
-            <!--<p class="text">-->
-              <!--时间类型：-->
-            <!--</p>-->
-            <!--<div class="input-container">-->
-
-              <!--<div style="border-radius: 2px;"-->
-                   <!--class="item select-input">-->
-                <!--&lt;!&ndash;el-ui 根据需求增加配置&ndash;&gt;-->
-                <!--<el-select v-model="indexType"-->
-                           <!--placeholder="请选择">-->
-                  <!--<el-option v-for="item in options"-->
-                             <!--:key="item.value"-->
-                             <!--:label="item.label"-->
-                             <!--:value="item.value">-->
-                  <!--</el-option>-->
-                <!--</el-select>-->
-              <!--</div>-->
-            <!--</div>-->
-          <!--</div>-->
-        <!--</div>-->
         <div class="u-layout-left-item">
           <div class="title-input-group">
             <datePick v-model="checkTime"
@@ -117,12 +95,10 @@ export default {
         pageSize: 10,
         pageNum: 0
       }
-      , startTime: new Date(datetimeUtils.getPreDate(15, ',')), endTime: new Date()
+      , start: new Date(datetimeUtils.getPreDate(15, ',')), end: new Date()
     }
   }
   , created () {
-    //this.echartwidth = document.body.clientWidth * 0.85 + 'px';
-    //this.tablewidth = document.body.clientWidth * 0.8 + 'px';
   }, mounted () {
     this.defaultStartTime = datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-');
     this.checkTime = { start: datetimeUtils.getSpecialDay(datetimeUtils.getPreDate(30), '-'), end: datetimeUtils.getSpecialDay(new Date(), '-') };
@@ -138,7 +114,9 @@ export default {
                 topShopNumers += ','
             }
         });
-      getAlarmResponseReportList({shopNumber:topShopNumers, startTime: this.checkTime.start + ' 0:0:0', endTime: this.checkTime.end + ' 23:59:59', timeType: this.timeType }).then((res) => {
+        this.checkTime.start = datetimeUtils.getSpecialDay(this.checkTime.start,"-");
+        this.checkTime.end = datetimeUtils.getSpecialDay(this.checkTime.end,"-");
+      getAlarmResponseReportList({shopNumber:topShopNumers, start: this.checkTime.start, end: this.checkTime.end, timeType: this.timeType }).then((res) => {
         this.pager.total = res.data.total;
         this.list = res.data.list;
       }).catch((error) => {

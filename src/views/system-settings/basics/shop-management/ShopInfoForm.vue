@@ -13,19 +13,19 @@
     >
       <el-row>
         <el-col :span="12">
-          <el-form-item label="门店名称" prop="shopName">
-            <el-input v-model.trim="form.shopName" placeholder="门店名称" :maxlength="16"></el-input>
+          <el-form-item label="门店名称" prop="name">
+            <el-input v-model.trim="form.name" placeholder="门店名称" :maxlength="16"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="门店编号" prop="shopNumber">
-            <el-input v-model.trim="form.shopNumber" placeholder="门店编号" :disabled="true"></el-input>
+          <el-form-item label="门店编号" prop="number">
+            <el-input v-model.trim="form.number" placeholder="门店编号" :disabled="true"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item label="门店类型" prop="shopType" :required="true">
+          <el-form-item label="门店类型" prop="shopType">
             <el-select v-model="form.shopType" placeholder="门店类型">
               <el-option
                 v-for="(item,index) in shopTypeList"
@@ -49,7 +49,7 @@
       </el-row>
       <el-row class="row-margin">
         <el-col :span="12">
-          <el-form-item label="所属区域" prop="regionn" class="area-selector" :required="true">
+          <el-form-item label="所属区域" prop="regionn" class="area-selector">
             <el-row>
               <el-col :span="8">
                 <el-select
@@ -134,7 +134,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="负责人电话" prop="leadingPhone">
+          <el-form-item label="联系电话" prop="leadingPhone">
             <el-input v-model.trim="form.leadingPhone" placeholder="负责人电话" maxlength="13"></el-input>
           </el-form-item>
         </el-col>
@@ -160,7 +160,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="联系电话" prop="propertyLeadingPhone">
+          <el-form-item label="负责人电话" prop="propertyLeadingPhone">
             <el-input v-model.trim="form.propertyLeadingPhone" placeholder="联系电话" maxlength="13"></el-input>
           </el-form-item>
         </el-col>
@@ -184,13 +184,13 @@ export default {
   data () {
     return {
       loading: true,
-      shopNumber: (this.$store.getters.getUserInfo || {}).shopNumber,
+      number: (this.$store.getters.getUserInfo || {}).shopNumber,
       shopTypeList: [],
       areaInitFlag: false, // 地区列表是否初始化标志位
       form: {
         id: '',
-        shopName: '',
-        shopNumber: '',
+        name: '',
+        number: '',
         shopType: '',
         area: '',
         regiona: '',
@@ -208,11 +208,11 @@ export default {
         propertyLeadingPhone: ''
       },
       formRules: {
-        shopName: [
+        name: [
           { required: true, message: '必填', trigger: 'blur' },
           { max: 16, message: '16个字符以内', trriger: 'blur' }
         ],
-        shopNumber: [{ required: true, message: '必填', trigger: 'blur' }],
+        number: [{ required: true, message: '必填', trigger: 'blur' }],
         shopType: [{ requierd: true, type: 'number', message: '必选', trigger: 'change' }],
         area: [{ required: true, pattern: Regexps.positiveInteger0, message: '必填（自然数）', trigger: 'blur' }],
         regionn: [{ requierd: true, type: 'number', message: '必选', trigger: 'change' }],
@@ -273,7 +273,8 @@ export default {
     cityListQuery,
     initData () { // 初始化
       const configType = 56
-      const shopNumber = this.shopNumber
+      const shopNumber = this.number
+      console.log('number', shopNumber)
       const chinaAreaId = 100000
       this.areaInitFlag = false
       this.loading = true
@@ -352,8 +353,8 @@ export default {
       this.shopEdit(this.form).then(res => {
         this.loading = false
         this.$message.success('保存成功！')
-        console.log('this.form.shopName :', this.form.shopName);
-        this.$store.commit('base/updateCurShopName', this.form.shopName);
+        console.log('this.form.name :', this.form.name);
+        this.$store.commit('base/updateCurShopName', this.form.name);
       }).catch(_ => {
         this.loading = false
         console.error('保存门店信息失败(errorMessage)：', _);

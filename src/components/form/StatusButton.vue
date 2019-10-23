@@ -15,7 +15,7 @@ export default {
   },
   data () {
     return {
-      //状态，0：未确认，1：已确认，2：处理中，3：已解决',
+      //状态，0：待确认，1：已确认，2：处理中，3：已忽略',
       statusClasss: { 0: 'wait-sure', 1: 'sure', 2: 'processing', 3: 'resolved' }
     }
   },

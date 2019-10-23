@@ -7,7 +7,7 @@
             <p class="text">关键字：</p>
             <div class="input-container">
               <div class="item select-input">
-                <el-input v-model="keyword" :clearable="true" placeholder="请输入编号/名称"></el-input>
+                <el-input v-model="keyword" :clearable="true" placeholder="请输入编码/名称"></el-input>
               </div>
             </div>
           </div>
@@ -79,10 +79,18 @@
         <el-table-column type="index" label="序号" :index="indexMethod" width="50"></el-table-column>
         <el-table-column prop="number" label="配件编码" width="180"></el-table-column>
         <el-table-column prop="name" label="配件名称"></el-table-column>
-        <el-table-column prop="type" label="配件类型"></el-table-column>
+        <el-table-column prop="typeName" label="配件类型"></el-table-column>
         <el-table-column prop="specification" label="规格型号"></el-table-column>
         <el-table-column prop="unitName" label="单位"></el-table-column>
-        <el-table-column prop="stock" label="当前库存"></el-table-column>
+        <el-table-column prop="stock" label="当前库存">
+          <template slot-scope="scope">
+            <span v-show="scope.row.stock>scope.row.stockAlertValue">{{scope.row.stock}}</span>
+            <span
+              v-show="scope.row.stock<=scope.row.stockAlertValue"
+              style="color:red"
+            >{{scope.row.stock}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态">
           <template slot-scope="scope">
             <span v-show="scope.row.status==0">启用</span>
@@ -155,8 +163,8 @@ export default {
       partsType: [],
       status: [
         { value: 1, label: '全部' },
-        { value: 2, label: '高于警戒线' },
-        { value: 3, label: '低于警戒线' }
+        { value: 2, label: '高于警戒值' },
+        { value: 3, label: '低于警戒值' }
       ],
       keyword: '',
       stockStatus: 1,
@@ -201,21 +209,6 @@ export default {
     curShop: function () {
       return this.$store.getters.getCurShop;
     },
-  },
-  watch: {
-    shopNumber (val) {
-      this.shopCode = val;
-      this.getPartsList()
-    },
-    curShop: {
-      handler: function (newVal, oldVal) {
-        this.shopCode = vanewVal.shopNumber;
-        this.getPartsList()
-      },
-      deep: true
-    }
-  },
-  methods: {
     // -----------------按钮权限---------------------
     //显示转单按钮
     showAddBtn () {
@@ -234,6 +227,22 @@ export default {
       return this.pageBtns.some(val => val == 'import');
     },
     // -----------------按钮权限结束---------------------
+  },
+  watch: {
+    shopNumber (val) {
+      this.shopCode = val;
+      this.getPartsList()
+    },
+    curShop: {
+      handler: function (newVal, oldVal) {
+        this.shopCode = vanewVal.shopNumber;
+        this.getPartsList()
+      },
+      deep: true
+    }
+  },
+  methods: {
+
     //初始化界面数据
     getPartsList () {
       queryList({ keyword: this.keyword, pageNum: this.pager.pageNum, pageSize: this.pager.pageSize, shopNumber: this.shopCode, stockStatus: this.stockStatus, type: this.type }).then(res => {
@@ -259,7 +268,7 @@ export default {
       this.pager.pageSize = val.pageSize;
     },
     seedetails (item) {
-      getDetailgetDetail({ id: item.id }).then(res => {
+      getDetail({ id: item.id }).then(res => {
         this.detailData = res.data
       }).catch(err => {
         console.log(err)

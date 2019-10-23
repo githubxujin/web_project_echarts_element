@@ -115,7 +115,13 @@ export default {
     },
     shopNumber: function () {
       return this.$store.getters.shopNumber;
-    }
+    },
+    // -----------------按钮权限---------------------
+    //显示转单按钮
+    showExportBtn () {
+      return this.pageBtns.some(val => val == 'export');
+    },
+    // -----------------按钮权限结束---------------------
   },
   watch: {
     shopNumber (val) {
@@ -132,12 +138,7 @@ export default {
     },
   },
   methods: {
-    // -----------------按钮权限---------------------
-    //显示转单按钮
-    showExportBtn () {
-      return this.pageBtns.some(val => val == 'export');
-    },
-    // -----------------按钮权限结束---------------------
+
     init () {//初始化表头的数据
       this.searchFile.shopNumber = this.roleType == 2 ? this.shopNumber : this.curShop.shopNumber;
       let Month = this.date.getMonth() + 1 > 9 ? this.date.getMonth() + 1 : "0" + (this.date.getMonth() + 1);
@@ -280,7 +281,7 @@ export default {
     },
     // 导出报表
     excelReport () {
-      location.href = `${energyDetail.exportEnergyConsume}?shopNumber= ${this.searchFile.shopNumber}&&timeType=${this.timeType}&&startTime=${this.searchFile.startTime}&&token=${localStorage.getItem('$token_info')}`
+      location.href = `${energyDetail.exportEnergyConsume}?shopNumber=${this.searchFile.shopNumber}&&timeType=${this.timeType}&&startTime=${this.searchFile.startTime}&&token=${localStorage.getItem('$token_info')}`
     }
   }
 }

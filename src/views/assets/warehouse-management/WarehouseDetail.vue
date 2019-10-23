@@ -22,7 +22,7 @@
           <el-form-item label="操作人：">{{detailData.operatorName}}</el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="领用人：">{{detailData.receiveId}}</el-form-item>
+          <el-form-item label="领用人：">{{detailData.receiverName}}</el-form-item>
         </el-col>
       </el-row>
       <el-row>
@@ -37,7 +37,7 @@
           class="el-table--border"
           :height="200"
         >
-          <el-table-column prop="sparePartId" label="配件名称"></el-table-column>
+          <el-table-column prop="spartPartName" label="配件名称"></el-table-column>
           <el-table-column prop="specification" label="规格型号"></el-table-column>
           <el-table-column prop="unitPrice" label="单价"></el-table-column>
           <el-table-column prop="num" label="数量"></el-table-column>

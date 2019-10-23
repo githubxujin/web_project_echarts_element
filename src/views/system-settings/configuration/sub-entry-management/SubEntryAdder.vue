@@ -63,7 +63,7 @@ export default {
     }
   },
   computed: {
-    shopNumber () {
+    buildId () {
       return this.$store.getters.getUserInfo.shopNumber
     }
   },
@@ -76,8 +76,8 @@ export default {
     subentryQuery, // 已新增分项列表
     initData () {
       this.dialogLoading = true
-      const shopNumber = this.shopNumber
-      axios.all([this.subentryGetTemplateTreeArray(), this.subentryQuery({ shopNumber })]).then(axios.spread((...args) => {
+      const buildId = this.buildId
+      axios.all([this.subentryGetTemplateTreeArray(), this.subentryQuery({ buildId })]).then(axios.spread((...args) => {
         let treeData = args[0].data.array || []
         let subentryNumberList = (args[1].data.list || []).map(item => {
           return item.number
@@ -121,7 +121,7 @@ export default {
         this.$message.warning('请选择分项！')
         return
       }
-      const shopNumber = this.shopNumber
+      const buildId = this.buildId
       const subentryList = this.checkedNodeList.map(item => {
         let {
           subName,
@@ -130,19 +130,19 @@ export default {
           expression,
           expressionJson,
           expressionText,
-          energyType,
+          subType,
           parentCode,
           status
         } = item
         return {
-          shopNumber,
+          buildId,
           subName,
           number,
           energyUnit,
           expression,
           expressionJson,
           expressionText,
-          energyType,
+          subType,
           parentCode,
           status
         }

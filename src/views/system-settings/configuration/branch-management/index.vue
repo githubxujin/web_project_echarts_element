@@ -48,11 +48,8 @@
                 icon="el-icon-plus"
                 v-if="pageBtns.some(val => val === 'add')"
               >新增</el-button>
-              <el-button
-                v-if="pageBtns.some(val => val === 'import')"
-                @click="$common.debounce(importData)()"
-                size="mini"
-              >导入</el-button>
+              <!-- v-if="pageBtns.some(val => val === 'import')" -->
+              <el-button @click="$common.debounce(importData)()" type="primary" size="mini">数据初始化</el-button>
             </el-form-item>
           </el-form>
           <div calss="tableBox">
@@ -124,6 +121,7 @@
         ref="branchChangeTable"
         :changeDialogVisible.sync="changeDialogVisible"
         :branchItem.sync="branchItem"
+        @success="search"
       ></branch-change-table-editor>
     </el-dialog>
     <!-- 导入弹窗 -->
@@ -156,7 +154,7 @@ export default {
       tableHeight: 400,
       itemPropList: [{
         label: '电表地址',
-        prop: 'number',
+        prop: 'electricAddr',
       }, {
         label: '支路名称',
         prop: 'name',
@@ -173,7 +171,7 @@ export default {
       form: { // 表单内容
         name: '',
         status: '',
-        shopNumber: (this.$store.getters.getUserInfo || {}).shopNumber
+        buildId: (this.$store.getters.getUserInfo || {}).shopNumber
       },
       pager: {
         total: 0,

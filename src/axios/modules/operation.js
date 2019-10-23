@@ -23,6 +23,7 @@ export default {
     getCheckMsg: pre + '/repairBill/getCheckMsg', // 获取审核原因
     repairSuspend: pre + '/repairBill/suspend', // 挂单
     getDeviceLocation: pre + '/repairBill/getDeviceLocation', ///{deviceIdAndType}获取设备位置
+    getLikeBill: pre + '/repairBill/likeBill', /// 模糊搜索维修工单,工单号|故障描述
 
     //-------------------------保养工单-------------------------
     getMaintainBillList: pre + '/maintainBill/getMaintainBillList', //分页查询
@@ -86,8 +87,7 @@ export default {
     getMaintainListByDevice: pre + '/maintainPlan/getListByDevice', //查看已投计划
     editMaintainPlan: pre + '/maintainPlan/edit', //编辑
     delMaintainPlan: pre + '/maintainPlan/delete', //{id}删除
-    beforeGenerateMaintainBill:
-        pre + '/maintainPlan/beforeGenerateMaintainBill', // 立即生成前查询
+    beforeGenerateMaintainBill: pre + '/maintainPlan/beforeGenerateMaintainBill', // 立即生成前查询
     generateMaintainBill: pre + '/maintainPlan/generateMaintainBill', //立即生成
 
     //-------------------------巡检计划-------------------------

@@ -158,9 +158,9 @@ export default {
       dialogLoading: false, // 弹框loading
       submitLoading: false, // 提交按钮loading
       pickerOptions1: {
-        disabledDate (time) { // 今天是否可以启动？
-          return time.getTime() < Date.now() - 24 * 36e5;
-        }
+        // disabledDate (time) { // 今天是否可以启动？
+        //   return time.getTime() < Date.now() - 24 * 36e5;
+        // }
       },
       form: {
         startDate: '',
@@ -172,7 +172,8 @@ export default {
         }]
       },
       priceSpan: [], // 计算时段类型内连续数据长度
-      priceSpanSum: [] // 价格类型长度 和列表
+      priceSpanSum: [], // 价格类型长度 和列表
+      startTime: []
     }
   },
   created () {
@@ -219,21 +220,41 @@ export default {
     },
     timeIsCrossOrLack () { // 判断时间是否交叉或缺失，用的简单方法 有算法可以优化的话麻烦优化下
       let _this = this
-      let timeArrList = this.form.priceList.map(item => {
+      let arr = []
+      let crossFlag = false;
+      this.form.priceList.forEach(item => {
         if (item.startTime && item.endTime) {
-          let timeArr = _this.timeToArr(item)
-          return timeArr
+          let timeArr = _this.timeToArr(item, arr);
+          if (item.endTime != '24:00' && this.startTime.indexOf(item.endTime) == '-1') {
+            crossFlag = true
+          }
+          console.log(item.endTime, this.startTime, this.startTime.indexOf(item.endTime))
         }
-        return []
-      }).filter(item => item.length)
-      let timeArr = []
-      timeArrList.forEach(item => {
-        timeArr = timeArr.concat(item)
       })
-      let timeArrCopy = Array.from(new Set(timeArr))
-      let isCross = timeArr.length - timeArrCopy.length !== timeArrList.length - 1 // 是否交叉
-      let isLack = timeArrCopy.length < 24 * 4 + 1 // 24小时是否缺失
-      return isCross || isLack
+      let timeLength = 0;
+      arr.forEach(item => {
+        timeLength += item
+      })
+      let isLack = timeLength < 24 || (timeLength == 24 && crossFlag) // 24小时是否缺失
+      let isCross = timeLength > 24// 是否交叉
+      // let timeArrList = this.form.priceList.map(item => {
+      //   if (item.startTime && item.endTime) {
+      //     let timeArr = _this.timeToArr(item, arr)
+      //     console.log(timeArr, 111)
+      //     return timeArr
+      //   }
+      //   return []
+      // }).filter(item => item.length)
+      // console.log(timeArrList, 222)
+      // let timeArr = []
+      // timeArrList.forEach(item => {
+      //   timeArr = timeArr.concat(item)
+      // })
+      // let timeArrCopy = Array.from(new Set(timeArr))
+      // let isCross = timeArr.length - timeArrCopy.length !== timeArrList.length - 1 // 是否交叉
+      // let isLack = timeArrCopy.length < 24 * 4 + 1 // 24小时是否缺失
+      console.log(isCross, isLack)
+      return { isCross, isLack }
     }
   },
   watch: {
@@ -243,27 +264,48 @@ export default {
         if (!val) return
         this.initData()
       }
+    },
+    'form.startDate': function (val) {
+      this.pickerOptions1.disabledDate = function (time) {
+        // if (new Date(val).toDateString() === new Date().toDateString()) {
+        //   return time.getTime() < Date.now() - 24 * 36e5;
+        // } else {
+        //   return time.getTime() < new Date(val).getTime();
+        // }
+      }
+    },
+    'form.priceList': {
+      handler: function (val) {
+        this.startTime = val.map(item => {
+          return item.startTime
+        })
+      },
+      deep: true
     }
   },
   methods: {
     electrovalenceEdit,
-    timeToArr (item) {
+    timeToArr (item, arr) {
       var min = item.startTime ? item.startTime.split(':') : []
       min = Number(min[0]) + (min[1] / 60)
       var max = item.endTime ? item.endTime.split(':') : []
       max = Number(max[0]) + (max[1] / 60)
       let len = (max - min) / 0.25
-      let timeArr = []
-      for (let index = 0; index < len + 1; index++) {
-        timeArr.push(min + index * 0.25)
-      }
-      return timeArr
+      arr.push(max - min);
+      // let timeArr = []
+      // for (let index = 0; index < len + 1; index++) {
+      //   timeArr.push(min + index * 0.25)
+      // }
+      return arr
     },
     initData () {
       let currentPrice = JSON.parse(JSON.stringify(this.currentPrice)) || {}
       currentPrice.priceList = this.formatPricelist(currentPrice.priceList) // 补充时段类目种类,避免编辑的时候缺失某一时段类目
       currentPrice.startDate = new Date(currentPrice.startDateTimestamp)
       this.form = currentPrice
+      this.startTime = currentPrice.priceList.map(item => {
+        return item.startTime
+      })
       this.countPriceSpan()
       this.countPriceSpanSum()
     },
@@ -273,8 +315,15 @@ export default {
         result = res
       })
       if (!result) return
-      if (this.timeIsCrossOrLack) { // 校验时间的交叉及全天覆盖
-        this.$message.warning('请检查电价时间段是否有交叉或者全天覆盖缺失！')
+      if (this.timeIsCrossOrLack.isLack) { // 校验时间的交叉及全天覆盖
+        this.$message.warning('请检查电价时间段是否全天覆盖缺失！')
+        return
+      } else if (this.timeIsCrossOrLack.isCross) {
+        this.$message.warning('请检查电价时间段是否有交叉')
+        return
+      }
+      if (this.form.priceList.filter(item => item.endTime !== '' || item.startTime !== '').some(item => item.price === '')) {
+        this.$message.warning('请输入单价')
         return
       }
       this.electrovalenceEdit(this.submitParams).then(res => {
@@ -331,6 +380,8 @@ export default {
       if (existLen < 2) { // 如果该类目只有最后一条，则给该条目压入压入空数据
         arg.push({
           type: scope.row.type,
+          endTime: '',
+          startTime: '',
           price: '',
           time: ''
         })

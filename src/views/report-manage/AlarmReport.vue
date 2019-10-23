@@ -24,19 +24,6 @@
                 </el-select>
               </div>
             </div>
-            <!--<div class="input-container">-->
-            <!--<div style="border-radius: 2px;" class="item select-input">-->
-            <!--&lt;!&ndash;el-ui 根据需求增加配置&ndash;&gt;-->
-            <!--<el-select v-model="alarmType" placeholder="请选择">-->
-            <!--<el-option-->
-            <!--v-for="item in options"-->
-            <!--:key="item.value"-->
-            <!--:label="item.label"-->
-            <!--:value="item.value"-->
-            <!--&gt;</el-option>-->
-            <!--</el-select>-->
-            <!--</div>-->
-            <!--</div>-->
           </div>
         </div>
         <div class="u-layout-left-item">

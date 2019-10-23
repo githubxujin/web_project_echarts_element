@@ -1,17 +1,18 @@
 import store from '../store/index';
 import config from '../base-config';
 let ws = null;
+
 function initWebSocket(params, callback, url) {
     let token = store.getters.getTokenInfo;
     let webSocketUrl =
         url.indexOf('ws:') != -1 ? url : config.webSocketPrefix + url;
     ws =
-        'MozWebSocket' in window
-            ? new MozWebSocket(webSocketUrl)
-            : new WebSocket(webSocketUrl);
-    ws.onmessage = function(e) {
+        'MozWebSocket' in window ?
+        new MozWebSocket(webSocketUrl) :
+        new WebSocket(webSocketUrl);
+    ws.onmessage = function (e) {
         //连接成功信息不存name属性
-        console.log('onmessage', e);
+        // console.log('onmessage', e);
         if (
             !e.data ||
             e.data == '{} from server' ||
@@ -32,21 +33,21 @@ function initWebSocket(params, callback, url) {
             console.log('error :', error);
         }
     };
-    ws.onclose = function(e) {
+    ws.onclose = function (e) {
         console.log('close');
     };
-    ws.onopen = function() {
+    ws.onopen = function () {
         console.log('连接成功');
         if (params) {
             ws.send(JSON.stringify(params));
             console.log('webSocket发送参数为', params);
         }
     };
-    ws.onerror = function(event) {
+    ws.onerror = function (event) {
         console.log('WebSocket连接发生错误', event);
         //连接建立失败重连
         let _self = this;
-        window.setTimeout(function() {
+        window.setTimeout(function () {
             _self.readyState === 3 && _self.onopen();
         }, 1000);
     };
@@ -61,17 +62,21 @@ function sendWsData(ws, data) {
     if (ws.readyState === ws.OPEN) {
         wsSend(data);
     } else if (ws.readyState === ws.CONNECTING) {
-        setTimeout(function() {
+        setTimeout(function () {
             sendWsData(data);
         }, 1000);
     } else {
-        setTimeout(function() {
+        setTimeout(function () {
             sendWsData(data);
         }, 1000);
     }
 }
+
 function wsSend(data) {
     console.log('webSocket1发送参数为', data);
     ws.send(JSON.stringify(data));
 }
-export { initWebSocket, sendWsData };
+export {
+    initWebSocket,
+    sendWsData
+};

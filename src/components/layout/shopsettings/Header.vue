@@ -1,7 +1,9 @@
 <template>
   <div class="header">
     <Logo linkUrl="/shop-index" />
-    <span class="shop-title" v-text="shopTitle" />
+    <div class="shop-title text-ellipse">
+      <span v-text="shopTitle" :title="shopTitle" />
+    </div>
     <top-user />
     <top-nav />
   </div>

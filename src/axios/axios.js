@@ -97,9 +97,8 @@ axios.interceptors.request.use(
         // }
         // debugger;
         // 登陆验证
-        config.headers.token =
-            // store.getters.getTokenInfo ||
-            localStorage.getItem('$token_info');
+        config.headers.token = store.getters.getTokenInfo;
+        //  ||localStorage.getItem('$token_info');
         return config;
     },
     error => {
@@ -119,16 +118,24 @@ axios.interceptors.response.use(
             //token 过期
             messageTip.errorInfo(response.data.code);
             console.log('退出');
-            Storage.removeAllLocalStorage();
-            setTimeout(() => {
+            try {
+                Storage.removeAllLocalStorage();
+                setTimeout(() => {
+                    router.push('/login');
+                }, 1000);
+            } catch (ex) {
                 router.push('/login');
-            }, 1000);
+            }
         }
         if (response && response.data && response.data.code !== 200) {
             response.data.msg && messageTip.msgInfo(response.data.msg);
-            store.commit('base/updateLoadingStatus', { isLoading: false }); //关闭loading
+            store.commit('base/updateBtnLoading', false);
+            store.commit('base/updateLoadingStatus', {
+                isLoading: false
+            }); //关闭loading
             return Promise.reject(response.data);
         }
+        store.commit('base/updateBtnLoading', false);
         return response.data;
     },
     error => {
@@ -138,7 +145,10 @@ axios.interceptors.response.use(
             error.response.status &&
             messageTip.errorInfo(error.response.status)
         ) {
-            store.commit('base/updateLoadingStatus', { isLoading: false }); //关闭loading
+            store.commit('base/updateBtnLoading', false);
+            store.commit('base/updateLoadingStatus', {
+                isLoading: false
+            }); //关闭loading
             return Promise.reject(error);
         }
     }

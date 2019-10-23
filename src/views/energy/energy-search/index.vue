@@ -89,7 +89,7 @@
                       border
                       style="width: 100%"
                       ref="table"
-                      height="490"
+                      height="480"
                     >
                       <el-table-column
                         v-for="item in tableList.tHead"
@@ -123,7 +123,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import leftSideTree from '@/components/sideTree/index.vue'
 import tabBtn from '@/components/tabs/Tabs.vue'
@@ -132,11 +131,13 @@ import datetimeUtils from '@/utils/datetime-utils'
 import { lineOption } from './energySearch'
 import { getEnergyList } from '@/services/energy'
 import vChart from '@/components/echarts/index';
+import utils from '@/utils/utils';
 
 export default {
   components: { leftSideTree, tabBtn, selectTime, vChart },
   data () {
     return {
+      searchType: '',//查询类型
       activeName: 'default',
       show: true,
       collapse: true,//控制左侧树的显示和隐藏
@@ -153,13 +154,13 @@ export default {
       ],//对比条件
       dateType: 'datetime',//时间类型
       format: 'yyyy-MM-dd HH',//时间格式
-      startTime: new Date(datetimeUtils.getPreDate(3).toLocaleDateString().replace(/\//g, '-') + " 00:00:00"),
+      startTime: new Date(datetimeUtils.getPreDate(6).toLocaleDateString().replace(/\//g, '-') + " 00:00:00"),
       endTime: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 23, 59, 59),
       searchFile: {
         compareType: 1,
         timeType: 1,
         endTime: new Date().toLocaleDateString().replace(/\//g, '-') + " 23:59:59",
-        startTime: datetimeUtils.getPreDate(3).toLocaleDateString().replace(/\//g, '-') + " 00:00:00",
+        startTime: datetimeUtils.getPreDate(7).toLocaleDateString().replace(/\//g, '-') + " 00:00:00",
         energyType: '',
         shopNumber: '',
         subCode: '01000',
@@ -218,9 +219,23 @@ export default {
         ],
         tData: []
       }//放置处理过后的图表数据
-    };
+    }
   },
   created () {
+    if (this.$route.params.referer) {
+      this.searchType = this.$route.params.referer;
+      console.log('this.searchType :', this.searchType);
+      if (this.searchType == 'day') {
+        this.getTimeType(1);
+        this.startTime = new Date(datetimeUtils.getTodayCurBeforeEndDate(0))
+        this.searchFile.startTime = datetimeUtils.getTodayCurBeforeEndDate(0);
+      }
+      else if (this.searchType == 'month') {
+        this.getTimeType(2);
+        this.format = "yyyy-MM-dd"
+        this.startTime = new Date(datetimeUtils.getCurYearMonthFirstDay(new Date()))
+      }
+    }
   },
   computed: {
     roleType: function () {
@@ -258,12 +273,9 @@ export default {
       this.collapse = !this.collapse
     },
     getLeftTreeData (data) {
-      if (data.number) {
-        this.initDate(data)
-        this.getEnergyList()
-      } else {
-        this.$message.error('请选择分项')
-      }
+      console.log('左侧树数据1', data)
+      this.initDate(data)
+      this.getEnergyList()
     },
     initDate (val) {
       this.searchFile.energyType = val.type;
@@ -321,6 +333,16 @@ export default {
         this.$message.error(this.message)
         return false
       }
+      console.log(this.timetype - 1, this.searchFile.startTime, this.searchFile.endTime)
+      let msg = utils.validDate(this.timetype - 1, this.searchFile.startTime, this.searchFile.endTime);
+      if (msg) {
+        this.$messageTip({
+          message: msg,
+          type: 'error',
+          duration: this.$baseConfig.messageDuration
+        });
+        return;
+      }
       switch (this.dateType) {
         case 'datetime':
           this.tableTitle = `${this.searchFile.startTime}~${this.searchFile.endTime}`
@@ -345,9 +367,30 @@ export default {
       }
       if (!this.searchFile.subCode) {
         this.$message.error(`请选择${tipEnum[this.searchFile.subType]}`);
+        this.lineOption.xAxis[0].data = [];
+        this.lineOption.xAxis[1].data = [];
+        this.lineOption.legend.data = [];
+        this.lineOption.series = [];
         return false;
       }
       let result = await getEnergyList(this.searchFile);
+      if (result.code != 200) {
+        switch (this.dateType) {
+          case 'datetime':
+            this.$message.error("时间粒度为'时'" + result.msg);
+            break;
+          case 'date':
+            this.$message.error("时间粒度为'日'" + result.msg);
+            break;
+          case 'month':
+            this.$message.error("时间粒度为'月'" + result.msg);
+            break;
+          default:
+            this.$message.error("时间粒度为'年'" + result.msg);
+            break;
+        }
+        return
+      }
       this.tableData.tData = result.data.energyInfo;
       this.energyList = result.data.energyList;
       // 每条线为一个对象，对象里面包含点的数组集合，样式，名称，类型
@@ -421,7 +464,11 @@ export default {
       this.tableList.tData = [];
       let that = this
       this.lineOption.xAxis[0].data = xData;
-      this.lineOption.xAxis[1].data = xData1;
+      if (this.compareType == 2 || this.compareType == 3) {
+        this.lineOption.xAxis[1].data = xData1;
+      } else {
+        this.lineOption.xAxis[1].data = [];
+      }
       this.lineOption.color = ['#4EB9DB', '#C88FC2', '#4BC484', '#8E73F3', '#D94949', '#FEC068', '#3183FF', '#BAE730', '#91B2B4', '#FF8969'];
       this.lineOption.legend.data = lendData;
       this.lineOption.series = seriesData;
@@ -453,7 +500,12 @@ export default {
         this.tableList.tHead.push(obj)
       })
       if (this.compareData.length > 0) {
-        this.tableList.tHead.push({ text: '对比时间', prop: 'compareTime' })
+        if (this.compareType == 2) {
+          this.tableList.tHead.push({ text: '同比时间', prop: 'compareTime' })
+        } else if (this.compareType == 3) {
+          this.tableList.tHead.push({ text: '环比时间', prop: 'compareTime' })
+        }
+
         this.compareData.forEach(item => {
           let obj = {}
           obj.text = item.name;
@@ -482,10 +534,13 @@ export default {
       this.lineOption.yAxis[0].name = yName;
       this.lineOption.tooltip.formatter = function (params, ticket, callback) {
         let htmlStr = '';
+        if (that.compareType == 1) {
+          htmlStr += params[0].name + '<br/>';//x轴的名称
+        }
         params.forEach((item, ind) => {
           let color = item.color;//图例颜色
           // console.log(item)
-          if (ind === 0 || ind === lendData.length / 2) {
+          if (that.compareType != 1 && (ind === 0 || ind === lendData.length / 2)) {
             htmlStr += item.name + '<br/>';//x轴的名称
           }
           htmlStr += '<div>';
@@ -543,7 +598,6 @@ export default {
           } else {
             this.endTime = new Date(year, month - 1, 28, 23, 59, 59);
             this.searchFile.endTime = year + '-' + month + '-' + '28' + " 23:59:59";
-
           }
         }
         this.getEnergyList();
@@ -634,6 +688,11 @@ export default {
             td {
               padding: 0px;
             }
+          }
+        }
+        .table-display-data {
+          /deep/ .el-table__body-wrapper.is-scrolling-none {
+            height: 432px !important;
           }
         }
       }

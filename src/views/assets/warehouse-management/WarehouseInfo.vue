@@ -14,7 +14,7 @@
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group">
-            <p class="text">配件名称：</p>
+            <p class="text">出库配件：</p>
             <div class="input-container">
               <div class="item select-input">
                 <!--el-ui 根据需求增加配置-->
@@ -32,7 +32,7 @@
         </div>
         <div class="u-layout-left-item">
           <div class="title-input-group u-title-input-group">
-            <datePick v-model="checkTime" title="操作时间" :defaultStartTime="defaultStartTime"></datePick>
+            <datePick v-model="checkTime" title="出库时间" :defaultStartTime="defaultStartTime"></datePick>
           </div>
         </div>
         <div class="u-layout-left-item">
@@ -69,9 +69,9 @@
         <el-table-column prop="relateBill" label="关联工单号"></el-table-column>
         <el-table-column prop="sparePartName" label="出库配件"></el-table-column>
         <el-table-column prop="outAmount" label="金额"></el-table-column>
-        <el-table-column prop="receiveId" label="领用人"></el-table-column>
+        <el-table-column prop="receiveName" label="领用人"></el-table-column>
         <el-table-column prop="operatorName" label="操作人"></el-table-column>
-        <el-table-column prop="outTime" label="操作时间"></el-table-column>
+        <el-table-column prop="outTime" label="出库时间"></el-table-column>
         <el-table-column fixed="right" label="操作" width="180">
           <template slot-scope="scope">
             <el-button
@@ -165,6 +165,7 @@ export default {
   },
   mounted () {
     this.shopCode = this.roleType == 2 ? this.shopNumber : this.curShop.shopNumber;
+    console.log('shopNumber', this.shopCode)
     if (this.shopCode) {
       this.getPartsType();
       this.getPartsList();
@@ -181,6 +182,20 @@ export default {
     curShop: function () {
       return this.$store.getters.getCurShop;
     },
+    // -----------------按钮权限---------------------
+    //显示转单按钮
+    showAddBtn () {
+      return this.pageBtns.some(val => val == 'add');
+    },
+    showEditBtn () {
+      return this.pageBtns.some(val => val == 'edit');
+    },
+    showDetailBtn () {
+      return this.pageBtns.some(val => val == 'detail');
+    },
+    showDeleteBtn () {
+      return this.pageBtns.some(val => val == 'delete');
+    }
   },
   watch: {
     shopNumber (val) {
@@ -198,24 +213,7 @@ export default {
     }
   },
   methods: {
-    // -----------------按钮权限---------------------
-    //显示转单按钮
-    showAddBtn () {
-      return this.pageBtns.some(val => val == 'add');
-    },
-    showEditBtn () {
-      return this.pageBtns.some(val => val == 'edit');
-    },
-    showDetailBtn () {
-      return this.pageBtns.some(val => val == 'detail');
-    },
-    showDeleteBtn () {
-      return this.pageBtns.some(val => val == 'delete');
-    },
-    showImportBtn () {
-      return this.pageBtns.some(val => val == 'import');
-    },
-    // -----------------按钮权限结束---------------------
+
     //初始化界面数据
     getPartsList () {
       getOutStorageList({ id: this.id, sparePartId: this.sparePartId, sparePartType: this.sparePartType, start: this.checkTime.start, end: this.checkTime.end, pageNum: this.pager.pageNum, pageSize: this.pager.pageSize, shopNumber: this.shopCode }).then(res => {
@@ -231,8 +229,13 @@ export default {
       })
     },
     getPartKey (node, data) {
-      this.sparePartId = data.isSparePart ? data.id : '';
-      this.sparePartType = data.isSparePart ? '' : data.id
+      if (node != null) {
+        this.sparePartId = data.id ? data.id : '';
+        this.sparePartType = data.configType ? data.configType : ''
+      } else {
+        this.sparePartId = '';
+        this.sparePartType = ''
+      }
     },
     onChangePage (val) {
       this.pager.pageNum = val.pageNum;

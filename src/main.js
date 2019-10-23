@@ -44,6 +44,13 @@ Vue.prototype.$messageTip = common.message; //防止重复提示的
 
 Vue.prototype.$echarts = echarts;
 Vue.config.productionTip = false;
+let autoStop = function() {
+    //5s内没响应，自动隐藏loading
+    setTimeout(() => {
+        store.commit('base/updateLoadingStatus', { isLoading: false });
+    }, 5000);
+};
+Vue.prototype.$autoStop = autoStop;
 
 // import axios from './axios/axios.js';
 // import url from './axios/url.js';

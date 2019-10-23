@@ -29,13 +29,15 @@
       </el-row>
 
       <el-row>
-        <el-col :span="12">
+        <el-col :span="24">
           <el-form-item prop="phone" label="手机号">{{form.phone}}</el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item prop="jobNumber" label="工号">{{form.jobNumber}}</el-form-item>
-        </el-col>
       </el-row>
+        <el-row>
+            <el-col :span="24">
+                <el-form-item prop="jobNumber" label="工号"  class="shopNames">{{form.jobNumber}}</el-form-item>
+            </el-col>
+        </el-row>
       <el-row>
         <el-col :span="24">
           <el-form-item
@@ -46,13 +48,16 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="12">
-          <el-form-item prop="orgName" label="部门">{{form.orgName}}</el-form-item>
+        <el-col :span="24">
+          <el-form-item prop="orgName" label="部门"  class="shopNames">{{form.orgName}}</el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item prop="positionName" label="职位">{{form.positionName}}</el-form-item>
-        </el-col>
+
       </el-row>
+        <el-row>
+            <el-col :span="24">
+                <el-form-item prop="positionName" label="职位">{{form.positionName}}</el-form-item>
+            </el-col>
+        </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item

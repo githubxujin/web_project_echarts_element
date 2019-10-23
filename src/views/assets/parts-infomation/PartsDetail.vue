@@ -35,7 +35,7 @@
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item label="是否启用：">
+          <el-form-item label="状态：">
             <span v-show="detailData.status==0">启用</span>
             <span v-show="detailData.status!=0">禁用</span>
           </el-form-item>

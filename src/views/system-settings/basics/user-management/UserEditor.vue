@@ -39,7 +39,7 @@
       </el-row>
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="userName" label="账号">
+          <el-form-item prop="userName" label="帐号">
             <el-input
               v-model.trim="form.userName"
               placeholder="请输入"
@@ -49,7 +49,7 @@
             ></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="isEdit ? 10 : 12">
           <el-form-item prop="password" label="密码">
             <el-input
               v-model.trim="form.password"
@@ -58,7 +58,7 @@
               :maxlength="16"
               autocomplete="off"
               :disabled="isEdit"
-              style="width:160px;"
+              :style="{width: isEdit && '160px'}"
             >
               <i
                 v-show="!isEdit"
@@ -70,7 +70,7 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="2">
+        <el-col :span="2" v-if="isEdit">
           <el-form-item>
             <el-button round size="mini" @click="resetPassWord" style="height:28px;">重 置</el-button>
           </el-form-item>
@@ -142,7 +142,7 @@
 <script>
 import TreeSelect from '@/components/treeSelect'
 import { adminGetInfo, adminAdd, adminEdit, roleListQuery, configTypeQuery, configTypeTreeQuery, adminResetPwd } from '@/services/system-settings.js' // 62部门
-import { validatePass, validateUserName, validateRealName, isPhone } from '@/utils/validate-utils.js'
+import { validatePwd, validateUserName, validateRealName, isPhone } from '@/utils/validate-utils.js'
 import { workStateEnum } from '@/enum/dicts.js'
 import Regexps from '@/utils/regexp.js'
 import axios from '@/axios/axios.js'
@@ -191,7 +191,8 @@ export default {
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { validator: validatePass, trigger: 'blur' }
+          { validator: validatePwd, trigger: 'blur' },
+          this.$baseConfig.validate.pwd
         ],
         roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
         orgId: [{ required: true, message: '请选择部门', trigger: 'change' }],
@@ -274,10 +275,11 @@ export default {
     resetPassWord () {
       // this.form.password = 123456;
       // this.$message.warning('密码重置为123456，点击确认后生效');
+      console.log('params', this.params)
       adminResetPwd(this.params).then(res => {
         if (res.code === 200) {
           this.$message.success('密码重置成功！');
-          this.form.password = 123456;
+          this.form.password = '123456';
         }
       })
     },

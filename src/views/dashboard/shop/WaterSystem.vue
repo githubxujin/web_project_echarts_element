@@ -16,20 +16,20 @@
             </li>
             <li>
               <span>运行水泵</span>
-              <span
-                v-show="waterData.supplySystem.livingPumpTotal"
-              >({{waterData.supplySystem.livingPumpRunning}}/{{waterData.supplySystem.livingPumpTotal}})</span>
+              <!-- v-show="waterData.supplySystem.livingPumpTotal" -->
+              <span>({{waterData.supplySystem.livingPumpRunning}}/{{waterData.supplySystem.livingPumpTotal}})</span>
             </li>
           </ul>
           <ul class="detail-info">
             <li
               @mouseenter="showBox('supplyError',waterData.supplySystem.livingBoxAbnormal)"
               @mouseleave="hideBox('supplyError',waterData.supplySystem.livingBoxAbnormal)"
+              @click.stop="goToPage('supply',waterData.supplySystem.livingBoxAbnormal,'waterBox')"
             >
               <span>异常报警</span>
+              <!-- v-show="waterData.supplySystem.livingBoxAbnormal" -->
               <span
                 :class="{'error':waterData.supplySystem.livingBoxAbnormal}"
-                v-show="waterData.supplySystem.livingBoxAbnormal"
               >({{waterData.supplySystem.livingBoxAbnormal}})</span>
               <div class="float-box" ref="supplyError">
                 <p>给水系统</p>
@@ -43,6 +43,7 @@
             <li
               @mouseenter="showBox('supplyWaterPump',waterData.supplySystem.livingPumpFault)"
               @mouseleave="hideBox('supplyWaterPump',waterData.supplySystem.livingPumpFault)"
+              @click.stop="goToPage('supply',waterData.supplySystem.livingPumpFault,'pump')"
             >
               <span>故障水泵</span>
               <span
@@ -72,20 +73,20 @@
             </li>
             <li>
               <span>运行水泵</span>
-              <span
-                v-show="waterData.drainSystem.sumpPumpTotal"
-              >({{waterData.drainSystem.sumpPumpRunning}}/{{waterData.drainSystem.sumpPumpTotal}})</span>
+              <!-- \v-show="waterData.drainSystem.sumpPumpTotal" -->
+              <span>({{waterData.drainSystem.sumpPumpRunning}}/{{waterData.drainSystem.sumpPumpTotal}})</span>
             </li>
           </ul>
           <ul class="detail-info">
             <li
               @mouseenter="showBox('drainSystemError',waterData.drainSystem.sumpBoxAbnormal)"
               @mouseleave="hideBox('drainSystemError',waterData.drainSystem.sumpBoxAbnormal)"
+              @click.stop="goToPage('out',waterData.drainSystem.sumpBoxAbnormal)"
             >
               <span>异常报警</span>
+              <!-- v-show="waterData.drainSystem.sumpBoxAbnormal" -->
               <span
                 :class="[waterData.drainSystem.sumpBoxAbnormal?'error':'']"
-                v-show="waterData.drainSystem.sumpBoxAbnormal"
               >({{waterData.drainSystem.sumpBoxAbnormal}})</span>
               <div class="float-box" ref="drainSystemError">
                 <p>排水系统</p>
@@ -96,6 +97,7 @@
             <li
               @mouseenter="showBox('drainWaterPump',waterData.drainSystem.sumpPumpFault)"
               @mouseleave="hideBox('drainWaterPump',waterData.drainSystem.sumpPumpFault)"
+              @click.stop="goToPage('out',waterData.drainSystem.sumpPumpFault)"
             >
               <span>故障水泵</span>
               <span
@@ -214,11 +216,11 @@ export default {
           break;
       }
     },
-    goToPage (type) {
+    goToPage (type, number, cate) {
       if (type == 'supply') {
-        this.$router.push({ path: '/safety/drainage/suppley-water' })
+        this.$router.push({ path: `/safety/drainage/suppley-water${number ? `?alarm=${'alarm'}` : ''}` })
       } else {
-        this.$router.push({ path: '/safety/drainage/out-water' })
+        this.$router.push({ path: `/safety/drainage/out-water${number ? '?alarm=alarm' : ''}` })
       }
     }
   }

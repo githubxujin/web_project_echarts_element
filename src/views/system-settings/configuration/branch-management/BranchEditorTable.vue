@@ -39,10 +39,13 @@
             </el-form-item>
           </template>
         </el-table-column>
-        <el-table-column prop="energyType" label="能耗类型" header-align="center">
+        <el-table-column prop="energyHType" label="能耗类型" header-align="center">
           <template slot-scope="scope">
-            <el-form-item :prop="`tableDataList[${scope.$index}].energyType`" :rules="[selectRule]">
-              <el-select v-model="form.tableDataList[scope.$index].energyType" placeholder="请选择">
+            <el-form-item
+              :prop="`tableDataList[${scope.$index}].energyHType`"
+              :rules="[selectRule]"
+            >
+              <el-select v-model="form.tableDataList[scope.$index].energyHType" placeholder="请选择">
                 <el-option
                   v-for="item in (dicts || {})['energyTypeList'] || []"
                   :label="item.name"
@@ -107,7 +110,7 @@
         </el-table-column>
         <el-table-column prop="lowerLimit" label="下限" header-align="center" width="100px">
           <template slot-scope="scope">
-            <el-form-item :prop="`tableDataList[${scope.$index}].lowerLimit`" :rules="[numberRule]" >
+            <el-form-item :prop="`tableDataList[${scope.$index}].lowerLimit`" :rules="[numberRule]">
               <el-input v-model.trim="form.tableDataList[scope.$index].lowerLimit" :maxlength="9"></el-input>
             </el-form-item>
           </template>
@@ -201,7 +204,7 @@ export default {
     addTableData () {  // 新增一条数据
       this.form.tableDataList.push({
         gatherOrder: '', //采集命令
-        energyType: '', //能耗类型
+        energyHType: '', //能耗类型
         valueType: '', //数值类型
         ratedPower: '', //额定功率
         unit: '', //能耗单位
@@ -224,8 +227,9 @@ export default {
       console.log('expressions:', expressions);
       let expression = "";
       expressions.forEach(item => {
+        console.log('item', item)
         if (item.type == "branch") {
-          expression += "[" + item.number + "]";
+          expression += "[" + item.electricAddr + "]";
         } else if (item.type == "number") {
           expression += item.value;
         } else {

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="elevator-system"
+    class="elevator-systems"
     v-loading="loading"
     :element-loading-text="$baseConfig.loading.text"
     :element-loading-spinner="$baseConfig.loading.spinner"
@@ -149,21 +149,13 @@ export default {
 </script>
 <style lang='scss' scoped>
 @import "../index.scss";
-.elevator-system {
+.elevator-systems {
   width: 100%;
   height: 100%;
   color: #e8efff;
   padding: 0px 10px;
   box-sizing: border-box;
   position: relative;
-  .left-top,
-  .left-bottom {
-    left: -11px;
-  }
-  .right-top,
-  .right-bottom {
-    right: 8px;
-  }
   .ele-container {
     height: calc(100% - 44px);
     overflow: hidden;

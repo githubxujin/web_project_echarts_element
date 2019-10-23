@@ -10,7 +10,7 @@ export default class BaseConfig {
         pwd: {
             min: 5,
             max: 16,
-            message: '长度在 5 到 16 个字符',
+            message: '长度在5到16个字符',
             trigger: 'blur'
         }
     };

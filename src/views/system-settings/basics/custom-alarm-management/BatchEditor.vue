@@ -18,7 +18,10 @@
         ></el-table-column>
         <el-table-column header-align="center" align="center" label="是否推送首页" prop="show">
           <template slot-scope="scope">
-            <el-form-item :porp="`alarmConditionBatchList[${scope.$index}].show`">
+            <el-form-item
+              class="alarmCondition"
+              :porp="`alarmConditionBatchList[${scope.$index}].show`"
+            >
               <el-radio-group v-model="form.alarmConditionBatchList[scope.$index].show">
                 <el-radio
                   :key="index"
@@ -42,14 +45,16 @@
             </el-form-item>
           </template>
         </el-table-column>
-        <el-table-column header-align="center" align="center" label="指派给" prop="executer">
+        <el-table-column header-align="center" label="指派给" prop="executer">
           <template slot-scope="scope">
             <el-form-item :porp="`alarmConditionBatchList[${scope.$index}].executer`">
               <TreeSelect
                 v-model="form.alarmConditionBatchList[scope.$index].executer"
                 placeholder="请选择"
                 :data="executerList"
-                :clearable="false"
+                :clearable="true"
+                :isSparePart="true"
+                :index="scope.$index"
                 :defaultProps="defaultProps"
               ></TreeSelect>
             </el-form-item>
@@ -108,14 +113,16 @@ export default {
       form: {
         alarmConditionBatchList: []
       },
-      rules: {},
+      selectRule: { type: 'string', required: true, message: '必填项', trigger: 'change' },
+      rules: { executer: { type: 'string', required: true, message: '必填项', trigger: 'change' } },
       shopNumber: this.$store.getters.shopNumber,
       dialogLoading: false
     }
   },
   computed: {},
   created () {
-    this.initDict()
+    this.initDict();
+    console.log('设置', '设置')
   },
   methods: {
     alarmAdminListQuery, // 推送人员列表
@@ -163,6 +170,14 @@ export default {
         this.dialogLoading = false
       })
     },
+    validateSelectValue (rule, value, callback, index) {
+      let item = this.form.alarmConditionBatchList[index];
+      console.log('item', item)
+      if (this.form.alarmConditionBatchList[index].workOrder === 0 && !value) {
+        return callback(new Error('必选'))
+      }
+      return callback()
+    },
     cancle () {
       this.$emit('update:batchDialogVisible', false)
     }
@@ -190,6 +205,7 @@ export default {
             status: ~~status
           }
         })
+        console.log('this.form.alarmConditionBatchList', this.form.alarmConditionBatchList)
       }
     }
   }
@@ -205,6 +221,11 @@ export default {
     margin-bottom: 0;
     line-height: normal;
     min-height: unset;
+  }
+  /deep/ .alarmCondition {
+    .el-radio:last-of-type {
+      margin-right: 16px;
+    }
   }
 }
 </style>

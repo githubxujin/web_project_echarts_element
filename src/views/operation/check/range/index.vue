@@ -57,11 +57,15 @@
       <el-table :data="tableData" :height="tableHeight" border style="width: 100%" ref="table">
         <el-table-column type="index" width="50" :index="indexMethod" label="序号"></el-table-column>
         <el-table-column prop="planName" label="计划名称"></el-table-column>
-        <el-table-column prop="deviceNames" label="设备名称"></el-table-column>
+        <el-table-column prop="deviceNames" label="设备名称">
+          <template slot-scope="scope">
+            <span class="two-text-ellipse" :title="scope.row.deviceNames">{{scope.row.deviceNames}}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="上次时间" prop="previousTimeStr"></el-table-column>
         <el-table-column label="预计下次时间" prop="nextTimeStr"></el-table-column>
         <el-table-column prop="cycleTimeStr" label="周期"></el-table-column>
-        <el-table-column fixed="right" label="操作" width="100">
+        <el-table-column label="操作" width="100">
           <template slot-scope="scope">
             <el-button
               v-if="pageBtns.some(val=>val=='edit')"

@@ -42,12 +42,9 @@ export default {
         url = roleType == 1 ? '/plat-index' : '/shop-index';
       }
       if (this.userInfo.blocIp && roleType == 2) { //如果是跳转登录，回集团首页
-        let indexUrl = 'http://' + this.userInfo.blocIp + '/plat-index';
+        let indexUrl = this.userInfo.blocIp + '/plat-index';
         console.log('indexUrl :', indexUrl);
         window.location.href = indexUrl;
-        //  this.$router.push({
-        //             path: indexUrl
-        //           });
       } else {
         this.$router.push({
           path: url

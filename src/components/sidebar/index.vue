@@ -26,7 +26,7 @@
 import Storages from '../../utils/storages';
 import MenuTree from './MenuTree'
 import { getSubMenuById, getRootMenu, getSubmMenusByPreIndex, getShopAuthoritiesArr, getBtnsByIndex } from '../../utils/permission.js';
-
+let sortList = ['给水系统', '排水系统'];
 export default {
   components: { MenuTree },
   props: {
@@ -111,6 +111,14 @@ export default {
       // console.log('叶子菜单', subItems)
       //存储当前叶子菜单数组
       if (subItems.length > 0) {
+        if (this.$route.path.includes('/safety/drainage')) {
+          // 给水在排水左边(前端暂时处理)
+          let sortRouter = [];
+          sortList.map(t => {
+            sortRouter.push(subItems.find(item => item.title === t))
+          })
+          subItems = sortRouter;
+        }
         this.$store.commit('permission/setCurLeafMenus', subItems);
       } else {
         this.$store.commit('permission/setCurLeafMenus', []);

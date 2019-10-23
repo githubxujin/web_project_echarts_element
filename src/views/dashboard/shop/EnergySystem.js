@@ -1,4 +1,5 @@
 export const option = {
+    color: ['#b3d465', '#71c455', '#00b7ee', '#d18463'],
     title: {
         text: '',
         x: 'center',
@@ -26,33 +27,31 @@ export const option = {
             font: '12px Microsoft YaHei'
         }
     },
-    series: [
-        {
-            name: '',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            label: {
-                normal: {
-                    position: 'inner',
-                    fontSize: '10',
-                    align: 'center',
-                    verticalAlign: 'bottom'
-                },
-                emphasis: {
-                    show: true,
-                    textStyle: {
-                        fontSize: '14',
-                        fontWeight: 'bold'
-                    }
-                }
+    series: [{
+        name: '',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        label: {
+            normal: {
+                position: 'inner',
+                fontSize: '10',
+                align: 'center',
+                verticalAlign: 'bottom'
             },
-            labelLine: {
-                normal: {
-                    show: false
+            emphasis: {
+                show: true,
+                textStyle: {
+                    fontSize: '14',
+                    fontWeight: 'bold'
                 }
-            },
-            data: []
-        }
-    ]
+            }
+        },
+        labelLine: {
+            normal: {
+                show: false
+            }
+        },
+        data: []
+    }]
 }

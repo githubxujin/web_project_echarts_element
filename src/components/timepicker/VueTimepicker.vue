@@ -8,6 +8,7 @@
       type="text"
       placeholder="HH:mm"
       readonly
+      :disabled="disabled"
     />
     <span
       class="clear-btn"
@@ -76,11 +77,14 @@ export default {
 
   props: {
     value: { type: Object },
-    hideClearButton: { type: Boolean },
+    hideClearButton: { type: Boolean, default: true },
     format: { type: String },
     minuteInterval: { type: Number },
     secondInterval: { type: Number },
-    id: { type: String }
+    id: { type: String },
+    disabled: {
+      type: Boolean, default: false
+    }
   },
 
   data () {

@@ -35,10 +35,11 @@
             <el-date-picker
               v-model="ruleForm.firstCreateTime"
               type="datetime"
-              class="create-time"
+              popper-class="first-time"
               placeholder="选择日期时间"
               :picker-options="pickerBeginAfter"
               :disabled="isEdit"
+              :default-time="defaultTime"
             ></el-date-picker>
           </el-form-item>
         </el-col>
@@ -51,11 +52,7 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="任务时长" prop="taskTimeLength">
-            <el-input
-              v-model.number="ruleForm.taskTimeLength"
-              clearable
-              :placeholder="cycleTimeLabel"
-            >
+            <el-input v-model="ruleForm.taskTimeLength" clearable :placeholder="cycleTimeLabel">
               <template slot="append" v-if="ruleForm.taskTimeLength">天</template>
             </el-input>
           </el-form-item>
@@ -85,7 +82,6 @@
             @click="previewTime('ruleForm')"
             size="mini"
           >预览保养时间</el-button>
-          <!-- <div class="sub-header" @click="previewTime('ruleForm')">预览保养时间</div> -->
         </el-col>
       </el-row>
     </el-form>
@@ -162,7 +158,7 @@
     >
       <div class="datatable-box">
         <el-table border :data="planPreviewList" style="width: 100%" height="300px">
-          <el-table-column label="日期范围" align="center">
+          <el-table-column label="任务时长" align="center">
             <template slot-scope="scope">
               <div class="plan-item">
                 <span>{{scope.row.startTime|timeFormat('YYYY-MM-DD')}}</span>
@@ -220,6 +216,12 @@
       :visible.sync="showCheckPlanWin"
       width="720px"
     >
+      <span
+        slot="title"
+        class="text-ellipse dialog-header-text"
+        v-text="checkPlanTitle"
+        :title="checkPlanTitle"
+      ></span>
       <maintain-plan-list
         v-if="showCheckPlanWin"
         @onHide="showCheckPlanWin=false"
@@ -236,6 +238,12 @@
       :visible.sync="showDetailWin"
       width="480px"
     >
+      <span
+        slot="title"
+        class="text-ellipse dialog-header-text"
+        v-text="detailTitle"
+        :title="detailTitle"
+      ></span>
       <template-detail v-if="showDetailWin" @onHide="showDetailWin=false" :id="templateNumber"></template-detail>
     </el-dialog>
   </div>
@@ -249,6 +257,7 @@ import MaintainPlanList from './MaintainPlanList';
 import TemplateDetail from '../template/TemplateDetail';
 import { MaintainCycleEnum } from '@/enum/operation-enum.js';
 import Regexps from '@/utils/regexp.js';
+import datetimeUtils from '@/utils/datetime-utils.js';
 
 export default {
   components: {
@@ -281,6 +290,7 @@ export default {
       }
     };
     return {
+      defaultTime: datetimeUtils.getTimeNextTime(new Date(), 5), //任务生成规则-默认时间
       taskTimeLengthMaxVal: 1,
       CheckCycleOptions: [],
       cycleTimeOptions: [],
@@ -325,9 +335,9 @@ export default {
       showDetailWin: false,//是否显示详情弹窗
       templateNumber: '',//当前选中模板编号
       pickerBeginAfter: {
-        //只能操作当前月份及以后的月份
+        //只能操作当前时间及以后的时间
         disabledDate: time => {
-          return time.getTime() < Date.now()
+          return time.getTime() + 3600 * 24 * 1000 < Date.now()
         }
       },
       planPreviewList: [],//计划预览列表
@@ -348,17 +358,6 @@ export default {
     }
   },
   watch: {
-    //保养周期
-    'ruleForm.cycleTime': function (val) {
-      if (val) {
-        this.cycleTimeType = val.charAt(val.length - 1);
-        this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
-        this.cycleTimeLabel = this.CheckCycleOptions.find(n => { return n.value = val }).label;
-
-        this.taskTimeLengthMaxVal = this.getTaskTimeLengthMaxVal();
-      }
-      this.planPreviewList = []; //有变化时，重新计算预览计划
-    },
     //初次生成时间
     'ruleForm.firstCreateTime': function (val) {
       this.planPreviewList = [];
@@ -372,7 +371,7 @@ export default {
     //任务时长最大值
     getTaskTimeLengthMaxVal () {
       let type = this.cycleTimeType;
-      let length = this.cycleTimeLength;
+      let length = this.cycleTimeLength || 1;
       let baseVal = 1;
 
       switch (type) {
@@ -408,8 +407,13 @@ export default {
         if (res.code == 200) {
           this.CheckCycleOptions = res.data.array;
           if (res.data.array.length > 0) {
-            this.ruleForm.cycleTime = res.data.array[0].value;
-            this.cycleTimeLabel = res.data.array[0].label;
+            if (!this.isEdit) {
+              this.ruleForm.cycleTime = res.data.array[0].value;
+              this.cycleTimeLabel = res.data.array[0].label;
+              let val = this.ruleForm.cycleTime;
+              this.cycleTimeType = val.charAt(val.length - 1);
+              this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
+            }
             this.taskTimeLengthMaxVal = this.getTaskTimeLengthMaxVal();
           }
         }
@@ -420,6 +424,9 @@ export default {
           if (res.code == 200 && res.data) {
             this.ruleForm.planName = res.data.planName;
             this.ruleForm.cycleTime = res.data.cycleTimeStr;
+            this.cycleTimeLength = res.data.cycleTimeLength;
+            this.cycleTimeType = res.data.cycleTimeType;
+            this.cycleTimeLabel = this.CheckCycleOptions.find(n => { return n.value == this.ruleForm.cycleTime }).label;
             this.ruleForm.checkEqus = res.data.deviceNames;
             this.ruleForm.firstCreateTime = res.data.firstTime;
             if (res.data.taskTimeLength) {
@@ -430,20 +437,34 @@ export default {
             this.curDeviceIds = res.data.devices;
             this.tableData = res.data.templateList;
             this.ruleForm.address = res.data.address;
+            this.taskTimeLengthMaxVal = this.getTaskTimeLengthMaxVal();
           }
         })
       }
     },
     //保养周期改变时
-    cycleTimeChange (data) {
+    cycleTimeChange (val) {
       //数据清空
       this.ruleForm.checkEqus = '';
       this.curDeviceIds = [];
       this.tableData = [];
+      if (val) {
+        this.cycleTimeType = val.charAt(val.length - 1);
+        this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
+        this.cycleTimeLabel = this.CheckCycleOptions.find(n => { return n.value == val }).label;
+        console.log('object :', val, this.cycleTimeLabel);
+
+        this.taskTimeLengthMaxVal = this.getTaskTimeLengthMaxVal();
+      }
+      this.planPreviewList = []; //有变化时，重新计算预览计划
     },
     //确定
     submitForm (formName) {
       var that = this;
+
+      let val = this.ruleForm.cycleTime;
+      this.cycleTimeType = val.charAt(val.length - 1);
+      this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
       that.$refs[formName].validate(valid => {
         if (valid) {
           console.log('验证成功');
@@ -451,25 +472,37 @@ export default {
             this.selectEquIds.push(n.checked ? n.deviceId + ',' + n.checked : n.deviceId);
           })
           console.log('this.selectEquIds :', this.selectEquIds);
-          let saveObj = {
-            shopNumber: this.shopNumber, planName: this.ruleForm.planName, cycleTimeLength: this.cycleTimeLength,
-            cycleTimeType: this.cycleTimeType, firstTime: this.ruleForm.firstCreateTime, rule: this.ruleForm.taskCreateRule,
-            status: this.ruleForm.status, devices: this.selectEquIds,
-            address: this.ruleForm.address
-          };
-          if (this.ruleForm.taskTimeLength > 0) {//周期不为时，并且任务时长有值
-            saveObj.taskTimeLength = this.ruleForm.taskTimeLength;
-          }
           if (this.isEdit) {
-            saveObj.preViews = this.planPreviewList || [];
-          } else { //新增，只传禁用的数据列表
-            saveObj.preViews = this.planPreviewList.filter(n => { return n.status == 1 }) || [];
+            that.submitFormFuc(that.ruleForm.firstCreateTime)
+          } else {
+            let firstCreateTime = that.ruleForm.firstCreateTime;
+            if (firstCreateTime.getTime() < new Date().getTime()) {
+              this.$message.error('初次生成时间已逾期，请重新设置!');
+            } else {
+              that.submitFormFuc(firstCreateTime);
+            }
           }
-          console.log('saveObj :', saveObj);
-          this.$emit('submitForm', saveObj);
         }
       }
       );
+    },
+    submitFormFuc (dt) {
+      let saveObj = {
+        shopNumber: this.shopNumber, planName: this.ruleForm.planName, cycleTimeLength: this.cycleTimeLength,
+        cycleTimeType: this.cycleTimeType, firstTime: dt, rule: this.ruleForm.taskCreateRule,
+        status: this.ruleForm.status, devices: this.selectEquIds,
+        address: this.ruleForm.address
+      };
+      if (this.ruleForm.taskTimeLength > 0) {//周期不为时，并且任务时长有值
+        saveObj.taskTimeLength = this.ruleForm.taskTimeLength;
+      }
+      if (this.isEdit) {
+        saveObj.preViews = this.planPreviewList || [];
+      } else { //新增，只传禁用的数据列表
+        saveObj.preViews = this.planPreviewList.filter(n => { return n.status == 1 }) || [];
+      }
+      console.log('saveObj :', saveObj);
+      this.$emit('submitForm', saveObj);
     },
     //关闭
     isHide () {
@@ -487,7 +520,11 @@ export default {
       console.log(row)
       this.templateNumber = row.checked;
       let templateObj = row.templateList.find(n => n.value == row.checked);
+      console.log('templateObj :', templateObj);
       let label = templateObj ? templateObj.label : '';
+      if (!templateObj && row.templateList.length > 0) {
+        label = row.templateList[0].label;
+      }
       if (label) {
         this.detailTitle = label.substr(label.indexOf(']') + 1);
       }
@@ -679,16 +716,6 @@ export default {
     overflow-y: auto;
   }
 }
-.add-plan {
-  .sub-header {
-    font-size: 16px;
-    color: #02b0f3;
-    cursor: pointer;
-    &:hover {
-      color: $hoverColor;
-    }
-  }
-}
 .plan-item {
   span {
     padding: 0px 8px;
@@ -702,5 +729,10 @@ export default {
 }
 .forbidden {
   color: red;
+}
+.first-time {
+  .el-button--text {
+    display: none;
+  }
 }
 </style>

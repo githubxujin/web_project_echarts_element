@@ -12,14 +12,14 @@
     >
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="shopName" label="门店名称">
-            <el-input v-model="form.shopName" placeholder="请输入" clearable :maxlength="16"></el-input>
+          <el-form-item prop="name" label="门店名称">
+            <el-input v-model="form.name" placeholder="请输入" clearable :maxlength="16"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item prop="shopNumber" label="门店编号">
+          <el-form-item prop="number" label="门店编号">
             <el-input
-              v-model="form.shopNumber"
+              v-model="form.number"
               :disabled="isEdit"
               placeholder="请输入"
               clearable
@@ -31,7 +31,7 @@
 
       <el-row>
         <el-col :span="12">
-          <el-form-item prop="userName" label="帐号">
+          <el-form-item prop="userName" label="主帐号">
             <el-input
               v-model="form.userName"
               :disabled="isEdit"
@@ -56,11 +56,6 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="shopTypeName" label="门店类型">
-            <!--<el-input v-model="form.shopTypeName"-->
-            <!--placeholder="请输入"-->
-            <!--clearable-->
-            <!--:maxlength="16"></el-input>-->
-
             <el-select v-model="form.shopTypeName" placeholder="请选择">
               <el-option
                 v-for="item in shopoptions"
@@ -78,7 +73,7 @@
               style=" width: 180px"
               placeholder="请输入"
               clearable
-              :maxlength="16"
+              :maxlength="8"
             ></el-input>㎡
           </el-form-item>
         </el-col>
@@ -88,7 +83,7 @@
           <el-form-item prop="regionn" label="所属区域">
             <el-select
               v-model="form.regiona"
-              style="width:80px"
+              style="width:120px"
               :clearable="true"
               placeholder="大区"
               @change="getAreaList(form.regiona, 'regionp')"
@@ -102,7 +97,7 @@
             </el-select>
             <el-select
               v-model="form.regionp"
-              style="width:80px"
+              style="width:140px"
               placeholder="省"
               :clearable="true"
               @change="getAreaList(form.regionp, 'regionn')"
@@ -116,9 +111,9 @@
             </el-select>
 
             <el-select
-              v-model="regionn"
+              v-model="form.regionn"
               @change="getRegionn"
-              style="width:80px"
+              style="width:120px"
               :clearable="true"
               placeholder="市"
             >
@@ -158,19 +153,6 @@
           </el-form-item>
         </el-col>
       </el-row>
-
-      <!-- <el-row>
-        <el-col :span="12">
-          <el-form-item prop="longitude" label="经度">
-            <el-input v-model="form.longitude" placeholder="请输入" clearable :maxlength="16"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item prop="latitude" label="纬度">
-            <el-input v-model="form.latitude" placeholder="请输入" clearable :maxlength="16"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>-->
 
       <el-row>
         <el-col :span="12">
@@ -257,7 +239,7 @@ import PositionInput from '@/components/form/PositionInput.vue'
 import Regexps from '@/utils/regexp.js'
 import { configTypeQuery } from '@/services/system-settings.js'
 import { statusEnum } from '@/enum/dicts.js'
-import { validatelonlat } from '@/utils/validate-utils.js'
+import { validatelonlat, validatePwd, validateUserName, validateRealName, isPhone } from '@/utils/validate-utils.js'
 export default {
   components: { PositionInput },
   props: {
@@ -277,22 +259,22 @@ export default {
       dialogLoading: false, // 弹框loading
       submitLoading: false, // 提交按钮loading
       form: {
-        shopName: '', regiona: null, regionp: null, regionn: null, status: null, lonlat: '', longitude: '',
+        name: '', regiona: '', regionp: '', regionn: '', status: 0, lonlat: '', longitude: '',
         latitude: '',
       },
       formRules: { // 表单规则
-        shopName: [
+        name: [
           // { required: true, message: '请输入门店名称', trigger: 'blur' },
           // { validator: this.testShopName, message: '禁止输入特殊符号', trigger: 'blur' }
-          { required: true, message: '必填', trigger: 'blur' },
+          { required: true, message: '请输入门店名称', trigger: 'blur' },
           { max: 16, message: '16个字符以内', trriger: 'blur' }
         ],
-        shopNumber: [
+        number: [
           { required: true, message: '请输入门店编号', trigger: 'blur' }
         ],
         userName: [
           { required: true, message: '请输入帐号', trigger: 'blur' },
-          { validator: this.accounts, message: '禁止输入特殊符号', trigger: 'blur' }
+          { validator: validateUserName, trigger: 'blur' }
         ],
         addressDetail: [
           { required: false, message: '128字符以内', trigger: 'blur' },
@@ -303,7 +285,9 @@ export default {
           { validator: this.validatelonlat, trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { validator: validatePwd, trigger: 'blur' },
+          this.$baseConfig.validate.pwd
         ], leadingPhone: [
           { required: false, message: '联系电话', trigger: 'blur' },
           { pattern: Regexps.mobilephone, message: '请输入正确的手机或座机号码', trigger: 'blur' }
@@ -328,9 +312,10 @@ export default {
         latitude: [
           { required: false, message: '纬度', trigger: 'blur' },
           { pattern: Regexps.latitude, message: '纬度必须为正整数或小数', trigger: 'blur' }
-        ], regionn: [
-          { required: true, message: '请选择完整区域信息', trigger: 'blur' },
-          { validator: this.testRegionn, message: '区域信息必选项', trigger: 'blur' }
+        ],
+        regionn: [
+          { required: true, message: '请选择完整区域信息', trigger: 'change' },
+          // { validator: this.testRegionn, message: '区域信息必选项', trigger: 'change' }
         ]
       }
     }
@@ -357,9 +342,12 @@ export default {
     }
   },
   mounted () {
-    this.form = this.details;
+    // this.form = this.isEdit && this.details;
     console.log(this.details)
     this.isEdit = false;
+    if (this.details.hasOwnProperty("id")) {
+      this.form = this.details;
+    }
     if (this.form && this.form.hasOwnProperty("id")) {
       this.regionn = this.form.regionn;
       if (this.form.longitude) {
@@ -397,7 +385,7 @@ export default {
       });
       getcityListQuery({ areaId: 100000 }).then((res) => {
         this.regionaList = res.data.array;
-        this.form.regiona = this.details.regiona;
+        // this.form.regiona = this.details.regiona;
       }).catch((error) => {
         console.log(error)
       });
@@ -421,6 +409,7 @@ export default {
     },
     submit () {
       let result = false
+      console.log('form', this.form)
       this.$refs.form.validate(res => {
         result = res
       });
@@ -431,6 +420,8 @@ export default {
           this.form.shopTypeName = item.configName;
         }
       });
+      this.form.longitude = this.form.lonlat.split(',')[0];
+      this.form.latitude = this.form.lonlat.split(',')[1];
       let params = JSON.parse(JSON.stringify(this.form));
 
       this.dialogLoading = true;
@@ -459,7 +450,7 @@ export default {
       addShop(params).then((res) => {
         if (res.data === 1) {
           this.dialogLoading = false;
-          this.$emit('update:editdialogVisible', this.form.shopNumber);
+          this.$emit('update:editdialogVisible', this.form.number);
           Object.keys(this.form).forEach(prop => {
             this.form[prop] = ''
           }, this);
@@ -505,9 +496,9 @@ export default {
           });
         }      }
     },
-    getRegionn () {
-      this.form.regionn = this.regionn;
-      // let a=this.form.regionn;
+    getRegionn (val) {
+      console.log('regionn', val)
+      console.log('regionnList', this.regionnList)
     },
     pointChange (point) {
       this.$set(this.form, 'lonlat', point.lng + ',' + point.lat)
@@ -519,11 +510,6 @@ export default {
       window.open('http://api.map.baidu.com/lbsapi/getpoint/index.html')
     },
   }
-  //   ,watch:{
-  // //         regionn (val) {
-  // // alert(val+':'+this.form.regionn);
-  // //         }
-  //     }
 }
 </script>
 <style lang="scss" scoped>

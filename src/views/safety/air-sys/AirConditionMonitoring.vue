@@ -7,9 +7,9 @@
           <a style=" padding-left:60px">kW</a>
           <a style=" padding-left:80px">COP</a>
         </div>
-        <div style="margin:0 0 5px 0; width:315px; height:125px; ">
-          <div style="width:100px; height: 100px;clear: both; margin-top: 30px">
-            <v-guage :loadValue="airValue"></v-guage>
+        <div style="margin:0 0 5px 0; width:315px; height:135px; ">
+          <div style="width:150px; height: 100px;clear: both; margin-top: 30px">
+            <SvgScaleDetails :loadValue="airValue"></SvgScaleDetails>
           </div>
           <div style="width:150px; height: 100px; float: right; margin-top:-100px">
             <div style="font-size: 18px; width:150px; height: 30px;">系统COP</div>
@@ -65,11 +65,11 @@
             <td width="100">{{equipment.CHW_PD}}</td>
           </tr>
           <tr style="background-color: #ffffff;">
-            <td width="210">冷却水回水温度(°C)</td>
+            <td width="210">冷却回水温度(°C)</td>
             <td width="100">{{equipment.CW_RT}}</td>
           </tr>
           <tr style="background-color:#F7F7FC;">
-            <td width="210">冷却水温度(°C)</td>
+            <td width="210">冷却水温差(°C)</td>
             <td width="100">{{equipment.CW_TD}}</td>
           </tr>
         </table>
@@ -96,6 +96,12 @@
       </div>
     </div>
     <div class="rightcontent">
+      <span
+        v-if="this.videoMonitorList.length>0"
+        class="video iconfont icon-shipin"
+        @click="videoModelVisible = true"
+        title="查看视频监控"
+      ></span>
       <div id="drawing"></div>
     </div>
     <el-dialog
@@ -104,7 +110,7 @@
       height="700px"
       :close-on-click-modal="false"
     >
-      <span slot="title"  class="dialog-header">{{etitle}}</span>
+      <span slot="title" class="dialog-header">{{etitle}}</span>
       <airDetails
         :airDetailsDialog.sync="airDetailsDialog"
         :dialogObj="dialogObj"
@@ -118,7 +124,7 @@
       height="700px"
       :close-on-click-modal="false"
     >
-      <span slot="title"  class="dialog-header">{{etitle}}</span>
+      <span slot="title" class="dialog-header">{{etitle}}</span>
       <coolingPump
         :coolingPumpDialog.sync="coolingPumpDialog"
         :dialogObj="dialogObj"
@@ -132,30 +138,50 @@
       height="700px"
       :close-on-click-modal="false"
     >
-      <span slot="title"  class="dialog-header">{{etitle}}</span>
+      <span slot="title" class="dialog-header">{{etitle}}</span>
       <coolingTower
         :coolingTowerDialog.sync="coolingTowerDialog"
         :dialogObj="dialogObj"
         v-if="coolingTowerDialog"
       ></coolingTower>
     </el-dialog>
+
+      <el-dialog
+          :visible.sync="WaterValveDialog"
+          width="750px"
+          height="300px"
+          :close-on-click-modal="false"
+      >
+          <span slot="title" class="dialog-header">{{etitle}}</span>
+          <WaterValve
+              :coolingTowerDialog.sync="WaterValveDialog"
+              :dialogObj="dialogObj"
+              v-if="WaterValveDialog"
+          ></WaterValve>
+      </el-dialog>
+    <el-dialog :visible.sync="videoModelVisible" width="800px" :close-on-click-modal="false">
+      <span slot="title" class="dialog-header">查看视频监控</span>
+      <power-video :videoMonitorList="videoMonitorList" :videoModelVisible.sync="videoModelVisible" :systemType="3"></power-video>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import SvgScaleDetails from '@/components/SvgScale/SvgScaleDetails.vue';
 import { initWebSocket } from "@/utils/websocket";
-// import { mapGetters, mapActions } from 'vuex'
+import { videoMonitorArray } from '../../../services/system-settings.js'
+import PowerVideo from '../power-sys/PowerVideo';
 import vGuage from '@/components/Guage.vue';
 import airDetails from './AirDetails';
 import coolingPump from './CoolingPump';
 import coolingTower from './CoolingTower';
+import WaterValve from './WaterValve';
 import cold from './cold.js';
 import baseOptions from '@/utils/baseOptions';
-import { getAirList } from '../../../services/safety.js';
 import $ from "jquery";
 export default {
   extends: baseOptions,
-  components: { vGuage, airDetails, coolingPump, coolingTower },
+  components: { vGuage, airDetails, coolingPump, coolingTower, WaterValve,SvgScaleDetails, PowerVideo },
   data () {
     return {
       websocketInstance: null, //websocket对象
@@ -164,9 +190,10 @@ export default {
       equipment: { CHW_ST: 0, CHW_PD: 0, CW_RT: 0, CW_TD: 0, CHL_PWR: 0, CHL_COP: 0, CHWP_PWR: 0, CHWP_COP: 0, CWP_PWR: 0, CWP_COP: 0, CT_PWR: 0, CT_COP: 0 },
       airDetailsDialog: false,
       coolingPumpDialog: false,
-      coolingTowerDialog: false,
+      coolingTowerDialog: false,WaterValveDialog: false,
       ct: "{\"controls\":{\"size\":\"960,720\",\"pipe\":[{\"text\":\"总管供水\",\"X_Y\":\"864,107\",\"op\":\"蓝横进\",\"io\":\"开\",\"pt\":\"\"},{\"text\":\"制冷机进A\",\"X_Y\":\"354,636\",\"op\":\"紫竖进\",\"io\":\"1#制冷机进A,2#制冷机进A,3#制冷机进A,4#制冷机进A\",\"pt\":\"\"},{\"text\":\"制冷机进B\",\"X_Y\":\"576,636\",\"op\":\"青竖进\",\"io\":\"1#制冷机进B,2#制冷机进B,3#制冷机进B,4#制冷机进B\",\"pt\":\"\"},{\"text\":\"制冷机出A\",\"X_Y\":\"334,139\",\"op\":\"红竖出\",\"io\":\"1#制冷机出A,2#制冷机出A,3#制冷机出A,4#制冷机出A\",\"pt\":\"冷却塔进\"},{\"text\":\"制冷机出B\",\"X_Y\":\"596,139\",\"op\":\"蓝竖出\",\"io\":\"1#制冷机出B,2#制冷机出B,3#制冷机出B,4#制冷机出B\",\"pt\":\"总管供水\"},{\"text\":\"冷冻泵进\",\"X_Y\":\"692,635\",\"op\":\"青竖进\",\"io\":\"1#冷冻泵进,2#冷冻泵进,3#冷冻泵进,4#冷冻泵进,5#冷冻泵进\",\"pt\":\"\"},{\"text\":\"冷冻泵出\",\"X_Y\":\"622,615\",\"op\":\"青竖出\",\"io\":\"1#冷冻泵出,2#冷冻泵出,3#冷冻泵出,4#冷冻泵出,5#冷冻泵出\",\"pt\":\"制冷机进B\"},{\"text\":\"冷却泵进\",\"X_Y\":\"238,636\",\"op\":\"紫竖进\",\"io\":\"1#冷却泵进,2#冷却泵进,3#冷却泵进,4#冷却泵进,5#冷却泵进\",\"pt\":\"\"},{\"text\":\"冷却泵出\",\"X_Y\":\"308,615\",\"op\":\"紫竖出\",\"io\":\"1#冷却泵出,2#冷却泵出,3#冷却泵出,4#冷却泵出,5#冷却泵出\",\"pt\":\"制冷机进A\"},{\"text\":\"冷却塔进\",\"X_Y\":\"66,107\",\"op\":\"红竖进\",\"io\":\"1#冷却塔进A,2#冷却塔进A,3#冷却塔进A,4#冷却塔进A,5#冷却塔进A\",\"pt\":\"\"},{\"text\":\"冷却塔出\",\"X_Y\":\"182,630\",\"op\":\"紫竖出\",\"io\":\"1#冷却塔出A,1#冷却塔出B,2#冷却塔出A,2#冷却塔出B,3#冷却塔出A,3#冷却塔出B,4#冷却塔出A,4#冷却塔出B,5#冷却塔出A\",\"pt\":\"冷却泵进\"},{\"text\":\"总管回水\",\"X_Y\":\"864,636\",\"op\":\"青横出\",\"io\":\"开\",\"pt\":\"冷冻泵进\"}],\"device\":[{\"text\":\"1#制冷机\",\"X_Y\":\"379,139\",\"type\":\"C.Chiller\",\"id\":\"92\",\"mid\":\"000000000082,1090\"},{\"text\":\"2#制冷机\",\"X_Y\":\"379,283\",\"type\":\"C.Chiller\",\"id\":\"93\",\"mid\":\"000000000081,1090\"},{\"text\":\"3#制冷机\",\"X_Y\":\"379,427\",\"type\":\"C.Chiller\",\"id\":\"94\",\"mid\":\"000000000059,1090\"},{\"text\":\"4#制冷机\",\"X_Y\":\"379,571\",\"type\":\"C.Chiller\",\"id\":\"95\",\"mid\":\"000000000060,1090\"},{\"text\":\"1#冷冻泵\",\"X_Y\":\"642,163\",\"type\":\"C.Pumps\",\"dir\":\"R\",\"id\":\"96\",\"mid\":\"000000000026,1090\"},{\"text\":\"2#冷冻泵\",\"X_Y\":\"642,271\",\"type\":\"C.Pumps\",\"dir\":\"R\",\"id\":\"97\",\"mid\":\"000000000008,1090\"},{\"text\":\"3#冷冻泵\",\"X_Y\":\"642,379\",\"type\":\"C.Pumps\",\"dir\":\"R\",\"id\":\"98\",\"mid\":\"000000000100,1090\"},{\"text\":\"4#冷冻泵\",\"X_Y\":\"642,487\",\"type\":\"C.Pumps\",\"dir\":\"R\",\"id\":\"99\",\"mid\":\"000000000007,1090\"},{\"text\":\"5#冷冻泵\",\"X_Y\":\"642,595\",\"type\":\"C.Pumps\",\"dir\":\"R\",\"id\":\"100\",\"mid\":\"000000000098,1090\"},{\"text\":\"1#冷却泵\",\"X_Y\":\"258,163\",\"type\":\"C.Pumps\",\"id\":\"101\",\"mid\":\"000000000032,1090\"},{\"text\":\"2#冷却泵\",\"X_Y\":\"258,271\",\"type\":\"C.Pumps\",\"id\":\"102\",\"mid\":\"000000000028,1090\"},{\"text\":\"3#冷却泵\",\"X_Y\":\"258,379\",\"type\":\"C.Pumps\",\"id\":\"103\",\"mid\":\"000000000097,1090\"},{\"text\":\"4#冷却泵\",\"X_Y\":\"258,487\",\"type\":\"C.Pumps\",\"id\":\"104\",\"mid\":\"000000000006,1090\"},{\"text\":\"5#冷却泵\",\"X_Y\":\"258,595\",\"type\":\"C.Pumps\",\"id\":\"105\",\"mid\":\"000000000027,1090\"},{\"text\":\"1#冷却塔\",\"X_Y\":\"96,139\",\"type\":\"C.Tower\",\"id\":\"106\",\"mid\":\"000000000055,1090\",\"ct\":\"/5\"},{\"text\":\"2#冷却塔\",\"X_Y\":\"96,247\",\"type\":\"C.Tower\",\"id\":\"107\",\"mid\":\"000000000055,1090\",\"ct\":\"/5\"},{\"text\":\"3#冷却塔\",\"X_Y\":\"96,355\",\"type\":\"C.Tower\",\"id\":\"108\",\"mid\":\"000000000055,1090\",\"ct\":\"/5\"},{\"text\":\"4#冷却塔\",\"X_Y\":\"96,463\",\"type\":\"C.Tower\",\"id\":\"109\",\"mid\":\"000000000055,1090\",\"ct\":\"/5\"},{\"text\":\"5#冷却塔\",\"X_Y\":\"96,571\",\"type\":\"C.Tower\",\"id\":\"110\",\"mid\":\"000000000055,1090\",\"ct\":\"/5\"},{\"text\":\"1#冷却塔进水阀\",\"X_Y\":\"76,147\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"111\"},{\"text\":\"2#冷却塔进水阀\",\"X_Y\":\"76,255\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"112\"},{\"text\":\"3#冷却塔进水阀\",\"X_Y\":\"76,363\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"113\"},{\"text\":\"4#冷却塔进水阀\",\"X_Y\":\"76,471\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"114\"},{\"text\":\"5#冷却塔进水阀\",\"X_Y\":\"76,579\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"115\"},{\"text\":\"1#冷机冷却水阀\",\"X_Y\":\"364,172\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"116\"},{\"text\":\"1#冷机冷冻水阀\",\"X_Y\":\"549,193\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"120\"},{\"text\":\"2#冷机冷却水阀\",\"X_Y\":\"360,316\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"117\"},{\"text\":\"2#冷机冷冻水阀\",\"X_Y\":\"553,337\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"121\"},{\"text\":\"3#冷机冷却水阀\",\"X_Y\":\"360,460\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"118\"},{\"text\":\"3#冷机冷冻水阀\",\"X_Y\":\"553,481\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"122\"},{\"text\":\"4#冷机冷却水阀\",\"X_Y\":\"360,604\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"119\"},{\"text\":\"4#冷机冷冻水阀\",\"X_Y\":\"553,625\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"123\"},{\"text\":\"1#冷却塔出水阀A\",\"X_Y\":\"163,171\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"124\"},{\"text\":\"2#冷却塔出水阀A\",\"X_Y\":\"163,279\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"125\"},{\"text\":\"3#冷却塔出水阀A\",\"X_Y\":\"163,387\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"126\"},{\"text\":\"4#冷却塔出水阀A\",\"X_Y\":\"163,495\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"127\"},{\"text\":\"5#冷却塔出水阀\",\"X_Y\":\"163,616\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"128\"},{\"text\":\"1#冷却塔出水阀B\",\"X_Y\":\"163,184\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"129\"},{\"text\":\"2#冷却塔出水阀B\",\"X_Y\":\"163,292\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"130\"},{\"text\":\"3#冷却塔出水阀B\",\"X_Y\":\"164,400\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"131\"},{\"text\":\"4#冷却塔出水阀B\",\"X_Y\":\"163,508\",\"type\":\"C.Valve\",\"dir\":\"X\",\"id\":\"132\"}],\"label\":[{\"text\":\"冷冻水供水\",\"X_Y\":\"866,75\",\"size\":\"14\"},{\"text\":\"冷冻水回水\",\"X_Y\":\"866,604\",\"size\":\"14\"}],\"arrow\":[{\"direction\":\"E\",\"X_Y\":\"884,92\"},{\"direction\":\"W\",\"X_Y\":\"884,621\"}],\"grid\":[{\"X_Y\":\"96,9\",\"read\":[{\"text\":\"冷却水供水温度\",\"unit\":\"℃\",\"_text\":\"CW_ST\"},{\"text\":\"冷却水供水压力\",\"unit\":\"kPa\",\"_text\":\"CW_SP\"},{\"text\":\"冷却水流量\",\"unit\":\"m³/h\",\"_text\":\"CW_FLOW\"}]},{\"X_Y\":\"181,57\",\"read\":[{\"text\":\"冷却水回水温度\",\"unit\":\"℃\",\"_text\":\"CW_RT\"},{\"text\":\"冷却水回水压力\",\"unit\":\"kPa\",\"_text\":\"CW_RP\"}]},{\"X_Y\":\"320,9\",\"read\":[{\"text\":\"冷却水温差\",\"unit\":\"℃\",\"_text\":\"CW_TD\"},{\"text\":\"冷却水压差\",\"unit\":\"kPa\",\"_text\":\"CW_PD\"}]},{\"X_Y\":\"640,9\",\"read\":[{\"text\":\"冷冻水供水温度\",\"unit\":\"℃\",\"_text\":\"CHW_ST\"},{\"text\":\"冷冻水供水压力\",\"unit\":\"kPa\",\"_text\":\"CHW_SP\"},{\"text\":\"冷冻水流量\",\"unit\":\"m³/h\",\"_text\":\"CHW_FLOW\"}]},{\"X_Y\":\"768,566\",\"read\":[{\"text\":\"冷冻水回水温度\",\"unit\":\"℃\",\"_text\":\"CHW_RT\"},{\"text\":\"冷冻水回水压力\",\"unit\":\"kPa\",\"_text\":\"CHW_RP\"}]},{\"X_Y\":\"822,297\",\"read\":[{\"text\":\"冷冻水温差\",\"unit\":\"℃\",\"_text\":\"CHW_TD\"},{\"text\":\"冷冻水压差\",\"unit\":\"kPa\",\"_text\":\"CHW_PD\"}]}],\"line\":[{\"X_Y\":\"97,64\",\"len\":\"45\",\"op\":\"竖虚无黑\"},{\"X_Y\":\"176,28\",\"len\":\"144\",\"op\":\"横虚右黑\"},{\"X_Y\":\"182,94\",\"len\":\"88\",\"op\":\"竖虚无黑\"},{\"X_Y\":\"261,76\",\"len\":\"22\",\"op\":\"横虚无黑\"},{\"X_Y\":\"283,28\",\"len\":\"48\",\"op\":\"竖虚无黑\"},{\"X_Y\":\"641,64\",\"len\":\"45\",\"op\":\"竖虚无黑\"},{\"X_Y\":\"720,37\",\"len\":\"49\",\"op\":\"横虚无黑\"},{\"X_Y\":\"769,37\",\"len\":\"599\",\"op\":\"竖虚无黑\"},{\"X_Y\":\"769,316\",\"len\":\"53\",\"op\":\"横虚右黑\"}]}}",
-      airValue: 0, coolingLoad: 0, totalPower: 0
+      airValue: 0, coolingLoad: 0, totalPower: 0,
+      videoModelVisible: false, videoMonitorList: []
     }
   }, computed: {
   },
@@ -174,17 +201,31 @@ export default {
     this.websocketInstance = this.createdSocket();
   },
   mounted () {
-
+    videoMonitorArray({ shopNumber: this.shopNumber, type: 3 }).then((res) => {
+      if (res.code === 200 && res.data.array.length > 0) {
+        this.videoMonitorList = res.data.array;
+      }
+    })
     this.initCold(this.ct);
     //  this.query();
     let that = this;
     $(function () {
       $('image').click(function () {
+
+        var href = $(this).attr("href");
         var name = $(this).attr("name"), vname = name.replace(name.substring(0, 1), '');
+          if (href.indexOf('png') == -1) {
+              return;
+          }
         that.dialogObj.baseInfo.name = name;
+          console.log(name);
         that.dialogObj.baseInfo.runers = cold.getRuners();
-        that.etitle=name.split('#')[1];
-        if (name.indexOf("冷却塔") != -1) {
+        that.etitle = name.split('#')[1];
+          if(name.indexOf('水阀') != -1){
+              // that.WaterValveDialog = true;
+              return;
+          }
+          else  if (name.indexOf("冷却塔") != -1) {
           that.coolingTowerDialog = true;
         }
         else if (name.indexOf("冷却泵") != -1 || name.indexOf("冷冻泵") != -1) {
@@ -208,7 +249,6 @@ export default {
         '/ws/safeManage/air/websocket'
       );
     },
-    // ...mapActions('drainage', ['initWebsocket']),
     refreshData (obj) {
       this.query(obj);
     },
@@ -218,6 +258,7 @@ export default {
       let rbj = res.data.list, address = '', v = 0;
       this.logList = res.data.logList;
       this.dialogObj.objval = rbj;
+        // console.log("测试："+JSON.stringify(rbj))
       cold.setNameVal(rbj);
       for (var i = 0; i < rbj.length; i++) {
         address = rbj[i].Address; v = rbj[i].val;
@@ -311,12 +352,12 @@ export default {
     }, close () {
       this.airDetailsDialog = false;
       this.coolingPumpDialog = false;
-      this.coolingTowerDialog = false;
+      this.coolingTowerDialog = false;  this.WaterValveDialog = false;
     }
   },
   watch: {
     shopNumber (val) {
-      console.log('shopNumber', val, this.websocketInstance);
+      // console.log('shopNumber', val, this.websocketInstance);
       if (this.websocketInstance) {
         this.websocketInstance.close()
       }
@@ -458,7 +499,7 @@ table tr td {
   padding: 10px 5px 5px 5px;
 }
 .dialog-header {
- font-size: 15px;
+  font-size: 15px;
 }
 
 .el-tabs.el-tabs--top {
@@ -469,7 +510,7 @@ table tr td {
 }
 
 .el-tabs__nav-wrap::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: 0;
@@ -486,5 +527,18 @@ table tr td {
 }
 .el-tabs__nav-wrap {
   margin-left: 20px;
+}
+
+.video {
+  font-size: 40px;
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  z-index: 999;
+  cursor: pointer;
+}
+
+.dialog-footer{
+    margin-top:20px;
 }
 </style>

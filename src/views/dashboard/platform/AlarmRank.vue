@@ -52,12 +52,13 @@ export default {
   },
   watch: {
     shopNumber: function (val) {
+
       // console.log('val', val)
       this.initData(val);
     }
   },
   mounted () {
-
+    this.$autoStop();
   },
   methods: {
     //更新数据
@@ -90,7 +91,7 @@ export default {
     lookMore () {
       // console.log('查看更多')
       //data-rank/index
-      this.$router.push({ path: '/data-rank/alarm-level' })
+      this.$router.push({ name: 'alarm-level', params: { referer: 'index' } })
     },
     //echarts点击事件
     eclick (params) {

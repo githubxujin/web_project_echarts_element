@@ -68,7 +68,7 @@
       <el-row>
         <el-col :span="12">
           <el-form-item prop="rank" label="排序">
-            <el-input v-model.trim="form.rank"></el-input>
+            <el-input v-model.trim="form.rank" clearable :maxlength="3"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
@@ -131,7 +131,7 @@ export default {
         configType: '',
         configName: '',
         pid: '',
-        rank: 0,
+        rank: '',
         content: ''
       },
       formRules: { // 表单规则
@@ -181,7 +181,7 @@ export default {
     cancle () { // 重置表单并关闭表单
       Object.keys(this.form).forEach(prop => {
         if (prop === 'rank') {
-          this.form[prop] = 0
+          this.form[prop] = ''
         } else {
           this.form[prop] = ''
         }

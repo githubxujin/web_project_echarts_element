@@ -44,13 +44,40 @@
                       @change="alarmDeviceTypeChange"
                     ></TreeSelect>
                   </el-form-item>
-                  <el-form-item label="位置" prop="alarmLocation">
-                    <el-input v-model.trim="form.alarmLocation" maxlength="50"></el-input>
-                  </el-form-item>
+                  <el-row>
+                    <el-col :span="12">
+                      <el-form-item
+                        label="位置"
+                        prop="alarmLocation"
+                        :rules="[
+                        {
+                          validator: (rule, value, callback) => {
+                            return validateLocationLength(rule, value, callback)
+                          },
+                          trigger: 'blur'
+                        }
+                        ]"
+                      >
+                        <el-input v-model.trim="form.alarmLocation"></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12" v-if="form.alarmSystemType === 4">
+                      <el-form-item label="是否显示楼层" prop="showFloor">
+                        <el-radio-group v-model="form.showFloor">
+                          <el-radio
+                            :key="index"
+                            v-for="(item, index) in yesOrNoEnum"
+                            :label="item.value"
+                          >{{item.label}}</el-radio>
+                        </el-radio-group>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
                   <el-form-item label="参数条件" class="alarmConditionParamList is-required">
                     <div v-for="(item, index) in form.alarmConditionParamList" :key="item.copyId">
                       <el-form-item
                         labelWidth="0px"
+                        v-if="form.alarmSystemType !== 4|| true"
                         :prop="`alarmConditionParamList[${index}].relateOperator`"
                         v-show="Boolean(index)"
                         :rules="[
@@ -99,6 +126,7 @@
                         </el-select>
                       </el-form-item>
                       <el-form-item
+                        v-if="form.alarmSystemType !== 4"
                         labelWidth="0px"
                         class="hasUnit"
                         :prop="`alarmConditionParamList[${index}].firstOperator`"
@@ -120,6 +148,7 @@
                         </el-select>
                       </el-form-item>
                       <el-form-item
+                        v-if="form.alarmSystemType !== 4"
                         labelWidth="0px"
                         :prop="`alarmConditionParamList[${index}].firstOperateValue`"
                         :rules="[
@@ -128,16 +157,11 @@
                             return validateFirstOperateValue(rule, value, callback, index)
                           },
                           trigger: 'blur'
-                        },
-                        {
-                          validator: (rule, value, callback) => {
-                            return validateFirstOperateValue(rule, value, callback, index)
-                          },
-                          trigger: 'change'
                         }
                         ]"
                       >
                         <el-input
+                          maxlength="8"
                           v-show="!item.dataType"
                           v-model.trim="form.alarmConditionParamList[index].firstOperateValue"
                           placeholder="请输入数值"
@@ -157,6 +181,7 @@
                         </el-select>
                       </el-form-item>&nbsp;&nbsp;&nbsp;&nbsp;
                       <el-form-item
+                        v-if="form.alarmSystemType !== 4 "
                         labelWidth="0px"
                         class="hasUnit"
                         :prop="`alarmConditionParamList[${index}].middleOperator`"
@@ -182,6 +207,7 @@
                         </el-select>
                       </el-form-item>
                       <el-form-item
+                        v-if="form.alarmSystemType !== 4"
                         labelWidth="0px"
                         class="hasUnit"
                         :prop="`alarmConditionParamList[${index}].secondOperator`"
@@ -208,6 +234,7 @@
                         </el-select>
                       </el-form-item>
                       <el-form-item
+                        v-if="form.alarmSystemType !== 4"
                         labelWidth="0px"
                         :prop="`alarmConditionParamList[${index}].secondOperateValue`"
                         :rules="[
@@ -216,16 +243,11 @@
                             return validateSecondOperateValue(rule, value, callback, index)
                           },
                           trigger: 'blur'
-                        },
-                        {
-                          validator: (rule, value, callback) => {
-                            return validateSecondOperateValue(rule, value, callback, index)
-                          },
-                          trigger: 'change'
                         }
                         ]"
                       >
                         <el-input
+                          maxlength="8"
                           v-show="!item.dataType"
                           v-model.trim="form.alarmConditionParamList[index].secondOperateValue"
                           placeholder="请输入数值"
@@ -245,18 +267,83 @@
                         </el-select>
                       </el-form-item>
                       <i
-                        v-show="index < form.alarmConditionParamList.length-1"
+                        v-show="index > 0"
                         @click="deleteFormParam(index)"
                         class="el-icon-remove-outline delete params-icon"
                       ></i>
                       <i
-                        v-show="index === form.alarmConditionParamList.length-1"
+                        v-show="index === 0"
                         @click="addFormParam"
                         class="el-icon-circle-plus-outline add params-icon"
                       ></i>
                     </div>
                   </el-form-item>
-                  <el-form-item label="级别">
+                  <el-form-item class="hasUnit" label="时间" prop="timeType">
+                    <el-select
+                      class="value-selector"
+                      @change="changeTimeType"
+                      v-model="form.timeType"
+                      clearable
+                    >
+                      <el-option
+                        v-for="item in timeTypeList2"
+                        :key="item.id"
+                        :label="item.label"
+                        :value="item.id"
+                      ></el-option>
+                    </el-select>
+                    <template v-if="form.timeType != 1">
+                      <el-select
+                        class="value-selector"
+                        v-model="form.startTime"
+                        clearable
+                        placeholder="选择时间"
+                      >
+                        <el-option
+                          v-for="item in timeList[form.timeType]"
+                          :key="item.id"
+                          :label="item.label"
+                          :value="item.id"
+                        ></el-option>
+                      </el-select>至
+                      <el-select
+                        class="value-selector"
+                        v-model="form.endTime"
+                        clearable
+                        placeholder="选择时间"
+                      >
+                        <el-option
+                          v-for="item in timeList[form.timeType]"
+                          :key="item.id"
+                          :label="item.label"
+                          :value="item.id"
+                        ></el-option>
+                      </el-select>
+                    </template>
+                    <template v-else>
+                      <el-time-select
+                        v-model="form.startTime"
+                        :picker-options="{
+                          start: '00:00',
+                          step: '00:15',
+                          end: '24:00',
+                          maxTime: form.endTime
+                        }"
+                        placeholder="选择时间"
+                      ></el-time-select>至
+                      <el-time-select
+                        v-model="form.endTime"
+                        :picker-options="{
+                          start: '00:00',
+                          step: '00:15',
+                          end: '24:00',
+                          minTime: form.startTime
+                        }"
+                        placeholder="选择时间"
+                      ></el-time-select>
+                    </template>
+                  </el-form-item>
+                  <el-form-item label="级别" prop="alarmLevel">
                     <el-select v-model="form.alarmLevel" clearable>
                       <el-option
                         v-for="item in alarmLevelList"
@@ -267,7 +354,7 @@
                     </el-select>
                   </el-form-item>
                   <el-form-item label="持续时间" class="hasUnit" prop="lastTime">
-                    <el-input v-model="form.lastTime">
+                    <el-input v-model="form.lastTime" maxlength="8">
                       <el-select slot="append" v-model="form.lastTimeUnit">
                         <el-option
                           v-for="item in timeTypeList"
@@ -279,7 +366,7 @@
                     </el-input>后报警
                   </el-form-item>
                   <el-form-item label="升级机制" class="hasUnit" prop="upgradeTime">
-                    <el-input v-model.trim="form.upgradeTime">
+                    <el-input v-model.trim="form.upgradeTime" maxlength="8">
                       <el-select slot="append" v-model="form.upgradeTimeUnit">
                         <el-option
                           v-for="item in timeTypeList"
@@ -310,6 +397,7 @@
                   </el-form-item>
                   <el-form-item label="指派给" prop="executer">
                     <TreeSelect
+                      :disabled="form.workOrder === 1"
                       v-model="form.executer"
                       placeholder="请选择"
                       :clearable="true"
@@ -333,7 +421,7 @@
                       style="width:280px;"
                       :rows="3"
                       placeholder="请输入内容"
-                      :maxlength="100"
+                      :maxlength="30"
                     ></el-input>
                   </el-form-item>
                 </div>
@@ -426,6 +514,10 @@ export default {
         alarmLocation: '',
         alarmConditionParamList: [JSON.parse(JSON.stringify(paramObj))],
         alarmLevel: '',
+        timeType: '',
+        startTime: '',
+        endTime: '',
+        showFloor: '',
         lastTime: '',
         lastTimeUnit: 2,
         upgradeTime: '',
@@ -436,6 +528,12 @@ export default {
         executer: '',
         remark: '派人查看',
         alarmConditionList: []
+      },
+      timeTypeList2: [{ id: 3, label: '每年' }, { id: 2, label: '每月' }, { id: 1, label: '每日' },],
+      timeList: {
+        3: Array.from(Array(12), (v, k) => ({ id: k + 1, label: k + 1 + '月' })),
+        2: Array.from(Array(31), (v, k) => ({ id: k + 1, label: k + 1 + '日' })),
+        1: Array.from(Array(24), (v, k) => ({ id: k, label: k }))
       },
       rules: {
         alarmName: [
@@ -448,6 +546,9 @@ export default {
         remark: [
           { pattern: Regexps.chinese, message: '只能是汉字', trigger: 'blur' }
         ],
+        alarmLevel: [
+          { required: true, message: '必选', trigger: 'change' }
+        ],
         lastTime: [
           { pattern: Regexps.positiveInteger, message: '只能是正整数', trigger: 'blur' }
         ],
@@ -456,7 +557,7 @@ export default {
         ]
       },
       copyAlarmConditionList: [], // 报警条件备份
-      deviceType:'',//设备类型
+      deviceType: '',//设备类型
     }
   },
   created () {
@@ -487,12 +588,12 @@ export default {
       //   item.secondOperateValue = ~~item.secondOperateValue
       // })
       form.shopNumber = this.shopNumber
-       //console.log("form1=",form)
+      //console.log("form1=",form)
       form.alarmConditionList = this.alarmInfo.map(item => {
         item.status = form.alarmConditionList.includes(item.id) ? 0 : 1
         return item
       })
-     // console.log("form2=",form)
+      // console.log("form2=",form)
       return form
     }
   },
@@ -531,23 +632,28 @@ export default {
       this.form.alarmSystemType = item.value
     },
     deviceTypeChange (item) {
-      //console.log("设备类型切换：",item)
+      // console.log("设备类型切换：", item)
       this.$refs['form'].resetFields()
       this.activeKey2 = item.id
       this.form.alarmDevice = item.id
       this.form.alarmDeviceType = item.id
       this.form.alarmDeviceName = item.configName
     },
-    alarmDeviceTypeChange (item) {
-     // console.log("报警设备类型切换：",item)
-     // debugger
+    changeTimeType () {
+      this.form.startTime = '';
+      this.form.endTime = '';
+    },
+    alarmDeviceTypeChange (item, node) {
+      // console.log("报警设备类型切换：",item)
+      // debugger
       this.form.alarmDeviceNumber = null
       if (!item) {
         this.form.alarmDeviceName = ''
         this.form.alarmLocation = ''
         return
       }
-      let data = item.data
+      // let data = item.data
+      let data = node
       /**
        * 子项有deviceType 父项只有id  activeKey2 为选中父项
        */
@@ -557,12 +663,15 @@ export default {
       this.form.alarmDeviceId = data.deviceType ? data.id : null
       this.form.alarmDeviceNumber = data.deviceType ? data.number : null
       this.form.alarmLocation = data.location || ''
-      if(!data.deviceType && data.id){//选中的是父项
-        this.deviceType=data.id;
-      }else{
-        this.deviceType='';
-      }
-     // console.log("this.deviceType:",this.deviceType)
+      // if (!data.deviceType && data.id) {//选中的是父项
+      //   this.deviceType = data.id;
+      // } else {
+      //   this.deviceType = '';
+      // }
+      this.deviceType = node.deviceType || node.id || ''
+      console.log("this.item:", item)
+      console.log("this.node:", node)
+      console.log("this.deviceType:", this.deviceType)
     },
     alarmParamChange (index) { // 参数修改
       let item = this.form.alarmConditionParamList[index];
@@ -603,7 +712,7 @@ export default {
       this.$common.updateLoadingStatus(true)
       this.alarmAdd(this.params).then(res => {
         this.$common.updateLoadingStatus(false)
-        this.$message.success('新增告警成功!')
+        this.$message.success('新增报警成功!')
         this.cancle()
       }).catch(_ => {
         this.$common.updateLoadingStatus(false)
@@ -666,26 +775,31 @@ export default {
     },
     validateMiddleOperator (rule, value, callback, index) { // 校验 参数条件 第二逻辑符
       let item = this.form.alarmConditionParamList[index]
-      if ((item.secondOperator || item.secondOperateValue) && !value && value !== 0) {
-        return callback(new Error('必选'))
-      }
+      // if ((item.secondOperator || item.secondOperateValue) && !value && value !== 0) {
+      //   return callback(new Error('必选'))
+      // }
       return callback()
     },
     validateSecondOperator (rule, value, callback, index) { // 校验 参数条件 第二运算符
       let item = this.form.alarmConditionParamList[index]
-      if ((item.middleOperator || item.secondOperateValue) && !value && value !== 0) {
-        return callback(new Error('必选'))
-      }
+      // if ((item.middleOperator || item.secondOperateValue) && !value && value !== 0) {
+      //   return callback(new Error('必选'))
+      // }
       return callback()
     },
     validateSecondOperateValue (rule, value, callback, index) { // 校验 参数条件 第二参数
       let item = this.form.alarmConditionParamList[index]
-      if ((item.middleOperator || item.secondOperator)) {
-        if (!value && value !== 0) return item.dataType ? callback(new Error('必选')) : callback(new Error('必填'))
-      }
+      // if ((item.middleOperator || item.secondOperator)) {
+      //   if (!value && value !== 0) return item.dataType ? callback(new Error('必选')) : callback(new Error('必填'))
+      // }
       if (!item.dataType && value && !this.Regexps.positiveNumber.test(value)) return callback(new Error('仅支持正数'))
       return callback()
+    },
+    validateLocationLength (rule, value, callback) { // 位置长度校验
+      if (value && value.length > 50) return callback(new Error('不能超过50个字符'))
+      return callback()
     }
+
   },
   watch: {
     'form.alarmSystemType': {
@@ -714,8 +828,8 @@ export default {
           this.form.alarmDeviceType = firstObj.id || null
           this.form.alarmDevice = firstObj.id || null
           this.form.alarmDeviceName = firstObj.configName || null
-          this.deviceType=this.form.alarmDeviceType
-         // console.log("监听form:",this.form);
+          this.deviceType = this.form.alarmDeviceType
+          // console.log("监听form:",this.form);
         })).catch(_ => {
           this.deviceTypeList = []
           this.deviceList = []
@@ -738,7 +852,7 @@ export default {
               ids = [deviceFirst.id]
             }
           }
-          this.alarmParameterQuery({ shopNumber: this.shopNumber, ids: ids, type: this.form.alarmSystemType ,deviceType:this.deviceType}).then(res => {
+          this.alarmParameterQuery({ shopNumber: this.shopNumber, ids: ids, type: this.form.alarmSystemType, deviceType: this.deviceType }).then(res => {
             this.alarmInfo = res.data.alarmInfo || []
             this.form.alarmConditionList = res.data.alarmInfo.filter(item => !item.status).map(item => item.id)
             this.copyAlarmConditionList = res.data.alarmInfo.filter(item => !item.status).map(item => item.id)
@@ -750,6 +864,17 @@ export default {
         } else {
           this.paramsTypeList = []
           this.form.alarmConditionParamList = [JSON.parse(JSON.stringify(this.paramObj))]
+        }
+      }
+    },
+    'form.workOrder': {
+      // 不直接生成工单时，指派人非必填
+      handler: function (val) {
+        if (val === 1) {
+          this.rules.executer = [];
+          // this.form.executer = '';
+        } else {
+          this.rules.executer = [{ required: true, message: '必选', trigger: 'change' }]
         }
       }
     }
@@ -775,6 +900,15 @@ export default {
     }
     .line {
       margin: 0 10px;
+    }
+  }
+  .alarm-condition-list {
+    .el-checkbox {
+      display: flex;
+      align-items: center;
+      /deep/ .el-checkbox__input {
+        line-height: 0;
+      }
     }
   }
   .page-content {
@@ -851,6 +985,12 @@ export default {
                 width: 100px;
                 .el-input {
                   width: 80px;
+                }
+              }
+              /deep/ .el-date-editor--time-select {
+                width: 100px;
+                .el-input {
+                  width: 100px;
                 }
               }
             }

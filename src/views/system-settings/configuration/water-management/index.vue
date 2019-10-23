@@ -169,7 +169,7 @@ export default {
             value: 'id'
           }
         }, {
-          label: '所属单位',
+          label: '所属设备',
           prop: 'belongToName',
         }, {
           label: '位置',
@@ -197,6 +197,7 @@ export default {
           configName: '全部',
           id: ''
         })
+        console.log('arr', this.deviceTypeList)
       })
       this.statusEnum.unshift({
         label: '全部',

@@ -12,7 +12,7 @@
                              :showTabs="false"
                              :clearable="true"
                              :isMultiple="false"
-                             :requestParams="{treeType: 1}"
+                             :requestParams="{treeType:2}"
                              :anotherStyle="false"
                              @ajaxSuccess="ajaxSuccess"
                              :showTitle="false"></projectTree>
@@ -78,11 +78,6 @@
         </div>
 
       </div>
-      <!--<div class="u-layout-right-item">-->
-        <!--<el-button class="el-button el-button&#45;&#45;primary el-button&#45;&#45;small"-->
-                   <!--@click="exportData"-->
-                   <!--v-if="pageBtns.some(val=>val=='export')">导出</el-button>-->
-      <!--</div>-->
         <div class="u-layout-left-item">
             <el-button @click="getCharts" class="el-button el-button--primary el-button--small">图形</el-button>
             <el-button @click="get_Data" class="el-button el-button--primary el-button--small">数据</el-button>
@@ -131,12 +126,6 @@ export default {
       checkTime: {},
       tableData: {
         tHead: [
-          // { text: '时间', prop: 'time', sortable: true },
-          // { text: '001号门店', prop: '001号门店', sortable: true },
-          // { text: '项目二', prop: 'city', sortable: true },
-          // { text: '项目三', prop: 'totalarea', sortable: true },
-          // { text: '项目四', prop: 'energy', sortable: true },
-          // { text: '项目五', prop: 'energy', sortable: true }
         ],
         data: [],
         total: 0,
@@ -175,30 +164,7 @@ export default {
       ],
       list: [],
       timeType: 1,
-      objectoptions: [{
-        value: '全部',
-        label: '全部'
-      }, {
-        value: '红星美凯龙龙华店',
-        label: '红星美凯龙龙华店'
-      }, {
-        value: '红星美凯龙南山店',
-        label: '红星美凯龙南山店'
-      }
-        , {
-        value: '红星美凯龙福田店',
-        label: '红星美凯龙福田店'
-      }
-        , {
-        value: '红星美凯龙坂田店',
-        label: '红星美凯龙坂田店'
-      }, {
-        value: '红星美凯龙五和店',
-        label: '红星美凯龙五和店'
-      }, {
-        value: '红星美凯龙西里店',
-        label: '红星美凯龙西里店'
-      }
+      objectoptions: [
       ], parameteroptions: [{
         value: '报警级别',
         label: '报警级别'
@@ -238,68 +204,7 @@ export default {
       objecvalue: '', check_Time: '',
       parametervalue: '', quotavalue: '',
       chartOption: {
-
-        // toolbox: {
-        //     show: true,
-        //     feature: {
-        //         dataView: {show: true, readOnly: true,lang:['','关闭']},
-        //         magicType: {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-        //         restore: {show: true},
-        //         saveAsImage: {show: true}
-        //     }
-        // }
-
-        // toolbox: {
-        //   show: true,
-        //   feature: {
-        //     dataView: {
-        //       buttonColor: '#1EA9FB',
-        //       show: true,
-        //       readOnly: true,
-        //       optionToContent: function (opt) {
-        //         console.log('opt:', opt);
-        //         let axisData = opt.xAxis[0].data; //坐标数据
-        //         let series = opt.series; //折线图数据
-        //
-        //         let table = `<table class="coustom-echarts-table">`;
-        //         // let tdHeads = `<thead><tr><td>${opt.xAxis[0].name}</td>`; //表头
-        //         let tdHeads = `<thead><tr><td>时间</td>`; //表头
-        //         //thead
-        //         series.forEach(function (item, index) {
-        //           tdHeads += `<td>${item.name}</td>`;
-        //         });
-        //         table += tdHeads + `</tr></thead>`;
-        //
-        //         //tbody
-        //         let tdBodys = "<tbody>";
-        //         for (
-        //           let i = 0, l = axisData.length;
-        //           i < l;
-        //           i++
-        //         ) {
-        //           let evenTrClass = i % 2 === 0 ? "even" : "";
-        //           //行
-        //           tdBodys += `<tr class="${evenTrClass}"><td>${
-        //             axisData[i]
-        //             }</td>`;
-        //           for (let j = 0; j < series.length; j++) {
-        //             //列
-        //             tdBodys += `<td>${
-        //               series[j].data[i]
-        //               }</td>`;
-        //           }
-        //           tdBodys += "</tr>";
-        //         }
-        //         //表
-        //         table += `${tdBodys}</tbody></table>`;
-        //         return table;
-        //       }
-        //     },
-        //     magicType: { type: ['line', 'bar'] },
-        //     //   restore: {show: true},
-        //     //   saveAsImage: {show: true}
-        //   }
-        // },
+          color: ['#028CF7','#4852DD','#9D67FF','#0DD789','#F19F02','#11AA07','#F14D4D','#00FFFC','#FF8080','#6FD1FF','#A39823'],
         tooltip: {
           trigger: 'axis'
         },
@@ -309,7 +214,7 @@ export default {
         },
         grid: {
           left: '3%',
-          right: '4%',
+          right: '3%',
           top: '5%',
           bottom: '7%',
           // containLabel: true
@@ -344,6 +249,7 @@ export default {
 
         },
         yAxis: {
+            minInterval:1,
           name: "处理时间(min)",
           axisLine: {
             symbol: ['none', 'arrow']          },
@@ -391,9 +297,10 @@ export default {
         }
       });
       this.checkedShopNumbers.forEach(function (v, i) {
-        topShopNumer += v;
-        if (t.checkedShopNumbers.length - 1 != i) {
-          topShopNumer += ','
+        //   debugger
+        // topShopNumer += v;
+        if (t.checkedShopNumbers.length - 1 == i) {
+            topShopNumer += v;
         }
       });
       if (!thisShop_Number || !topShopNumer) {
@@ -404,25 +311,26 @@ export default {
         this.$message.error("对比的两个门店不能一样");  return;
       }
       if (this.compareParam == 1) {
-        this.chartOption.yAxis.name = "单位(个)";
+          this.chartOption.yAxis.name = "数量(个)";
       }
       else if (this.compareParam == 2) {
-        this.chartOption.yAxis.name = "单位(min)";
+          this.chartOption.yAxis.name = "时间(min)";
       }
       else if (this.compareParam == 3) {
-        this.chartOption.yAxis.name = "单位(%)";
+          this.chartOption.yAxis.name = "占比(%)";
       }
       else if (this.compareParam == 4) {
-        this.chartOption.yAxis.name = "单位(kWh)";
+          this.chartOption.grid.left='3%';
+          this.chartOption.yAxis.name = "总能耗(kWh)";
           if (this.detailIndex==2){
-              this.chartOption.yAxis.name = "单位(kWh/m²)";
+              this.chartOption.grid.left='4%';
+              this.chartOption.yAxis.name = "单位面积能耗(kWh/m²)";
           }
       }
 
       let obj={        compareParam: this.compareParam, compareTarget: thisShop_Number, currentTarget: topShopNumer, detailIndex: this.detailIndex==0?'':this.detailIndex, timeType: this.timeType
           , start: this.checkTime.start, end: this.checkTime.end      };
         getShopCompareListReverse(obj).then((res) => {
-            // console.log("getShopCompareListReverse:"+JSON.stringify(res))
             if (res.data.length>0){
               this.tableData.tHead=[];
                 let t_count = JSON.stringify(res.data[0]).toString().split('":"').length-1;
@@ -437,7 +345,7 @@ export default {
             }
 
         });
-        this.chartOption.xAxis.name=this.timeType==1?this.chartOption.xAxis.name='日期(日)':this.timeType==2? this.chartOption.xAxis.name='日期(月)':this.chartOption.xAxis.name='日期(年)';
+        this.chartOption.xAxis.name=this.timeType==1?this.chartOption.xAxis.name='日':this.timeType==2? this.chartOption.xAxis.name='月':this.chartOption.xAxis.name='年';
       getShopCompareList(obj).then((res) => {
         let obj = res.data;
         this.list = obj;
@@ -468,15 +376,9 @@ export default {
           this.chartOption.legend.data.push(pName);
           let dataObj = "[" + iobj.split(":[")[1] + "]";
           param.data = JSON.parse(dataObj.replace('}]', ''));
-          // let obj = {
-          //     "unit": '%',
-          //     "value": JSON.parse(dataObj.replace('}]',''))
-          // };
           this.chartOption.series.push(param);
 
         }
-        // debugger
-         // console.log(JSON.stringify(this.chartOption))
         if (this.chartOption.series.length == 0) {
             this.chartOption.xAxis.data=[];
             this.tableData.data=[];
@@ -528,7 +430,7 @@ export default {
       }
       else if (this.compareParam == 4) {
         this.detailIndexOptions = [{ label: '总能耗', value: 1 },
-        { label: '平均能耗', value: 2 }];
+        { label: '单位面积能耗', value: 2 }];
       }
     },
     getCharts () {
@@ -550,7 +452,7 @@ export default {
       exportShopCompareList(`?token=${localStorage.getItem('$token_info')}&compareParam=${this.compareParam}&start=${
         this.checkTime.start
         }&end=${this.checkTime.end }&detailIndex=${
-        this.detailIndex
+          this.detailIndex==0?'':this.detailIndex
         }&compareTarget=${thisShop_Number}&currentTarget=${topShopNumer}&timeType=${this.timeType}`);
     }, ajaxSuccess (data, copydata) {
       try {

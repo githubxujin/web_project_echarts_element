@@ -135,7 +135,7 @@
                 <div>评分：</div>
               </el-col>
               <el-col :span="20">
-                <div>
+                <div class="detail-rate">
                   <el-rate v-model="billDetail.score" disabled show-score></el-rate>
                 </div>
               </el-col>
@@ -223,6 +223,7 @@
         v-if="showAppraiseAuditWin"
         @onHide="showAppraiseAuditWin = false"
         @submitForm="submitAppraiseAudit"
+        :id="curBill.id"
       ></appraise-audit>
     </el-dialog>
   </div>
@@ -281,7 +282,7 @@ export default {
       let res = 0;
       if (this.curBill.status == this.CheckBillStatusEnum.waiting) {
         res = 0;
-      } else if (this.curBill.status == this.CheckBillStatusEnum.closed) {
+      } else if (this.curBill.status == this.CheckBillStatusEnum.closed || this.curBill.status == this.CheckBillStatusEnum.canceled) {
         res = 2;
       } else {
         res = 1;
@@ -297,7 +298,7 @@ export default {
         // console.log('res', res)
         if (res.data) {
           this.billDetail = res.data;
-          this.overImgs = res.data.BillImages;
+          this.overImgs = res.data.billImages;
           this.ruleForm.score = res.data.score;
         }
         this.dialogLoading = false;
@@ -325,7 +326,7 @@ export default {
     },
     //执行派工操作
     submitDispatching (data) {
-      let item = { billNumber: this.curBill.billNumber, userId: data.user.id };
+      let item = { billNumber: this.curBill.billNumber, userId: data.user.userId };
       checkDispatch(item).then(res => {
         //console.log('res', res);
         if (res.code == 200) {
@@ -382,7 +383,7 @@ export default {
   }
 }
 /deep/ .el-tabs__content {
-  height: 500px;
+  height: 480px;
   overflow-y: auto;
 }
 /deep/ .el-tabs__nav-scroll {
@@ -397,5 +398,12 @@ export default {
 }
 /deep/ .el-form-item--small .el-form-item__label {
   line-height: 40px;
+}
+/deep/ .el-form-item--small .el-form-item__content {
+  line-height: 40px;
+}
+.detail-rate {
+  /deep/ .el-rate__icon {
+  }
 }
 </style>

@@ -23,7 +23,7 @@
         </el-form-item>
       </el-row>
       <el-row>
-        <el-form-item label="上传模板">
+        <el-form-item label="下载模板">
           <div @click="downLoadFile">
             <i class="el-icon-download"></i>下载导入模板
           </div>
@@ -54,8 +54,7 @@ export default {
   },
   computed: {
     uploadUrl () {
-      // let uploadUrl = this.url.systemSettings.dictImport
-      let uploadUrl = '';
+      let uploadUrl = '/assetManage/deviceAccount/importDevice';
       return `/api${uploadUrl}`
     },
     fileName () {
@@ -78,7 +77,7 @@ export default {
     submit () {
     },
     downLoadFile () {
-      // utils.downloadFile('/api/system-setting/excel/SystemGlobalSet.xlsx')
+      utils.downloadFile('/api/assetManage/excel/deviceInfoModel.xls');
     },
     handleChange (file, fileList) {
       this.form.name = file.status === 'ready' ? file.name : ''
@@ -86,13 +85,14 @@ export default {
       this.fileList.length && this.$nextTick(_ => {
         this.$refs.form && this.$refs.form.clearValidate()
       })
+      this.$refs.upload.submit();
     },
     handleSuccess (res) {
       this.dialogLoading = false
       if (res.code !== 200) {
         this.$refs.upload && this.$refs.upload.clearFiles()
         this.form.name = ''
-        this.$message.error('导入失败！')
+        this.$message.error(res.msg)
         return
       }
       let errorData = []

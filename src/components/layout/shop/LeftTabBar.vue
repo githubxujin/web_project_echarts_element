@@ -39,7 +39,7 @@ export default {
       type: Array,
       default: () => [
         { title: '供配电系统', icon: 'nhjc-dianli', checked: false, url: '/power-distribution-system' },
-        { title: '给排水系统', icon: 'nhjc-shui', sub: [{ name: '给水系统', url: '/water-supply-system' }, { name: '排水系统', url: '/drainage-system' }], checked: false },
+        { title: '给排水系统', icon: 'nhjc-shui', sub: [{ name: '排水系统', url: '/drainage-system' }, { name: '给水系统', url: '/water-supply-system' }], checked: false },
         { title: '空调系统', icon: 'el-icon-share', checked: false, url: '/air-conditioning-system' },
         { title: '电梯系统', icon: 'el-icon-share', checked: false, url: '/elevator-system' },
         { title: '通讯监测', icon: 'el-icon-share', checked: false, url: '/communication-monitoring' },
@@ -65,8 +65,9 @@ export default {
     // 获取侧边栏菜单
     getLeftTabMenus () {
       let authoritiesMenu = getShopAuthoritiesArr();
-      this.data = getSubMenuById(authoritiesMenu, '/safety');
-      this.handleTabMenu(this.data);
+      // this.data = getSubMenuById(authoritiesMenu, '/safety');
+      console.log('getSubMenuById00000000000000', this.authoritiesMenu)
+      // this.handleTabMenu(this.data);
       // console.log(this.data)
     },
     handleTabMenu (arr) {

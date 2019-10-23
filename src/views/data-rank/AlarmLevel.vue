@@ -73,16 +73,27 @@
           </div>
         </div>
         <div v-if="!isdata">
-          <myEcharts :id="'exampleId'" :style="{height: '655px'}" :option="chartOption" v-if="!isdata&&(chartOption.series.length != 0&&chartOption.series[0].data.length != 0)"/>
-          <div v-if="!isdata&&(chartOption.series.length != 0&&chartOption.series[0].data.length != 0)"
+          <myEcharts
+            :id="'exampleId'"
+            :style="{height: '655px'}"
+            :option="chartOption"
+            v-if="!isdata&&(chartOption.series.length != 0&&chartOption.series[0].data.length != 0)"
+          />
+          <div
+            v-if="!isdata&&(chartOption.series.length != 0&&chartOption.series[0].data.length != 0)"
             class="echartsTitle"
           >{{datetimeUtils.GMTToStr(checkTime.start).length>0?datetimeUtils.GMTToStr(checkTime.start).split(' ')[0]:''}}~{{datetimeUtils.GMTToStr(checkTime.end).length>0?datetimeUtils.GMTToStr(checkTime.end).split(' ')[0]:''}}门店报警级别排名</div>
-            <div  v-if="chartOption.series.length == 0||chartOption.series[0].data.length == 0" style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px">
-                <span>暂无数据</span></div>
+          <div
+            v-if="chartOption.series.length == 0||chartOption.series[0].data.length == 0"
+            style="text-align: center;height:400px;color: #909399; padding-top: 200px;font-size: 12px"
+          >
+            <span>暂无数据</span>
+          </div>
         </div>
         <div v-if="isdata" class="datatable-box">
-            <div class="echartsTitle"
-            >{{datetimeUtils.GMTToStrRorType(checkTime.start,'day')}}至{{datetimeUtils.GMTToStrRorType(checkTime.end,'day')}}报警级别排名报表</div>
+          <div
+            class="echartsTitle"
+          >{{datetimeUtils.GMTToStrRorType(checkTime.start,'day')}}至{{datetimeUtils.GMTToStrRorType(checkTime.end,'day')}}报警级别排名报表</div>
           <tableDataList
             id="tableList"
             :style="{width:tablewidth}"
@@ -100,7 +111,7 @@ import datePick from "@/components/timerange/separateTime";
 import myEcharts from '@/components/echarts/index';
 import tableDataList from "@/components/table/tableDataList.vue";
 import utils from '@/utils/utils.js';
-import { getAlarmLevelList,exportAlarmLevelList } from '@/services/data-rank.js';
+import { getAlarmLevelList, exportAlarmLevelList } from '@/services/data-rank.js';
 import datetimeUtils from '@/utils/datetime-utils'
 import baseOptions from '@/utils/baseOptions';
 var Enumerable = require('linq');
@@ -179,7 +190,7 @@ export default {
         grid: {
           left: '3%',
           right: '4%',
-            top: '30px',
+          top: '30px',
           bottom: '10%',
           containLabel: true
           //  borderColor: 'red'
@@ -217,15 +228,15 @@ export default {
               interval: 'auto'
             },
             splitArea: {
-              show: true
+              show: false
             }
           }
         ],
         yAxis: [
           {
-
-            type: 'value',
-            name: '次数(次)',
+              minInterval:1,
+              type: 'value',
+            name: '数量(个)',
             nameTextStyle: {
               color: '#838383'
             },
@@ -288,8 +299,9 @@ export default {
   }
 
   , created () {
-    //this.echartwidth = document.body.clientWidth * 0.85 + 'px';
-    //this.tablewidth = document.body.clientWidth * 0.8 + 'px';
+    if (this.$route.params) {
+      this.status = '0,2';
+    }
   }, mounted () {
     this.query();
   },
@@ -334,15 +346,15 @@ export default {
       if (this.alarmLevel.includes(5)) {
         this.tableData.tHead.push({ text: '五级(个)', prop: 'level5', sortable: true })
       }
-        this.chartOption.legend.data=[];
-        if(this.status=='0,2'){
-            this.chartOption.legend.data.push('待处理报警排名');
-            this.chartOption.series[0].name='待处理报警排名';
-        }else{
-            this.chartOption.legend.data.push('所有报警排名');
-            this.chartOption.series[0].name='所有报警排名';
-        }
-      getAlarmLevelList({ shopNumber: topShopNumers, status: this.status, alarmLevel: alarmLevels, start: this.checkTime.start , end: this.checkTime.end  }).then((res) => {
+      this.chartOption.legend.data = [];
+      if (this.status == '0,2') {
+        this.chartOption.legend.data.push('待处理报警排名');
+        this.chartOption.series[0].name = '待处理报警排名';
+      } else {
+        this.chartOption.legend.data.push('所有报警排名');
+        this.chartOption.series[0].name = '所有报警排名';
+      }
+      getAlarmLevelList({ shopNumber: topShopNumers, status: this.status, alarmLevel: alarmLevels, start: this.checkTime.start, end: this.checkTime.end }).then((res) => {
         this.list = res.data.list;
         this.tableData.data = res.data.list;
         this.chartOption.xAxis[0].data = []; this.chartOption.series[0].data = [];
@@ -356,8 +368,8 @@ export default {
           };
           this.chartOption.series[0].data.push(obj);
         }
-         this.getFormatter();
-          console.log('aaa:'+JSON.stringify(this.chartOption.series))
+        this.getFormatter();
+        console.log('aaa:' + JSON.stringify(this.chartOption.series))
         if (this.chartOption.series.length == 0) {
           this.$message.warning("暂无数据");        }
       }).catch((error) => {
@@ -366,34 +378,34 @@ export default {
 
     },
 
-      getFormatter(){
-          let that=this;
-          this.chartOption.tooltip.formatter = function (params, ticket, callback) {
-              let htmlStr="";
-              if(that.status=="0,1,2,3"){
-                  htmlStr+= "<div>"+ params[0].name + "</br>所有报警："+ params[0].value +"次</br>"
-              }else{
-                  htmlStr+= "<div>"+ params[0].name + "</br>待处理总数："+ params[0].value +"次</br>"
-              }
-              if (that.alarmLevel.includes(1)) {
-                  htmlStr+= "一级："+ params[0].data.datas[0] + "次</br>";
-              }
-              if (that.alarmLevel.includes(2)) {
-                  htmlStr+= "二级："+ params[0].data.datas[1] + "次</br>";
-              }
-              if (that.alarmLevel.includes(3)) {
-                  htmlStr+= "三级："+ params[0].data.datas[2] + "次</br>";
-              }
-              if (that.alarmLevel.includes(4)) {
-                  htmlStr+= "四级："+ params[0].data.datas[3] + "次</br>";
-              }
-              if (that.alarmLevel.includes(5)) {
-                  htmlStr+= "五级："+ params[0].data.datas[4] + "次</br>";
-              }
-              htmlStr+= "</div>"
-              return htmlStr;
-          };
-      },
+    getFormatter () {
+      let that = this;
+      this.chartOption.tooltip.formatter = function (params, ticket, callback) {
+        let htmlStr = "";
+        if (that.status == "0,1,2,3") {
+          htmlStr += "<div>" + params[0].name + "</br>所有报警：" + params[0].value + "个</br>"
+        } else {
+          htmlStr += "<div>" + params[0].name + "</br>待处理总数：" + params[0].value + "个</br>"
+        }
+        if (that.alarmLevel.includes(1)) {
+          htmlStr += "一级：" + params[0].data.datas[0] + "个</br>";
+        }
+        if (that.alarmLevel.includes(2)) {
+          htmlStr += "二级：" + params[0].data.datas[1] + "个</br>";
+        }
+        if (that.alarmLevel.includes(3)) {
+          htmlStr += "三级：" + params[0].data.datas[2] + "个</br>";
+        }
+        if (that.alarmLevel.includes(4)) {
+          htmlStr += "四级：" + params[0].data.datas[3] + "个</br>";
+        }
+        if (that.alarmLevel.includes(5)) {
+          htmlStr += "五级：" + params[0].data.datas[4] + "个</br>";
+        }
+        htmlStr += "</div>"
+        return htmlStr;
+      };
+    },
     changeTime (start, end) {
       this.startTime = start;
       this.endTime = end;
@@ -413,32 +425,29 @@ export default {
       this.alarmLevel = Enumerable.from(this.alarmLevel).distinct("x=>x").toArray();//条件查询
     },
     exportData () {
-        let topShopNumers = '', that = this;
-        this.checkedShopNumbers.forEach(function (v, i) {
-            topShopNumers += v;
-            if (that.checkedShopNumbers.length - 1 != i) {
-                topShopNumers += ','
-            }
-        });
-        let alarmLevels = '';
-        this.alarmLevel.forEach(function (n, i) {
-            if (n == 0) {
-                alarmLevels = '1,2,3,4,5'
-            } else {
-                alarmLevels += n;        }
-            if (that.alarmLevel.length - 1 != i) {
-                alarmLevels += ','
-            }
-        });
-        if (alarmLevels == '') {
-            this.$message.error("报警级别不能为空");
-            return;
+      let topShopNumers = '', that = this;
+      this.checkedShopNumbers.forEach(function (v, i) {
+        topShopNumers += v;
+        if (that.checkedShopNumbers.length - 1 != i) {
+          topShopNumers += ','
         }
-        //{ shopNumber: topShopNumers, status: this.status, alarmLevel: alarmLevels, start: this.checkTime.start , end: this.checkTime.end  }
-
-        exportAlarmLevelList(`?token=${localStorage.getItem('$token_info')}&shopNumber=${topShopNumers}&start=${this.checkTime.start }&end=${
-            this.checkTime.end
-            }&alarmLevel=${ alarmLevels}&status=${this.status}`);
+      });
+      let alarmLevels = '';
+      this.alarmLevel.forEach(function (n, i) {
+        if (n == 0) {
+          alarmLevels = '1,2,3,4,5'
+        } else {
+          alarmLevels += n;        }
+        if (that.alarmLevel.length - 1 != i) {
+          alarmLevels += ','
+        }
+      });
+      if (alarmLevels == '') {
+        this.$message.error("报警级别不能为空");
+        return;
+      }exportAlarmLevelList(`?token=${localStorage.getItem('$token_info')}&shopNumber=${topShopNumers}&start=${this.checkTime.start}&end=${
+        this.checkTime.end
+        }&alarmLevel=${alarmLevels}&status=${this.status}`);
 
     }, formatJson (filterVal, jsonData) {
       return jsonData.map(v => filterVal.map(j => {
@@ -446,12 +455,12 @@ export default {
       }))
     }
   }, watch: {
-        alarmLevel:{
-            handler (val) {
-                this.query();
-            },
-            deep: true
-        },
+    alarmLevel: {
+      handler (val) {
+        this.query();
+      },
+      deep: true
+    },
     //门店编码
     checkedShopNumbers: {
       handler (val) {
@@ -470,10 +479,10 @@ export default {
   background-color: #ebf2f8;
 }
 .echartsTitle {
-    text-align: center;
-    color: #909399;
-    font-size: 16px;
-     height:35px;
-    margin-top: -20px;
+  text-align: center;
+  color: #909399;
+  font-size: 16px;
+  height: 35px;
+  margin-top: -20px;
 }
 </style>

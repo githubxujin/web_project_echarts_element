@@ -15,7 +15,7 @@
         :videoUrl="videoUrl"
         @hideDialog="$emit('update:videoModelVisible', false)"
       ></camera-player>
-      <div v-else style="lineHeight: 300px;">摄像头已禁用</div>
+      <div v-else style="lineHeight: 300px;textAlign: center">摄像头故障，暂无视频</div>
     </div>
   </div>
 </template>
@@ -29,6 +29,9 @@ export default {
     videoMonitorList: {
       type: Array,
       default: []
+    }, systemType: {
+      type: Number,
+      default: 1
     }
   },
   data () {
@@ -51,7 +54,7 @@ export default {
   },
   methods: {
     getUrl (number) {
-      videoMonitorUrl({ shopNumber: this.$store.getters.shopNumber, number: number, systemType: 1 }).then(res => {
+      videoMonitorUrl({ shopNumber: this.$store.getters.shopNumber, number: number, systemType: this.systemType }).then(res => {
         this.videoUrl = res.data.videoUrl || '';
       })
     }

@@ -143,7 +143,7 @@ export const PieOption = {
     },
     series: [
         {
-            name: '访问来源',
+            name: '',
             type: 'pie',
             radius: ['45%', '65%'],
             itemStyle: {
@@ -249,7 +249,7 @@ export const getColorsByLevels = items => {
     return res;
 };
 export const HourDayMonthYear = [
-    { name: '时', id: 0 },
+    // { name: '时', id: 0 },
     { name: '日', id: 1 },
     { name: '月', id: 2 },
     { name: '年', id: 3 }

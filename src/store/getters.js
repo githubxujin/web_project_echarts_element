@@ -6,6 +6,8 @@ const getters = {
     },
     //获取页面正在加载中状态
     getPageLoading: state => state.base.openPageLoading,
+    //获取按钮加载中状态
+    getBtnLoading: state => state.base.btnLoading,
     getTokenInfo: state => {
         if (!state.user.requestHeaderToken) {
             state.user.requestHeaderToken = localStorage.getItem('$token_info');
@@ -45,8 +47,11 @@ const getters = {
         return state.base.leftNavRefresh;
     },
     getUploadHeader: state => {
+        if (!state.user.requestHeaderToken) {
+            state.user.requestHeaderToken = localStorage.getItem('$token_info');
+        }
         return {
-            token: localStorage.getItem('$token_info')
+            token: state.user.requestHeaderToken
         };
     },
     getLeftTabTree: state => state.base.leftTabTree,

@@ -44,9 +44,14 @@
                   <span class="label">{{item2.label}}：</span>
                   <span
                     class="value"
-                    v-if="item2.prop !== 'meterInfo'"
+                    v-if=" !['meterInfo','status'].includes(item2.prop)"
                     :title="item[item2.prop]"
                   >{{item[item2.prop]}}</span>
+                  <span
+                    class="value"
+                    v-else-if="item2.prop === 'status'"
+                    :title="item[item2.prop]"
+                  >{{item[item2.prop] === 0 ?'启用':'禁用'}}</span>
                   <span
                     v-else
                     class="value branchInfo"
@@ -125,6 +130,10 @@ export default {
           prop: 'meterInfo'
         },
         {
+          label: '状态',
+          prop: 'status'
+        },
+        {
           label: '备注',
           prop: 'remark'
         }
@@ -193,12 +202,15 @@ export default {
       ele.style.display = displayType;
     },
     meterInfoFilter (value) {
+      console.log('value', value)
       let arr = value ? value.split(',') : []
       if (arr.length < 2) return value
-      if (arr.length < 6) return arr.join(',<br/>')
+      // if (arr.length < 6) return arr.join(',<br/>')
       arr = arr.slice(0, 4)
       arr.push('......')
-      return arr.join('，<br/>')
+      // return arr.join('，<br/>')
+      console.log('arr', arr)
+      return arr.map(item => (`<section>${item}</section>`)).join('')
     }
   },
   filters: {
@@ -276,9 +288,18 @@ export default {
             word-wrap: break-word;
             &.branchInfo {
               padding-top: 10px;
-              white-space: normal;
               line-height: 16px;
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              -webkit-line-clamp: 2;
+              overflow: hidden;
             }
+          }
+          /deep/ section {
+            max-width: 255px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
       }

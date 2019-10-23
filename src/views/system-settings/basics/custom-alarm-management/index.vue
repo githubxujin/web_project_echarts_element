@@ -309,7 +309,7 @@ export default {
       let data = item.data;
       if (data.deviceType || data.deviceType === 0) { // 叶子节点
         this.form.deviceType = data.deviceType || ''
-        this.form.deviceId = data.id || ''
+        this.form.deviceId = data.realId || ''
       } else if (data.pid === 0) { // 根节点
         this.form.systemType = data.id || ''
       } else { // 中间节点 data.configType

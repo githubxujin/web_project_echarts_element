@@ -78,7 +78,7 @@
                     height="100%"
                     style="display:none;"
                     @load="showSelf($event)"
-                    :src="elevatorImage"
+                    :src="item.status === 1 ? elevatorStopImage : elevatorImage"
                     alt="加载中..."
                   />
                 </div>
@@ -103,7 +103,7 @@
       :before-close="resetDialogForm"
       :close-on-click-modal="false"
     >
-      <span slot="title" class="dialog-header">{{elevatorItem?'编辑电梯信息': '新增电梯设备'}}</span>
+      <span slot="title" class="dialog-header">{{elevatorItem?'编辑电梯设备': '新增电梯设备'}}</span>
       <ElevatorEditor
         ref="elevatorEditor"
         :dialogVisible.sync="dialogVisible"
@@ -122,6 +122,7 @@ import utils from '@/utils/utils.js'
 import { elevatorQuery, meterGetArray } from '@/services/system-settings.js'
 import { statusEnum } from '@/enum/dicts.js'
 import elevatorImage from '@/assets/images/elevator/elevator.png'
+import elevatorStopImage from '@/assets/images/elevator/elevator_stop.png'
 const translateBranch = function (
   value = '',
   dict = [],
@@ -133,7 +134,7 @@ const translateBranch = function (
   for (let index = 0, len = dict.length; index < len; index++) {
     let dictValue = dict[index][options.value].toString()
     if (value === dictValue) {
-      label = '[' + dict[index]['number'] + ']' + dict[index][options.label]
+      label = '[' + dict[index]['electricAddr'] + ']' + dict[index][options.label]
       break
     }
   }
@@ -145,6 +146,7 @@ export default {
   data () {
     return {
       elevatorImage,
+      elevatorStopImage,
       activeName: 'default',
       statusEnum: JSON.parse(JSON.stringify(statusEnum)), // 启用状态字典
       meterList: [], // 支路下拉列表
@@ -281,7 +283,7 @@ export default {
     }
   }
   .flex-box {
-    height: calc(100% - 68px);
+    // height: calc(100% - 68px);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -290,6 +292,7 @@ export default {
       position: relative;
       display: inline-block;
       width: 392px;
+      height: 370px;
       height: auto;
       border: 1px solid rgba(219, 219, 219, 1);
       border-radius: 20px;

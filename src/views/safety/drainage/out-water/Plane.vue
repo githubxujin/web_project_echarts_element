@@ -4,7 +4,7 @@
       <div class="table-content" v-show="basicShow">
         <p class="header">
           <span>报警次数</span>
-          <router-link tag="a" to="/safety/alarm/view">查看详情</router-link>
+          <router-link tag="a" to="/safety/alarm/view?type=2">查看详情</router-link>
         </p>
         <table border="0" cellspacing="0">
           <tr class="thead">
@@ -12,12 +12,12 @@
             <td>本月报警次数</td>
             <td>安全运行时长</td>
           </tr>
-          <tr>
+          <tr v-for="(item, i) in basicData" :key="i">
             <td>
-              <router-link tag="a" to="/safety/alarm/view">{{basicData.name}}</router-link>
+              <router-link tag="a" :to="`/safety/alarm/view?type=2`">{{item.name}}</router-link>
             </td>
-            <td>{{basicData.alarmCount}}</td>
-            <td>{{basicData.safePeriod}}</td>
+            <td>{{item.alarmCount}}</td>
+            <td>{{item.safePeriod}}</td>
           </tr>
         </table>
       </div>
@@ -27,6 +27,12 @@
         @click="basicShow = !basicShow"
       ></i>
     </div>
+    <!-- <span
+      v-if="this.videoMonitorList.length>0"
+      class="video iconfont icon-shipin"
+      @click="videoModelVisible = true"
+      title="查看视频监控"
+    ></span>-->
     <i
       v-if="videoMonitorList.length"
       @click="videoModelVisible = true"
@@ -40,7 +46,7 @@
       class="original-picture"
     />
     <empty-data v-if="!pictureArray.length && !$store.getters.getLoading" msg="暂无排水系统数据" />
-    <div class="tab-groups" v-if="pictureArray.length > 1">
+    <div class="tab-groups" v-if="pictureArray.length > 0">
       <el-radio-group v-model="originUrl">
         <el-radio-button
           v-for="(item,index) in pictureArray"
@@ -78,11 +84,16 @@
               <li v-for="(pump,index) in item.pumps" :key="index">
                 {{pump.name}}:
                 <span
-                  :class="{'error-color': pump.status === '1'}"
+                  :class="{'error-color': pump.status === '1','normal-color': pump.status === '0'}"
                 >{{pump.status | statusRender}}</span>
                 &nbsp;&nbsp;&nbsp;&nbsp;{{pump.control}}
               </li>
-              <li>液位：{{item.fluidLevel}}</li>
+              <li>
+                液位：
+                <span
+                  :style="{color: ['故障', '无有效数据', '异常'].includes(item.fluidLevel) ? 'red' : ''}"
+                >{{item.fluidLevel}}</span>
+              </li>
             </ol>
           </div>
           <div>
@@ -142,7 +153,8 @@ export default {
         height: 200
       },
       videoMonitorList: [],
-      videoModelVisible: false
+      videoModelVisible: false,
+      timesFlag: false
     }
   },
   computed: {
@@ -153,22 +165,20 @@ export default {
     },
     pictureUrl () {
       let pictureUrl = ''
-      console.log('picture', this.pictureArray)
-      console.log('pointList', this.pointList)
-      console.log('current', this.originUrl)
       for (let index = 0, len = this.pictureArray.length; index < len; index++) {
         const item = this.pictureArray[index];
+        // 报警次数显示
         if (item.originUrl === this.originUrl) {
           pictureUrl = item.pictureUrl
-          this.basicData = this.pointList.find(item => item.originUrl === this.originUrl)
-          console.log('basicData', this.basicData)
+          // this.basicData = this.pointList.filter(item => item.originUrl === this.originUrl).filter(item => item.fluidLevel !== '正常')
+          this.basicData = this.pointList.filter(item => item.originUrl === this.originUrl)
           break;
         }
       }
       return pictureUrl
     },
     pointListCopy () {
-      const originUrl = this.originUrl
+      let originUrl = this.originUrl
       let pointList = JSON.parse(JSON.stringify(this.pointList))
       pointList = pointList.filter(item => { // 根据originUrl过滤属于当前图片的点位数据
         return item.originUrl === originUrl
@@ -176,7 +186,7 @@ export default {
       let scalSize = this.resizePictureSize.width / this.OriginalPictureSize.width
       pointList.forEach((item, index) => {
         let pumpStatus = item.pumps.map(pump => pump.status).join(',')
-        item.errorStatus = (pumpStatus && pumpStatus.indexOf('1') > -1) || item.fluidLevel === '故障'
+        item.errorStatus = (pumpStatus && pumpStatus.indexOf('1') > -1) || ['故障', '无有效数据', '异常'].includes(item.fluidLevel)
         item.status = item.fluidLevel === '故障'
         item.x = item.x * scalSize
         item.y = item.y * scalSize
@@ -209,6 +219,12 @@ export default {
     initData () {
       const shopNumber = this.$store.getters.shopNumber
       this.monitorPictureQuery({ shopNumber, type: 239 }).then(res => {
+        if (res.data) {
+          // 无图片处理
+          res.data.array.forEach((item, i) => {
+            if (!item.originUrl) item.originUrl = 'empty' + i;
+          })
+        }
         this.pictureArray = (res.data || {}).array
         this.pictureArray.length && (this.originUrl = this.pictureArray[0].originUrl)
         this.$nextTick(_ => {
@@ -261,11 +277,16 @@ export default {
     initSocketData (val) {
       if (!val) return
       val = JSON.parse(JSON.stringify(val))
-      console.log('websocket', val)
-      this.pointList = val.detail || []
-    },
-    openVideo () {
-
+      this.pointList = val.detail || [];
+      // const { alarm } = this.$route.query;
+      // if (alarm) {
+      //   let alarmItem = val.detail.find(item => item.fluidLevel !== '正常');
+      //   if (alarmItem) {
+      //     this.originUrl = alarmItem.originUrl
+      //   } else {
+      //     this.originUrl = val.detail[0].originUrl
+      //   }
+      // }
     }
   },
   watch: {
@@ -279,6 +300,37 @@ export default {
       immediate: true,
       handler: function (val) {
         this.initSocketData(val)
+      }
+    },
+    'pointList': {
+      immediate: true,
+      handler: function (val) {
+        let errorData = val.find(item => {
+          let pumpStatus = item.pumps.map(pump => pump.status).join(',');
+          return (pumpStatus && pumpStatus.indexOf('1') > -1) || ['故障', '无有效数据', '异常'].includes(item.fluidLevel)
+        })
+        const { alarm } = this.$route.query;
+        if (errorData && this.pictureArray.length && !this.timesFlag && alarm) {
+          this.originUrl = errorData.originUrl
+          this.timesFlag = true;
+        }
+      }
+    },
+    'pictureArray': {
+      immediate: true,
+      handler: function (val) {
+        if (this.pointList.length) {
+          let errorData = this.pointList.find(item => {
+            let pumpStatus = item.pumps.map(pump => pump.status).join(',');
+            return (pumpStatus && pumpStatus.indexOf('1') > -1) || ['故障', '无有效数据', '异常'].includes(item.fluidLevel)
+          })
+          const { alarm } = this.$route.query;
+          if (errorData && this.pictureArray.length && !this.timesFlag && alarm) {
+            this.originUrl = errorData.originUrl
+            this.timesFlag = true;
+          }
+        }
+
       }
     }
   },
@@ -305,14 +357,16 @@ export default {
 .out-water-plane {
   text-align: center;
   position: relative;
+  /deep/ .el-dialog__header {
+    font-size: 14px;
+    text-align: left;
+  }
   .video-btn {
+    font-size: 40px;
     position: absolute;
-    width: 30px;
-    right: 20px;
-    top: 0;
-    line-height: 40px;
-    font-size: 20px;
-    background-color: #dcdfe6;
+    right: 30px;
+    top: 10px;
+    z-index: 999;
     cursor: pointer;
   }
   .basic-table {
@@ -376,10 +430,24 @@ export default {
   }
   .tab-groups {
     padding: 20px 0;
+    max-width: 1230px;
+    overflow-x: auto;
+    margin-left: 380px;
+    /deep/ .el-radio-group {
+      white-space: nowrap;
+    }
   }
   .picture-container {
     position: relative;
     display: inline-block;
+    /deep/ .el-popper {
+      .alarm {
+        span {
+          color: #f0213e;
+        }
+      }
+    }
+
     .pointer-picture {
       position: absolute;
       width: 22px;
@@ -393,7 +461,7 @@ export default {
           left: 22px;
           bottom: 0;
           display: block;
-          content: '';
+          content: "";
           background-color: #e3bbbb;
           width: 1px;
           height: 1px;
@@ -402,7 +470,7 @@ export default {
         }
         &::before::before,
         &::before::after {
-          content: '';
+          content: "";
           position: absolute;
           top: 0;
           left: 0;
@@ -456,6 +524,9 @@ export default {
     .error-color {
       color: #f0213e;
     }
+    .normal-color {
+      color: #00a054;
+    }
   }
   .catchment-item {
     width: 219px;
@@ -468,7 +539,7 @@ export default {
     }
     .picture {
       height: 189px;
-      background: url('../../../../assets/images/drainage/catchment1.png') 100%
+      background: url("../../../../assets/images/drainage/catchment1.png") 100%
         100% no-repeat;
       position: relative;
       .alarm {
@@ -478,12 +549,12 @@ export default {
         right: -2px;
         top: 43px;
         &.alarm1 {
-          background: url('../../../../assets/images/drainage/alarm1.png') 100%
+          background: url("../../../../assets/images/drainage/alarm1.png") 100%
             100% no-repeat;
         }
         &.alarm2 {
           opacity: 0;
-          background: url('../../../../assets/images/drainage/alarm2.png') 100%
+          background: url("../../../../assets/images/drainage/alarm2.png") 100%
             100% no-repeat;
           right: -9px;
           top: 45px;
@@ -495,11 +566,11 @@ export default {
         position: absolute;
         right: 3px;
         top: 90px;
-        background: url('../../../../assets/images/drainage/normal.png') 100%
+        background: url("../../../../assets/images/drainage/normal.png") 100%
           100% no-repeat;
       }
       &.error {
-        background: url('../../../../assets/images/drainage/catchment2.png')
+        background: url("../../../../assets/images/drainage/catchment2.png")
           100% 100% no-repeat;
         .alarm2 {
           animation: blink 1s infinite;

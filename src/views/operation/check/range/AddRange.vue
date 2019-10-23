@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="add-range">
     <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="100px">
       <el-row>
         <el-col :span="12">
@@ -35,22 +35,24 @@
             <el-date-picker
               v-model="ruleForm.firstCreateTime"
               type="datetime"
-              class="create-time"
+              popper-class="first-time"
               placeholder="选择日期时间"
               :picker-options="pickerBeginAfter"
               :disabled="isEdit"
+              :default-time="defaultTime"
             ></el-date-picker>
           </el-form-item>
         </el-col>
         <el-col :span="12" class="pl10">
           <el-form-item label="任务时长" prop="taskTimeLength">
-            <el-input
-              v-model.number="ruleForm.taskTimeLength"
-              :disabled="taskTimeLengthIsDisabled"
-              clearable
-            >
-              <template slot="append">天</template>
-            </el-input>
+            <el-select :disabled="taskTimeLengthIsDisabled" v-model="ruleForm.taskTimeLength">
+              <el-option
+                v-for="(item,index) in taskTimeOptions"
+                :label="item.label"
+                :value="item.value"
+                :key="index"
+              ></el-option>
+            </el-select>
           </el-form-item>
         </el-col>
       </el-row>
@@ -79,7 +81,7 @@
         border
         :data="tableData"
         style="width: 100%"
-        height="320px"
+        height="200px"
         @selection-change="changeFun"
       >
         <el-table-column type="selection" width="55" prop="deviceId"></el-table-column>
@@ -159,6 +161,12 @@
       :visible.sync="showCheckPlanWin"
       width="720px"
     >
+      <span
+        slot="title"
+        class="text-ellipse dialog-header-text"
+        v-text="checkPlanTitle"
+        :title="checkPlanTitle"
+      ></span>
       <check-plan-list
         v-if="showCheckPlanWin"
         @onHide="showCheckPlanWin=false"
@@ -175,6 +183,12 @@
       :visible.sync="showDetailWin"
       width="480px"
     >
+      <span
+        slot="title"
+        class="text-ellipse dialog-header-text"
+        v-text="detailTitle"
+        :title="detailTitle"
+      ></span>
       <template-detail v-if="showDetailWin" @onHide="showDetailWin=false" :id="templateNumber"></template-detail>
     </el-dialog>
   </div>
@@ -185,6 +199,8 @@ import { getCheckCycleSelected, getTemplateByDevice, getCheckPlanInfo, generateC
 import SelectEqu from './SelectEqu';
 import CheckPlanList from './CheckPlanList';
 import TemplateDetail from '../template/TemplateDetail';
+// import fakeClickOutSide from '@/utils/mixins/fackClickOutSide.js';
+import datetimeUtils from '@/utils/datetime-utils.js';
 export default {
   components: {
     SelectEqu,
@@ -201,25 +217,16 @@ export default {
       default: false
     }
   },
+  // mixins: [fakeClickOutSide],
   data () {
-    var checktaskTimeLength = (rule, value, callback) => {
-      if (value == '' || (value > 0 && value <= 2)) {
-        callback();
-      } else {
-        if (this.isEdit) { //编辑时不验证
-          callback();
-        } else {
-          callback(new Error('任务时长不能大于2且不能小于1'));
-        }
-      }
-    };
     return {
+      defaultTime: datetimeUtils.getTimeNextTime(new Date(), 5), //任务生成规则-默认时间
       CheckCycleOptions: [],
       cycleTimeOptions: [],
       ruleForm: { cycleTime: '', planName: '', checkEqus: '', firstCreateTime: '', taskCreateRule: 0, status: 0, taskTimeLength: '' },
       rules: {
         planName: [
-          { required: true, message: '请输入范围名称', trigger: 'blur' },
+          { required: true, message: '请输入计划名称', trigger: 'blur' },
           { max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' }
         ],
         cycleTime: [
@@ -231,9 +238,9 @@ export default {
         firstCreateTime: [
           { required: true, message: '请选择初次生成时间', trigger: 'blur' },
         ],
-        taskTimeLength: [
-          { validator: checktaskTimeLength, trigger: 'blur' }
-        ]
+        // taskTimeLength: [
+        //   { validator: this.checktaskTimeLength(), trigger: 'blur' }
+        // ]
       },
       multipleSelection: [],
       tableData: [],
@@ -250,14 +257,20 @@ export default {
       showDetailWin: false,//是否显示详情弹窗
       templateNumber: '',//当前选中模板编号
       pickerBeginAfter: {
-        //只能操作当前月份及以后的月份
+        //只能操作当前时间及以后的时间
         disabledDate: time => {
-          return time.getTime() < Date.now()
+          return time.getTime() + 3600 * 24 * 1000 < Date.now()
         }
       },
+      taskTimeOptions: [
+        { label: '全部周期', value: '' },
+        { label: '1天', value: 1 },
+        { label: '2天', value: 2 },
+      ]
     }
   },
   created () {
+    console.log('defaultTime :', this.defaultTime);
     this.initData();
   },
   computed: {
@@ -277,17 +290,38 @@ export default {
         this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
         // console.log('this.cycleTimeLength:', this.cycleTimeLength);
       }
-      if (this.isEdit) {
-        return true;
+      let result = this.cycleTimeType == 'B' || val == '1C';
+      if (result) {
+        this.ruleForm.taskTimeLength = '';
       }
-      if (!this.isEdit && val) {
-        return this.cycleTimeType == 'B';
-      } else {
-        return false;
-      }
+      return result; //时，1天 禁用
+    },
+    taskTimeLengthMaxVal () {
+      return this.cycleTimeLength >= 2 ? 2 : 1;
     }
   },
   methods: {
+    checktaskTimeLength () {
+      return (rule, value, callback) => {
+        console.log('value :', value, this.taskTimeLengthMaxVal);
+        if (this.taskTimeLengthIsDisabled) { //禁用时不验证
+          callback();
+        }
+        else if (value === 0) {
+          callback(new Error('任务时长不能为0'));
+        }
+        else if (value === '' || value === 1 || (value > 0 && value <= this.taskTimeLengthMaxVal)) {
+          callback();
+        }
+        else if (value > this.taskTimeLengthMaxVal) {
+          let msg = '任务时长不能大于' + this.taskTimeLengthMaxVal;
+          callback(new Error(msg));
+        }
+        else {
+          callback(new Error('任务时长是不能大于2且不能小于1的整数'));
+        }
+      }
+    },
     initData () {
       //获取巡检周期下拉框数据
       getCheckCycleSelected(this.shopNumber).then(res => {
@@ -309,6 +343,9 @@ export default {
             if (res.data.taskTimeLength) {
               this.ruleForm.taskTimeLength = res.data.taskTimeLength;
             }
+            if (res.data.cycleTimeStr) {
+              this.cycleTimeLength = parseInt(res.data.cycleTimeStr.substring(0, res.data.cycleTimeStr.length - 1));
+            }
             this.ruleForm.taskCreateRule = res.data.rule;
             this.ruleForm.status = res.data.status;
             this.curDeviceIds = res.data.devices;
@@ -318,11 +355,14 @@ export default {
       }
     },
     //巡检周期改变时
-    cycleTimeChange (data) {
+    cycleTimeChange (val) {
       //数据清空
       this.ruleForm.checkEqus = '';
       this.curDeviceIds = [];
       this.tableData = [];
+      if (val) {
+        this.cycleTimeLength = parseInt(val.substring(0, val.length - 1));
+      }
     },
     //确定
     submitForm (formName) {
@@ -330,25 +370,37 @@ export default {
       that.$refs[formName].validate(valid => {
         if (valid) {
           console.log('验证成功');
-          this.tableData.forEach(n => {
-            this.selectEquIds.push(n.checked ? n.deviceId + ',' + n.checked : n.deviceId);
+          that.tableData.forEach(n => {
+            that.selectEquIds.push(n.checked ? n.deviceId + ',' + n.checked : n.deviceId);
           })
-          console.log('this.selectEquIds :', this.selectEquIds);
-          let saveObj = {
-            shopNumber: this.shopNumber, planName: this.ruleForm.planName, cycleTimeLength: this.cycleTimeLength,
-            cycleTimeType: this.cycleTimeType, firstTime: this.ruleForm.firstCreateTime, rule: this.ruleForm.taskCreateRule,
-            status: this.ruleForm.status, devices: this.selectEquIds
-          };
-          if (this.cycleTimeType != 'B' && this.ruleForm.taskTimeLength > 0) {//周期不为时，并且任务时长有值
-            saveObj.taskTimeLength = this.ruleForm.taskTimeLength;
-          }
+          console.log('that.selectEquIds :', that.selectEquIds);
           if (this.isEdit) {
-
+            that.submitFormFuc(that.ruleForm.firstCreateTime)
           }
-          this.$emit('submitForm', saveObj);
+          else {
+            let firstCreateTime = that.ruleForm.firstCreateTime;
+            if (firstCreateTime.getTime() < new Date().getTime()) {
+              console.log('初次 :', firstCreateTime, firstCreateTime.getTime(), new Date().getTime());
+              this.$message.error('初次生成时间已逾期，请重新设置!');
+            } else {
+              that.submitFormFuc(firstCreateTime);
+            }
+          }
         }
       }
       );
+    },
+    submitFormFuc (dt) {
+      let that = this;
+      let saveObj = {
+        shopNumber: that.shopNumber, planName: that.ruleForm.planName, cycleTimeLength: that.cycleTimeLength,
+        cycleTimeType: that.cycleTimeType, firstTime: dt, rule: that.ruleForm.taskCreateRule,
+        status: that.ruleForm.status, devices: that.selectEquIds
+      };
+      if (that.cycleTimeType != 'B' && that.ruleForm.cycleTime != '1C' && that.ruleForm.taskTimeLength > 0) {//周期不为时，且不为1天，并且任务时长有值
+        saveObj.taskTimeLength = that.ruleForm.taskTimeLength;
+      }
+      that.$emit('submitForm', saveObj);
     },
     //关闭
     isHide () {
@@ -499,6 +551,11 @@ export default {
   .el-message-box__message {
     max-height: 320px;
     overflow-y: auto;
+  }
+}
+.first-time {
+  .el-button--text {
+    display: none;
   }
 }
 </style>

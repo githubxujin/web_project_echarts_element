@@ -114,16 +114,13 @@
               :key="index2"
               class="history-price-cell"
             >
-              <span
-                style="display: inline-block;"
-                class="history-price"
-              >{{isNaN(Number(item.price)) ? 0 : item.price}}(元/kWh)</span>
-              <span style="display: inline-block;" class="history-time-list">
-                <span
+              <span style="display: inline-block;" class="history-price">
+                {{isNaN(Number(item.price)) ? 0 : item.price}}(元/kWh)
+                <i
                   v-for="(time, index3) in item.timeList"
                   :key="index3"
                   class="history-time"
-                >{{time}}</span>
+                >{{time}}</i>
               </span>
             </div>
           </template>
@@ -338,6 +335,9 @@ export default {
       border-top: $border;
       text-align: left;
       position: relative;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       span,
       div {
         text-align: center;
@@ -346,16 +346,11 @@ export default {
         border-top: none;
       }
       .history-price {
-        width: 80px;
-        position: absolute;
         top: calc(50% - 12px);
         text-align: center;
       }
-      .history-time-list {
-        padding-left: 90px;
-        .history-time {
-          display: block;
-        }
+      .history-time {
+        font-style: normal;
       }
     }
   }

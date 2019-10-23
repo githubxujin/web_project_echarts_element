@@ -179,8 +179,8 @@ export default {
       showIdentifyCode: false, // 是否显示图形验证码
       userInputCode: '', // 用户输入的验证码
       identifyCode: '', // 图形验证码
-      passwordErrorCount: 3, // 密码错误次数出现图片验证码
-      identifyCodeLength: 4,
+      passwordErrorCount: 4, // 密码错误次数出现图片验证码
+      identifyCodeLength: 4, //验证码长度
       codePlaceholder: '请输入验证码',
       isAllowSubmit: true,
       interval: null,
@@ -209,14 +209,6 @@ export default {
     document.onkeydown = null;
   },
   methods: {
-    // 判断是否是IE浏览器
-    isIE () {
-      var userAgent = navigator.userAgent // 取得浏览器的userAgent字符串
-      var isIE = userAgent.indexOf('compatible') > -1 && userAgent.indexOf('MSIE') > -1 // && !isOpera // 判断是否IE浏览器
-      if (isIE) {
-        this.$message.error('当前浏览器是IE浏览器，为获得更好的用户体验，请使用谷歌浏览器访问本平台')
-      }
-    },
     focused (target) {
       if (target === 'user') {
         this.userFocus = true
@@ -332,6 +324,21 @@ export default {
         console.log('登陆信息：', res)
         // 存储当前用户权限
         if (res.data.permission) {
+          // 处理给排水子页面排序问题
+          if (res.data.permission.shop) {
+            res.data.permission.shop.forEach(page => {
+              if (page.index === '/safety' && page.subs) {
+                page.subs.forEach(sub => {
+                  if (sub.index === '/safety/drainage') {
+                    let pre = sub.subs[0];
+                    let next = sub.subs[1];
+                    sub.subs[0] = next;
+                    sub.subs[1] = pre;
+                  }
+                })
+              }
+            })
+          }
           console.log('res.data.permission', res.data.permission)
           setAuthoritiesArr(res.data.permission);//存储权限
         }
@@ -339,6 +346,9 @@ export default {
         if (res.data.info) {
           // const userinfo = { shopname: '武汉竹叶山店', username: 'admin' } // 模拟存储店铺信息
           this.$store.commit('user/setUserInfo', res.data.info)
+          if (res.data.info.shopname) {
+            this.$store.commit('base/updateCurShopName', res.data.info.shopname);
+          }
           toUrl = res.data.info.roleType == 1 ? '/plat-index' : '/shop-index'; //1：集团、2：门店
         }
         //存储门店IP地址信息
@@ -399,7 +409,9 @@ export default {
         type: 'success',
         duration: 500,
         onClose: function () {
-          it.btnLoading = false;
+          setTimeout(function () {
+            it.btnLoading = false;
+          }, 300);
           // 模拟跳转
           it.$router.push({
             path: toUrl

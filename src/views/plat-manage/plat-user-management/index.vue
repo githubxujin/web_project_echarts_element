@@ -5,14 +5,14 @@
         <el-input v-model.trim="form.userName" placeholder="帐号/手机号/姓名" :clearable="true"></el-input>
       </el-form-item>
       <!--<el-form-item label="所属门店：">-->
-        <!--<projectTree-->
-          <!--v-model="form.shopNumbers"-->
-          <!--:showTabs="false"-->
-          <!--:requestParams="{treeType: 1}"-->
-          <!--:anotherStyle="false"-->
-          <!--:showTitle="false"-->
-          <!--:clearable="true"-->
-        <!--&gt;</projectTree>-->
+      <!--<projectTree-->
+      <!--v-model="form.shopNumbers"-->
+      <!--:showTabs="false"-->
+      <!--:requestParams="{treeType: 1}"-->
+      <!--:anotherStyle="false"-->
+      <!--:showTitle="false"-->
+      <!--:clearable="true"-->
+      <!--&gt;</projectTree>-->
       <!--</el-form-item>-->
       <el-form-item label="角色：">
         <div style="width:120px;">
@@ -90,15 +90,7 @@
       </el-table>
       <Pager :pager="pager" @setPager="search"></Pager>
     </el-row>
-    <el-dialog
-
-
-      :visible.sync="dialogVisible"
-      width="720px"
-
-      :close-on-click-modal="false"
-
-    >
+    <el-dialog :visible.sync="dialogVisible" width="720px" :close-on-click-modal="false">
       <span slot="title" class="dialog-header">{{userItem?'编辑用户': '新增用户'}}</span>
       <user-editor
         ref="userEditor"
@@ -130,7 +122,7 @@ import { adminQueryList, adminDelete, roleListQuery } from '@/services/system-se
 import { workStateEnum } from '@/enum/dicts.js'
 import baseOptions from '@/utils/baseOptions';
 export default {
-    extends: baseOptions,
+  extends: baseOptions,
   components: { projectTree, Pager, userDetail, userEditor },
   data () {
     return {
@@ -271,7 +263,7 @@ export default {
     },
     delItem (item) {
       console.log(item)
-      this.$confirm(`确认删除用户:${item.userName}?`, '提示', {
+      this.$confirm(`确认删除帐号：${item.userName}?`, '提示', {
         confirmButtonText: '确 定',
         cancelButtonText: '取 消',
         type: 'warning'
@@ -314,14 +306,19 @@ export default {
       this.viewDialogVisible = false
     }
   }, watch: {
-        checkedShopNumbers: {
-            handler (val) {
-                this.form.shopNumbers=this.checkedShopNumbers;
-                this.search();
-            },
-            deep: true
+    checkedShopNumbers: {
+      handler (val) {
+        let objTree = localStorage.getItem('allTreeNode');
+        if (objTree && JSON.parse(objTree).length === this.checkedShopNumbers.length) {
+          this.form.shopNumbers = [];
+        } else {
+          this.form.shopNumbers = this.checkedShopNumbers;
         }
+        this.search();
+      },
+      deep: true
     }
+  }
 }
 </script>
 <style lang="scss" scoped>

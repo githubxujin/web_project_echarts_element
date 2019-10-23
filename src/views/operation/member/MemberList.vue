@@ -20,13 +20,13 @@
             </div>
           </div>
           <div class="title-input-group u-title-input-group">
-            <p class="text">部门：</p>
+            <p class="text">状态：</p>
             <div class="input-container">
               <div style="border-radius: 2px;" class="item select-input">
                 <!--el-ui 根据需求增加配置-->
-                <el-select v-model="departId" placeholder="请选择" clearable filterable>
+                <el-select v-model="status" placeholder="请选择" clearable filterable>
                   <el-option
-                    v-for="item in deptOptions"
+                    v-for="item in statusOption"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -34,6 +34,17 @@
                 </el-select>
               </div>
             </div>
+          </div>
+          <div class="title-input-group u-title-input-group">
+            <p class="text">部门：</p>
+            <tree-select
+              v-model="departId"
+              placeholder="请选择"
+              :clearable="true"
+              :data="treeData"
+              :defaultProps="defaultProps"
+              :onlyLeafSelect="false"
+            ></tree-select>
           </div>
           <div class="title-input-group u-title-input-group">
             <el-button
@@ -54,7 +65,7 @@
         <el-table-column prop="jobNumber" label="工号" width="180" align="center"></el-table-column>
         <el-table-column prop="realName" label="姓名" width="180"></el-table-column>
         <el-table-column prop="orgName" label="部门"></el-table-column>
-        <el-table-column prop="phone" label="联系方式" align="center"></el-table-column>
+        <el-table-column prop="phone" label="手机号" align="center"></el-table-column>
         <el-table-column prop="billCount" label="当前工单数"></el-table-column>
         <el-table-column prop="status" label="状态" width="180" align="center"></el-table-column>
         <el-table-column fixed="right" label="操作" width="150" align="center">
@@ -68,7 +79,6 @@
           </template>
         </el-table-column>
       </el-table>
-      <Pager :pager="pager" @query="getItemList" @setPager="onChangePage"></Pager>
     </div>
     <!-- 详情 -->
     <el-dialog
@@ -79,25 +89,25 @@
       :visible.sync="showAddEdit"
       width="800px"
     >
-      <add-edit @onHide="hideAddEditWin" :isEdit="isEdit" :id="curUserId"></add-edit>
+      <add-edit v-if="showAddEdit" @onHide="hideAddEditWin" :isEdit="isEdit" :id="curUserId"></add-edit>
     </el-dialog>
   </div>
 </template>
 
 <script>
 import datePick from "@/components/timerange/separateTime.vue";
-import Pager from '../../../components/table/Pager'
 import AddEdit from './AddEdit';
 // import Detail from './Detail';
 import { getMemberList, getDepartSelected } from '../../../services/operation';
 import baseOptions from '@/utils/baseOptions';
+import TreeSelect from '@/components/treeSelect';
 
 export default {
   extends: baseOptions,
   components: {
     datePick,
-    Pager,
     AddEdit,
+    TreeSelect
     // Detail,
   },
   data () {
@@ -112,14 +122,26 @@ export default {
       pager: {
         total: 100,
         pageNum: 1,
-        pageSize: 15,
+        pageSize: 2000,
       },
-      curUserId: 0,//当前人员ID
+      curUserId: '',//当前人员ID
       memberName: '', //姓名
       memberNumber: '', //工号
       departId: '', //部门ID
-      deptOptions: [],
-      tableData: []
+      tableData: [],
+      status: '',//状态
+      statusOption: [
+        { label: '休假', value: 0 },
+        { label: '空闲', value: 1 },
+        { label: '忙碌', value: 2 },
+      ],
+      treeData: [],//部门树
+      defaultProps: {
+        children: 'options',
+        label: 'name',
+        key: 'id',
+        disabled: 'disabled'
+      },
     }
   },
   created () {
@@ -127,7 +149,7 @@ export default {
     this.getItemList();
   },
   mounted: function () {
-    this.$common.initTableHeight(this);
+    this.$common.initTableHeight(this, 150);
   },
   watch: {
     //门店编码
@@ -140,9 +162,7 @@ export default {
     initData () {
       getDepartSelected().then(res => {
         if (res.code == 200) {
-          this.deptOptions = res.data.array.map(n => {
-            return { label: n.name, value: n.id };
-          })
+          this.treeData = res.data.array;
         }
       })
     },
@@ -155,11 +175,10 @@ export default {
       this.ctrlLoading(true)
       getMemberList({
         pageNum: this.pager.pageNum, pageSize: this.pager.pageSize, shopNumber: this.shopNumber, memberName: this.memberName,
-        memberNumber: this.memberNumber, departId: this.departId
+        memberNumber: this.memberNumber, departId: this.departId, status: this.status
       }).then(res => {
         console.log('res', res)
-        this.tableData = res.data.list;
-        this.pager.total = res.data.total;
+        this.tableData = res.data.array;
         this.ctrlLoading(false)
       }).catch(error => {
         this.ctrlLoading(false)
@@ -178,7 +197,7 @@ export default {
       console.log(row)
       this.showAddEdit = true;
       this.isEdit = true;
-      this.curUserId = row.id;
+      this.curUserId = row.userId;
     },
     //隐藏 添加/编辑 弹窗
     hideAddEditWin () {

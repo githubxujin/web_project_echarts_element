@@ -3,7 +3,7 @@
     <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="100px">
       <el-row :gutter="0">
         <el-col :span="23">
-          <el-form-item label="用户名">
+          <el-form-item label="帐号">
             <el-input v-model="username" :disabled="true"/>
           </el-form-item>
         </el-col>
